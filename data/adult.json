@@ -1,0 +1,29 @@
+{
+    "loader": "CSV",
+    "name": "Adult",
+    "file_name": "adult.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "age",
+        "workclass",
+        "fnlwgt",
+        "education",
+        "education.num",
+        "marital.status",
+        "occupation",
+        "relationship",
+        "race",
+        "sex",
+        "capital.gain",
+        "capital.loss",
+        "hours.per.week",
+        "native.country",
+        "income"
+    ],
+    "parse_dates": false,
+    "decimal": ".",
+    "thousands": null
+}
