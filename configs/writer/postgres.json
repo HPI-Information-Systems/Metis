@@ -1,0 +1,9 @@
+{
+    "writer_name": "postgres",
+    "table_name": "dqresults",
+    "db_user": "postgres",
+    "db_pass": "postgres",
+    "db_name": "metis_db",
+    "db_port": 5432,
+    "db_host": "localhost"
+}

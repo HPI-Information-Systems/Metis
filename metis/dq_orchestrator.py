@@ -10,34 +10,25 @@ from metis.utils.data_config import DataConfig
 from metis.utils.result import DQResult
 from metis.loader.csv_loader import CSVLoader
 from metis.writer.sqlite_writer import SQLiteWriter
+from metis.writer.postgres_writer import PostgresWriter
+from metis.writer.console_writer import ConsoleWriter
 
 class DQOrchestrator:
-    def __init__(self, db_name="dq_repository.db", result_table_name="dq_results") -> None:
+    def __init__(self, writer_config=None) -> None:
         self.dataframes = {}
         self.data_paths = {}
         self.results = {} #TODO: Decide what to do with these in memory results
 
-        if not os.path.exists(db_name): #TODO: Make this modular for different databases
-            conn = sqlite3.connect(db_name)
-            cur = conn.cursor()
-            cur.execute(f'''
-            CREATE TABLE IF NOT EXISTS {result_table_name} (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mesTime REAL NOT NULL,
-                DQvalue REAL NOT NULL,
-                DQdimension TEXT NOT NULL,
-                DQmetric TEXT NOT NULL,
-                columnName TEXT,
-                rowIndex INTEGER,
-                DQannotations TEXT,
-                dataset TEXT,
-                tableName TEXT
-            )
-            ''')
-            conn.commit()
-            conn.close()
-
-        self.writer = SQLiteWriter(db_name, result_table_name)
+        self.writer = ConsoleWriter({})
+        if writer_config:
+            with open(writer_config, 'r') as f:
+                writer_config = json.load(f)
+            if not "writer_name" in writer_config:
+                raise ValueError("Writer config must include 'writer_name' field.")
+            if writer_config["writer_name"] == "sqlite":
+                self.writer = SQLiteWriter(writer_config)
+            elif writer_config["writer_name"] == "postgres":
+                self.writer = PostgresWriter(writer_config)
 
     def load(self, data_loader_configs: List[str]) -> None:
         for config_path in data_loader_configs:

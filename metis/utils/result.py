@@ -7,7 +7,7 @@ class DQResult:
         DQvalue: float,
         DQdimension: str,
         DQmetric: str,
-        columnName: Union[str, None] = None,
+        columnNames: Union[List[str], None] = None,
         rowIndex: Union[int, None] = None,
         DQannotations: Union[dict, None] = None,
         dataset: Union[str, None] = None,
@@ -19,7 +19,7 @@ class DQResult:
         self._DQmetric = DQmetric
         self._dataset = dataset
         self._tableName = tableName
-        self._columnName = columnName
+        self._columnNames = columnNames
         self._rowIndex = rowIndex
         self._DQannotations = DQannotations
 
@@ -72,12 +72,12 @@ class DQResult:
         self._tableName = value
 
     @property
-    def columnName(self):
-        return self._columnName
+    def columnNames(self):
+        return self._columnNames
 
-    @columnName.setter
-    def columnName(self, value):
-        self._columnName = value
+    @columnNames.setter
+    def columnNames(self, value):
+        self._columnNames = value
 
     @property
     def rowIndex(self):
@@ -103,7 +103,7 @@ class DQResult:
             "DQmetric": self._DQmetric,
             "dataset": self._dataset,
             "tableName": self._tableName,
-            "columnName": self._columnName,
+            "columnNames": self._columnNames,
             "rowIndex": self._rowIndex,
             "DQannotations": self._DQannotations
         }

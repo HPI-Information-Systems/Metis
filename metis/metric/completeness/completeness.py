@@ -18,14 +18,14 @@ class Completeness(Metric):
         
         for column in data.columns:
             missing_count = data[column].isnull().sum()
-            completeness = (total_rows - missing_count) / total_rows
+            completeness = (total_rows - int(missing_count)) / total_rows
             
             result = DQResult(
                 mesTime=pd.Timestamp.now(),
                 DQvalue=completeness,
                 DQdimension="Completeness",
                 DQmetric="Completeness",
-                columnName=column,
+                columnNames=[column],
             )
             results.append(result)
         
