@@ -1,29 +1,31 @@
 # Metis
 
+Metis is a framework to automatically assess the quality of tabular data across multiple data quality dimensions. The Metis DQ framework (this GitHub repo) is part of the Metis project: [www.metisdq.org](www.metisdq.org)
+
 ![Overview](images/overview.png)
 
-## Start the demo:
+## Start the demo and run Metis:
 ```
 python -m demo.getting_started
 ```
 
-## How to implement new Metrics
+## How to implement new metrics
 
-To extend the Metis framework and add new data quality metrics, one should follow our interface for easy integration. 
+To extend the Metis framework and add new data quality metrics, please check our interface for easy integration. 
 ````python
 def assess(self, 
             data: pd.DataFrame, 
             reference: Union[pd.DataFrame, None] = None, 
             metric_config: Union[str, None] = None) -> List[DQResult]:
 ````
-Every metric should be a sublass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes three arguments:
+Each metric should be a subclass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes three arguments:
 - **data: pandas.Dataframe**: The DataFrame that should be assessed by this metric. This is the primary dataset under inspection.
-- **reference: Optional[pd.DataFrame]**: An optional, cleaned reference DataFrame that can act as a gold-standard / ground-truth version of the dataset. Metrics that need a clean version of the data (for example correctness against a known-good source) should accept and use this DataFrame. If not needed by a metric, `None` is allowed.
+- **reference: Optional[pd.DataFrame]**: An optional, cleaned reference DataFrame that can act as a gold-standard / ground-truth version of the dataset. Metrics that need a clean version of the data (e.g., correctness against a known-good source) should accept and use this DataFrame. If not needed by a metric, `None` is allowed.
 - **metric_config: Optional[str]**: Optional path or JSON string containing metric-specific configuration. Use this to keep the method signature compact; all metric-specific parameters (thresholds, aggregation options, etc.) can be stored here.
 
 The metric should return a list of ```metis.utils.result.DQResult```. This can be only one object if one value is computed on a table level or mutliple DQResults if for example one result per column is computed.
 
-## Creating a DQResult
+## Output: creating a DQResult
 
 ````python
 class DQResult:
