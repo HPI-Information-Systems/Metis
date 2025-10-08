@@ -1,8 +1,11 @@
+import json
 from abc import ABC, abstractmethod
-import pandas as pd
 from typing import List, Union
 
+import pandas as pd
+
 from metis.utils.result import DQResult
+
 
 class Metric(ABC):
     """
@@ -16,9 +19,9 @@ class Metric(ABC):
         Metric.registry[cls.__name__] = cls
 
     @abstractmethod
-    def assess(self, 
-               data: pd.DataFrame, 
-               reference: Union[pd.DataFrame, None] = None, 
+    def assess(self,
+               data: pd.DataFrame,
+               reference: Union[pd.DataFrame, None] = None,
                metric_config: Union[str, None] = None) -> List[DQResult]:
                 """Assess data using this metric and return the results.
 
@@ -37,7 +40,7 @@ class Metric(ABC):
                 - metric_config: Optional[str]
                         Optional path or JSON string containing metric-specific
                         configuration. Use this to keep the method signature compact;
-                        all metric-specific parameters (thresholds, aggregation options, 
+                        all metric-specific parameters (thresholds, aggregation options,
                         etc.) can be stored here.
 
                 Returns
@@ -65,3 +68,16 @@ class Metric(ABC):
                     agreement score.
                 """
                 raise NotImplementedError()
+
+    def load_config(self, config: str) -> dict:
+        """
+        Load metric-specific configuration from a JSON file.
+
+        :param config: Path to the JSON configuration file or a JSON string.
+        :return: Dictionary containing the configuration parameters.
+        """
+        if config.endswith(".json"):
+            with open(config, 'r') as f:
+                return json.load(f)
+
+        return json.loads(config)

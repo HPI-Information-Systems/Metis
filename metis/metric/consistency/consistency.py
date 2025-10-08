@@ -9,7 +9,7 @@ class Consistency(Metric):
     def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, None] = None, metric_config: Union[str, None] = None) -> List[DQResult]:
         """
         Assess the consistency of a dataset by checking the compliance of a functional dependency specified in the metric_config.
-        
+
         :param data: DataFrame to assess.
         :param metric_config: JSON that specifies FDs to check.
         :return: List of DQResult objects containing accuracy results.
@@ -25,7 +25,7 @@ class Consistency(Metric):
         for determinant, dependents in metric_conf.items():
             if determinant not in data.columns:
                 continue
-            
+
             for dependent in dependents:
                 if dependent not in data.columns:
                     continue
@@ -36,7 +36,7 @@ class Consistency(Metric):
                 # find groups where there's more than one dependent value
                 # for the same determinant (FD violation)
                 violations = grouped[grouped > 1].index.tolist()
-                
+
             consistency = 1 - (len(violations) / len(data[determinant]))
 
             result = DQResult(
@@ -48,5 +48,5 @@ class Consistency(Metric):
                 DQannotations={f"{determinant}:{dependent}":violations} # FD
             )
             results.append(result)
-        
+
         return results
