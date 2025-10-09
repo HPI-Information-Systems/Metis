@@ -1,0 +1,16 @@
+{
+    "loader": "CSV",
+    "name": "Countries Capitals",
+    "file_name": "countries-capitals.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "country",
+        "capital"
+    ],
+    "parse_dates": false,
+    "decimal": ".",
+    "thousands": null
+}

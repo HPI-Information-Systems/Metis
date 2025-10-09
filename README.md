@@ -25,6 +25,8 @@ Each metric should be a subclass of ```metis.metric.metric.Metric``` and impleme
 
 The metric should return a list of ```metis.utils.result.DQResult```. This can be only one object if one value is computed on a table level or mutliple DQResults if for example one result per column is computed.
 
+**Note:** Each metric has to be imported in the *__init__.py* file inside the folder *metric/* so it is recognized by the Metric registry.
+
 ## Output: creating a DQResult
 
 ````python
