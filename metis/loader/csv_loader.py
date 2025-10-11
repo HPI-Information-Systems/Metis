@@ -3,12 +3,13 @@ import pandas as pd
 from metis.loader.loader import DataLoader
 from metis.utils.data_config import DataConfig
 
+
 class CSVLoader(DataLoader):
     def load(self, config: DataConfig) -> pd.DataFrame:
         """
         Load data from a CSV file specified by the config.
-        
-        :param config: Path to the CSV file.
+
+        :param config: DataConfig object containing the CSV parsing details.
         :return: DataFrame containing the loaded data.
         """
 
