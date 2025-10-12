@@ -6,6 +6,7 @@ import pandas as pd
 from metis.metric.config import MetricConfig
 from metis.metric.currency.config import CurrencyConfig
 from metis.metric.metric import Metric
+from metis.utils.dq_dimension import DQDimension
 from metis.utils.result import DQResult
 
 
@@ -48,16 +49,16 @@ class Currency(Metric):
 
             for row_index in range(total_rows):
                 ingestion_date = pd.to_datetime(
-                    data.at[row_index, ingestion_date_column], dayfirst=True
+                    str(data.at[row_index, ingestion_date_column]), dayfirst=True
                 )
-                delta: pd.Timedelta = (assessment_date - ingestion_date)
-                age = delta.days // 365
+                delta = (assessment_date - ingestion_date)
+                age = delta.days / 365
                 measurement = exp(-decline_rate * age) if pd.notna(age) else 0
 
                 result = DQResult(
                     mesTime=pd.Timestamp.now(),
                     DQvalue=measurement,
-                    DQdimension="Currency",
+                    DQdimension=DQDimension.CURRENCY,
                     DQmetric="Currency",
                     columnNames=[col_name],
                     rowIndex=row_index,

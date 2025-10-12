@@ -1,12 +1,14 @@
 from typing import List, Union
 import pandas as pd
 
+from metis.utils.dq_dimension import DQDimension
+
 class DQResult:
     def __init__(
             self,
             mesTime: pd.Timestamp,
             DQvalue: float,
-            DQdimension: str,
+            DQdimension: DQDimension,
             DQmetric: str,
             columnNames: Union[List[str], None] = None,
             rowIndex: Union[int, None] = None,

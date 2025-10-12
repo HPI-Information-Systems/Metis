@@ -2,8 +2,10 @@ from typing import List, Union
 
 import pandas as pd
 
+from metis.metric.config import MetricConfig
 from metis.metric.consistency.config import RuleConsistencyConfig
 from metis.metric.metric import Metric
+from metis.utils.dq_dimension import DQDimension
 from metis.utils.result import DQResult
 
 
@@ -12,7 +14,7 @@ class RuleConsistency(Metric):
         self,
         data: pd.DataFrame,
         reference: Union[pd.DataFrame, None] = None,
-        metric_config: str | None | RuleConsistencyConfig = None,
+        metric_config: str | None | MetricConfig = None,
     ) -> List[DQResult]:
         """
         Assess the consistency of the data by checking each value for the given rules.
@@ -22,9 +24,17 @@ class RuleConsistency(Metric):
         :return: List of DQResult objects containing consistency results.
         """
         if metric_config is None:
-            raise ValueError("Metric configuration is required for rule-based consistency assessment.")
+            raise ValueError(
+                "Metric configuration is required for rule-based consistency assessment."
+            )
         if isinstance(metric_config, str):
-            raise ValueError("Metric configuration must be a RuleConsistencyConfig instance. JSON loading is not supported.")
+            raise ValueError(
+                "Metric configuration must be a RuleConsistencyConfig instance. JSON loading is not supported."
+            )
+        if not isinstance(metric_config, RuleConsistencyConfig):
+            raise ValueError(
+                "Metric configuration must be a RuleConsistencyConfig instance."
+            )
 
         rules = metric_config.rules
 
@@ -33,6 +43,12 @@ class RuleConsistency(Metric):
 
         for col_name in data.columns:
             column_rules = rules.get(col_name, [])
+            if len(column_rules) == 0:
+                print(
+                    f"No consistency rules defined for column '{col_name}'. Skipping."
+                )
+                continue
+
             for row_index in range(total_rows):
                 degree_of_violation = sum(
                     rule(data.at[row_index, col_name]) for rule in column_rules
@@ -42,7 +58,7 @@ class RuleConsistency(Metric):
                 result = DQResult(
                     mesTime=pd.Timestamp.now(),
                     DQvalue=measurement,
-                    DQdimension="Consistency",
+                    DQdimension=DQDimension.CONSISTENCY,
                     DQmetric="RuleConsistency",
                     columnNames=[col_name],
                     rowIndex=row_index,

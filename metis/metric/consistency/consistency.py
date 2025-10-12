@@ -1,12 +1,21 @@
-import pandas as pd
-from typing import List, Union
 import json
+from typing import List
 
-from metis.utils.result import DQResult
+import pandas as pd
+
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.utils.dq_dimension import DQDimension
+from metis.utils.result import DQResult
+
 
 class Consistency(Metric):
-    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, None] = None, metric_config: Union[str, None] = None) -> List[DQResult]:
+    def assess(
+        self,
+        data: pd.DataFrame,
+        reference: pd.DataFrame | None = None,
+        metric_config: str | MetricConfig | None = None,
+    ) -> List[DQResult]:
         """
         Assess the consistency of a dataset by checking the compliance of a functional dependency specified in the metric_config.
 
@@ -20,8 +29,18 @@ class Consistency(Metric):
         if total_rows == 0:
             return results
 
+        if metric_config is None:
+            raise ValueError(
+                "Metric configuration is required for consistency assessment."
+            )
+        if not isinstance(metric_config, str):
+            raise ValueError(
+                "Metric configuration must be a file path to a JSON configuration or a JSON string."
+            )
+
         with open(metric_config, "r") as f:
             metric_conf = json.load(f)
+
         for determinant, dependents in metric_conf.items():
             if determinant not in data.columns:
                 continue
@@ -42,10 +61,10 @@ class Consistency(Metric):
             result = DQResult(
                 mesTime=pd.Timestamp.now(),
                 DQvalue=consistency,
-                DQdimension="Consistency",
+                DQdimension=DQDimension.CONSISTENCY,
                 DQmetric="Consistency",
                 columnNames=[determinant],
-                DQannotations={f"{determinant}:{dependent}":violations} # FD
+                DQannotations={f"{determinant}:{dependent}": violations},  # FD
             )
             results.append(result)
 

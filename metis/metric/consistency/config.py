@@ -5,6 +5,16 @@ from metis.metric.config import MetricConfig
 
 
 @dataclass
+class ConsistencyConfig(MetricConfig):
+    """
+    Configuration class for the Consistency metric.
+    """
+
+    rules: Dict[
+        str, List[Callable[[Any], float]]
+    ]  # Dictionary of functions that define consistency rules for each column given by the key
+
+@dataclass
 class RuleConsistencyConfig(MetricConfig):
     """
     Configuration class for the RuleConsistency metric.

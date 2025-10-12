@@ -1,8 +1,10 @@
-from typing import List, Union
+from typing import List
 
 import pandas as pd
 
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.utils.dq_dimension import DQDimension
 from metis.utils.result import DQResult
 
 
@@ -10,8 +12,8 @@ class Correctness(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        reference: pd.DataFrame | None = None,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the correctness of the data by calculating the deviation from the reference.
@@ -38,8 +40,8 @@ class Correctness(Metric):
 
                 result = DQResult(
                     mesTime=pd.Timestamp.now(),
-                    DQvalue=measurement,
-                    DQdimension="Correctness",
+                    DQvalue=float(measurement),
+                    DQdimension=DQDimension.CORRECTNESS,
                     DQmetric="Correctness",
                     columnNames=[col_name],
                     rowIndex=row_index,

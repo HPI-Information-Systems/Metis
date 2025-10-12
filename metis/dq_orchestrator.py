@@ -5,6 +5,7 @@ import pandas as pd
 
 from metis.loader.csv_loader import CSVLoader
 from metis.metric import Metric
+from metis.metric.config import MetricConfig
 from metis.utils.data_config import DataConfig
 from metis.utils.result import DQResult
 from metis.writer.console_writer import ConsoleWriter
@@ -54,7 +55,7 @@ class DQOrchestrator:
                         f"Unsupported loader type: {config_data.get('loader', None)}"
                     )
 
-    def assess(self, metrics: List[str], metric_configs: List[str | None]) -> None:
+    def assess(self, metrics: List[str], metric_configs: List[str | MetricConfig | None]) -> None:
         results = []
 
         for metric, metric_config in zip(metrics, metric_configs):
