@@ -1,3 +1,4 @@
+from math import sqrt
 from typing import List, Union
 
 import pandas as pd
@@ -38,7 +39,7 @@ class RuleConsistency(Metric):
 
         rules = metric_config.rules
 
-        results = []
+        results: List[DQResult] = []
         total_rows = len(data)
 
         for col_name in data.columns:
@@ -49,20 +50,36 @@ class RuleConsistency(Metric):
                 )
                 continue
 
+            max_violation = 0.0
+            column_results: List[DQResult] = []
+
             for row_index in range(total_rows):
                 degree_of_violation = sum(
                     rule(data.at[row_index, col_name]) for rule in column_rules
                 )
                 measurement = 1 / (1 + degree_of_violation)
+                max_violation = max(max_violation, degree_of_violation)
 
                 result = DQResult(
                     mesTime=pd.Timestamp.now(),
                     DQvalue=measurement,
                     DQdimension=DQDimension.CONSISTENCY,
-                    DQmetric="RuleConsistency",
+                    DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
                     rowIndex=row_index,
                 )
-                results.append(result)
+                column_results.append(result)
+
+            maximum_rules_coverage = 1 / (1 + max_violation)
+            for result in column_results:
+                certainty = sqrt(
+                    (1 - result.DQvalue + maximum_rules_coverage)
+                    * maximum_rules_coverage
+                )
+                result.DQannotations = {
+                    "certainty": certainty,
+                }
+
+            results.extend(column_results)
 
         return results

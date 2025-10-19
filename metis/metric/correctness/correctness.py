@@ -58,7 +58,7 @@ class Correctness(Metric):
         if dtype == "int64" or dtype == "float64":
             return abs(value - reference_value) / max(abs(reference_value), abs(value))
         if dtype == "object":
-            return self.levenshteinDistance(str(value), str(reference_value)) / max(
+            return self.levenshtein_distance(str(value), str(reference_value)) / max(
                 len(str(value)), len(str(reference_value))
             )
         raise ValueError(
@@ -66,7 +66,7 @@ class Correctness(Metric):
         )
 
     # https://stackoverflow.com/a/32558749
-    def levenshteinDistance(self, s1, s2):
+    def levenshtein_distance(self, s1, s2):
         if len(s1) > len(s2):
             s1, s2 = s2, s1
 
