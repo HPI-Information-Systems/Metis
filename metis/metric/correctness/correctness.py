@@ -56,9 +56,9 @@ class Correctness(Metric):
         if pd.isna(value) or pd.isna(reference_value):
             return 0
         if dtype == "int64" or dtype == "float64":
-            return abs(value - reference_value) / max(abs(reference_value), abs(value))
+            return 1 - abs(value - reference_value) / max(abs(reference_value), abs(value))
         if dtype == "object":
-            return self.levenshtein_distance(str(value), str(reference_value)) / max(
+            return 1 - self.levenshtein_distance(str(value), str(reference_value)) / max(
                 len(str(value)), len(str(reference_value))
             )
         raise ValueError(

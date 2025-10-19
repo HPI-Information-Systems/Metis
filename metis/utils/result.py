@@ -21,7 +21,7 @@ class DQResult:
         Required arguments
         - `mesTime: pd.Timestamp`: The time at which the result was assessed.
         - `DQvalue: float`: Numeric outcome of the assessment (quantitative only).
-        - `DQdimension: str`: Data quality dimension assessed (e.g. 'completeness', 'accuracy').
+        - `DQdimension: DQDimension`: Data quality dimension assessed (e.g. DQDimension.COMPLETENESS, DQDimension.ACCURACY).
         - `DQmetric: str`: Name of the specific metric within the dimension.
 
         Optional arguments

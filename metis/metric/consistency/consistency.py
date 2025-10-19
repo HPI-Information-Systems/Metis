@@ -35,7 +35,7 @@ class Consistency(Metric):
             )
         if not isinstance(metric_config, str):
             raise ValueError(
-                "Metric configuration must be a file path to a JSON configuration or a JSON string."
+                "Metric configuration must be a file path to a JSON configuration."
             )
 
         with open(metric_config, "r") as f:
