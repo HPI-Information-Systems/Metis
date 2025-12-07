@@ -5,16 +5,18 @@ from sqlalchemy import JSON, DateTime, Double, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
-class Base(DeclarativeBase):
-    pass
-
 def register_models(results_table_name: str):
+    class Base(DeclarativeBase):
+        pass
+
     class DQResultModel(Base):
         __tablename__ = results_table_name
         __table_args__ = {"extend_existing": True}
 
         id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-        mes_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+        mes_time: Mapped[datetime] = mapped_column(
+            DateTime(timezone=True), server_default=func.now()
+        )
         dq_value: Mapped[float] = mapped_column(Double)
         dq_dimension: Mapped[str]
         dq_metric: Mapped[str]
@@ -24,4 +26,4 @@ def register_models(results_table_name: str):
         dataset: Mapped[str | None]
         table_name: Mapped[str | None]
 
-    return DQResultModel
+    return Base, DQResultModel

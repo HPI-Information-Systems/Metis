@@ -2,8 +2,10 @@ from typing import Dict, List
 
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
+from tqdm import tqdm
 
-from metis.database_models import Base, register_models
+from metis.database_models import register_models
+from metis.utils.numbers import format_count
 from metis.utils.result import DQResult
 from metis.writer.writer import DQResultWriter
 
@@ -12,7 +14,9 @@ class DatabaseWriter(DQResultWriter):
     def __init__(self, writer_config: Dict) -> None:
         self.engine = self.create_engine(writer_config)
 
-        self.DQResultModel = register_models(writer_config.get("table_name", "dq_results"))
+        Base, self.DQResultModel = register_models(
+            writer_config.get("table_name", "dq_results")
+        )
         Base.metadata.create_all(self.engine)
 
     def create_engine(self, writer_config: Dict) -> Engine:
@@ -34,5 +38,10 @@ class DatabaseWriter(DQResultWriter):
                 )
                 for result in results
             ]
-            session.add_all(db_entities)
-            session.commit()
+            for batch in tqdm(
+                range(0, len(db_entities), 1000),
+                desc=f"Writing {format_count(len(db_entities))} DQ results to database",
+                unit="k results",
+            ):
+                session.add_all(db_entities[batch : batch + 1000])
+                session.commit()

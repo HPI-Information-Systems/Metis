@@ -7,6 +7,7 @@ from metis.loader.csv_loader import CSVLoader
 from metis.metric import Metric
 from metis.metric.config import MetricConfig
 from metis.utils.data_config import DataConfig
+from metis.utils.logger import logger
 from metis.utils.result import DQResult
 from metis.writer.console_writer import ConsoleWriter
 from metis.writer.postgres_writer import PostgresWriter
@@ -55,7 +56,9 @@ class DQOrchestrator:
                         f"Unsupported loader type: {config_data.get('loader', None)}"
                     )
 
-    def assess(self, metrics: List[str], metric_configs: List[str | MetricConfig | None]) -> None:
+    def assess(
+        self, metrics: List[str], metric_configs: List[str | MetricConfig | None]
+    ) -> None:
         results = []
 
         for metric, metric_config in zip(metrics, metric_configs):
@@ -64,6 +67,7 @@ class DQOrchestrator:
                 raise ValueError(f"Metric {metric} is not registered.")
             metric_instance: Metric = metric_class()
             for df_name, df in self.dataframes.items():
+                logger.info(f"Assessing metric '{metric}'")
                 incomplete_metric_results = metric_instance.assess(
                     data=df,
                     reference=self.reference_dataframes.get(df_name),
