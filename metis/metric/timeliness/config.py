@@ -13,3 +13,11 @@ class TimelinessConfig(MetricConfig):
     decline_rate_per_column: Dict[str, float]
     ingestion_date_column: str
     simulated_assessment_date: str | None = None
+
+    def to_json(self):
+        return {
+            "name": self.__class__.__name__,
+            "decline_rate_per_column": self.decline_rate_per_column,
+            "ingestion_date_column": self.ingestion_date_column,
+            "simulated_assessment_date": self.simulated_assessment_date,
+        }

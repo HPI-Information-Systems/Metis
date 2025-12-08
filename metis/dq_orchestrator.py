@@ -1,6 +1,5 @@
 import json
 import traceback
-from pathlib import Path
 from typing import Dict, List, Type
 
 import pandas as pd
@@ -12,8 +11,11 @@ from metis.utils.data_config import DataConfig
 from metis.utils.logging import logger
 from metis.utils.result import DQResult
 from metis.writer.console_writer import ConsoleWriter
+from metis.writer.csv_writer import CSVWriter
 from metis.writer.postgres_writer import PostgresWriter
 from metis.writer.sqlite_writer import SQLiteWriter
+
+FALLBACK_RESULTS_FILE = "dq_results_fallback.csv"
 
 
 class DQOrchestrator:
@@ -29,12 +31,14 @@ class DQOrchestrator:
         if writer_config_path:
             with open(writer_config_path, "r") as f:
                 writer_config = json.load(f)
-            if not "writer_name" in writer_config:
+            if "writer_name" not in writer_config:
                 raise ValueError("Writer config must include 'writer_name' field.")
             if writer_config["writer_name"] == "sqlite":
                 self.writer = SQLiteWriter(writer_config)
             elif writer_config["writer_name"] == "postgres":
                 self.writer = PostgresWriter(writer_config)
+            elif writer_config["writer_name"] == "csv":
+                self.writer = CSVWriter(writer_config)
 
     def load(self, data_loader_configs: List[str]) -> None:
         for config_path in data_loader_configs:
@@ -89,11 +93,8 @@ class DQOrchestrator:
             traceback.print_exc()
             logger.error(f"Error writing results: {e}")
             try:
-                logger.warning(f"Trying to save results to csv as fallback...")
-                fallback_df = pd.DataFrame([result.as_json() for result in results])
-                fallback_file = Path("dq_results_fallback.csv")
-                fallback_df.to_csv(fallback_file, index=False)
-                logger.warning(f"Results saved to {fallback_file.absolute()}")
+                logger.warning("Trying to save results to csv as fallback...")
+                CSVWriter({"path": FALLBACK_RESULTS_FILE}).write(results)
             except Exception as e:
                 logger.error(f"Failed to save results to csv: {e}")
                 raise e
