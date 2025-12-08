@@ -44,4 +44,5 @@ class DatabaseWriter(DQResultWriter):
                 unit="k results",
             ):
                 session.add_all(db_entities[batch : batch + 1000])
-                session.commit()
+                session.flush()
+            session.commit()

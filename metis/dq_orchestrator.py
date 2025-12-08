@@ -1,4 +1,6 @@
 import json
+import traceback
+from pathlib import Path
 from typing import Dict, List, Type
 
 import pandas as pd
@@ -78,7 +80,23 @@ class DQOrchestrator:
                     result.dataset = self.data_paths[df_name]
                     results.append(result)
 
-        self.writer.write(results)
+        try:
+            logger.info(
+                f"Writing {len(results)} results using {self.writer.__class__.__name__}"
+            )
+            self.writer.write(results)
+        except Exception as e:
+            traceback.print_exc()
+            logger.error(f"Error writing results: {e}")
+            try:
+                logger.warning(f"Trying to save results to csv as fallback...")
+                fallback_df = pd.DataFrame([result.as_json() for result in results])
+                fallback_file = Path("dq_results_fallback.csv")
+                fallback_df.to_csv(fallback_file, index=False)
+                logger.warning(f"Results saved to {fallback_file.absolute()}")
+            except Exception as e:
+                logger.error(f"Failed to save results to csv: {e}")
+                raise e
 
     def get_dq_result(self, query: str) -> List[DQResult]:
         return []

@@ -62,7 +62,7 @@ class RuleConsistency(Metric):
 
                 result = DQResult(
                     mesTime=pd.Timestamp.now(),
-                    DQvalue=measurement,
+                    DQvalue=float(measurement),
                     DQdimension=DQDimension.CONSISTENCY,
                     DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
