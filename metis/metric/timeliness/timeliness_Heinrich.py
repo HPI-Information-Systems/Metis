@@ -4,13 +4,14 @@ from typing import List
 import pandas as pd
 
 from metis.metric.config import MetricConfig
-from metis.metric.currency.config import CurrencyConfig
 from metis.metric.metric import Metric
+from metis.metric.timeliness.config import TimelinessConfig
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.logging import logger
 from metis.utils.result import DQResult
 
 
-class Currency(Metric):
+class TimelinessHeinrich(Metric):
     def assess(
         self,
         data: pd.DataFrame,
@@ -18,18 +19,18 @@ class Currency(Metric):
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
-        Assess the currency of the data by calculating the deviation from the reference.
+        Assess the timeliness of the data by calculating the deviation from the reference.
 
         :param data: DataFrame to assess.
         :param metric_config: Optional configuration for the metric.
-        :return: List of DQResult objects containing currency results.
+        :return: List of DQResult objects containing timeliness results.
         """
         if not metric_config:
             raise ValueError(
-                "Metric configuration is required for currency assessment."
+                "Metric configuration is required for timeliness assessment."
             )
 
-        config = self.load_config(metric_config, CurrencyConfig)
+        config = self.load_config(metric_config, TimelinessConfig)
 
         ingestion_date_column = config.ingestion_date_column
         assessment_date = pd.to_datetime(
@@ -43,7 +44,7 @@ class Currency(Metric):
         for col_name in data.columns:
             decline_rate = config.decline_rate_per_column.get(col_name)
             if decline_rate is None:
-                print(
+                logger.info(
                     f"Decline rate for column '{col_name}' is not specified in the configuration. Skipping."
                 )
                 continue

@@ -14,10 +14,11 @@ class ConsistencyConfig(MetricConfig):
         str, List[Callable[[Any], float]]
     ]  # Dictionary of functions that define consistency rules for each column given by the key
 
+
 @dataclass
-class RuleConsistencyConfig(MetricConfig):
+class ConsistencyRuleBasedHinrichsConfig(MetricConfig):
     """
-    Configuration class for the RuleConsistency metric.
+    Configuration class for the RuleBasedHinrichs metric.
     """
 
     rules: Dict[

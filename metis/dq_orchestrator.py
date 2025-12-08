@@ -9,7 +9,7 @@ from metis.loader.csv_loader import CSVLoader
 from metis.metric import Metric
 from metis.metric.config import MetricConfig
 from metis.utils.data_config import DataConfig
-from metis.utils.logger import logger
+from metis.utils.logging import logger
 from metis.utils.result import DQResult
 from metis.writer.console_writer import ConsoleWriter
 from metis.writer.postgres_writer import PostgresWriter

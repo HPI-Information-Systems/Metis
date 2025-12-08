@@ -4,13 +4,13 @@ from typing import List, Union
 import pandas as pd
 
 from metis.metric.config import MetricConfig
-from metis.metric.consistency.config import RuleConsistencyConfig
+from metis.metric.consistency.config import ConsistencyRuleBasedHinrichsConfig
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.result import DQResult
 
 
-class RuleConsistency(Metric):
+class ConsistencyRuleBasedHinrichs(Metric):
     def assess(
         self,
         data: pd.DataFrame,
@@ -30,11 +30,11 @@ class RuleConsistency(Metric):
             )
         if isinstance(metric_config, str):
             raise ValueError(
-                "Metric configuration must be a RuleConsistencyConfig instance. JSON loading is not supported."
+                "Metric configuration must be a ConsistencyRuleBasedHinrichsConfig instance. JSON loading is not supported."
             )
-        if not isinstance(metric_config, RuleConsistencyConfig):
+        if not isinstance(metric_config, ConsistencyRuleBasedHinrichsConfig):
             raise ValueError(
-                "Metric configuration must be a RuleConsistencyConfig instance."
+                "Metric configuration must be a ConsistencyRuleBasedHinrichsConfig instance."
             )
 
         rules = metric_config.rules

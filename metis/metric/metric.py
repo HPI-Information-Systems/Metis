@@ -1,6 +1,6 @@
 import json
 from abc import ABC, abstractmethod
-from typing import Any, List, TypeVar, cast, overload
+from typing import Any, List, TypeVar
 
 import pandas as pd
 
@@ -92,4 +92,6 @@ class Metric(ABC):
         if isinstance(config, str):
             return model(**json.loads(config))
 
-        raise TypeError(f"Invalid config type: {type(config)}. Expected str or {model}.")
+        raise TypeError(
+            f"Invalid config type: {type(config)}. Expected str or {model}."
+        )

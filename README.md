@@ -11,11 +11,11 @@ python -m demo.getting_started
 
 ## How to implement new metrics
 
-To extend the Metis framework and add new data quality metrics, please check our interface for easy integration. 
+To extend the Metis framework and add new data quality metrics, please check our interface for easy integration.
 ````python
-def assess(self, 
-            data: pd.DataFrame, 
-            reference: Union[pd.DataFrame, None] = None, 
+def assess(self,
+            data: pd.DataFrame,
+            reference: Union[pd.DataFrame, None] = None,
             metric_config: Union[str, None] = None) -> List[DQResult]:
 ````
 Each metric should be a subclass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes three arguments:
@@ -29,14 +29,17 @@ The metric should return a list of ```metis.utils.result.DQResult```. This can b
 
 ### Metric naming convention
 
-Metrics are organized by dimension (e.g., `completeness`, `minimality`), where one folder exists for each. 
-New metrics should follow the naming format: `{Granularity}_{DimensionName}_{Technique}`
+Metrics are organized by dimension (e.g., `completeness`, `minimality`), where one folder exists for each.
+New metrics inside those folders should follow the naming format: `{DimensionName}_{Technique}`
 
-- **Granularity**: The level of analysis (e.g., `cell`, `row`, `column`, `table`)
 - **DimensionName**: The quality dimension being measured (e.g., `Completeness`, `Minimality`)
 - **Technique**: The calculation or method used  (e.g., `MissingRatio`, `HierarchicalClustering`)
 
-Examples: `column_completeness_MissingRatio`, `row_minimality_DuplicateRatio`
+Examples: `completeness_MissingRatio`, `minimality_DuplicateRatio`
+
+The granularities at which a metric can operate are handled inside the metric itself and are configurable through the metric config. This enables each metric to handle reusing results for coarser granularities individually.
+
+- **Granularity**: The level of analysis (e.g., `cell`, `row`, `column`, `table`)
 
 ## Output: creating a DQResult
 

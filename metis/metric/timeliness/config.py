@@ -5,9 +5,9 @@ from metis.metric.config import MetricConfig
 
 
 @dataclass
-class CurrencyConfig(MetricConfig):
+class TimelinessConfig(MetricConfig):
     """
-    Configuration class for the Currency metric.
+    Configuration class for the TimelinessHeinrich metric.
     """
 
     decline_rate_per_column: Dict[str, float]

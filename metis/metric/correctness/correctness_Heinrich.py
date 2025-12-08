@@ -10,7 +10,7 @@ from metis.utils.result import DQResult
 from metis.utils.strings import levenshtein_distance
 
 
-class Correctness(Metric):
+class CorrectnessHeinrich(Metric):
     def assess(
         self,
         data: pd.DataFrame,
