@@ -1,5 +1,5 @@
 from math import sqrt
-from typing import List, Union
+from typing import Any, Callable, List, Union
 
 import pandas as pd
 
@@ -7,10 +7,15 @@ from metis.metric.config import MetricConfig
 from metis.metric.consistency.config import ConsistencyRuleBasedHinrichsConfig
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.logging import logger as main_logger
 from metis.utils.result import DQResult
 
 
 class ConsistencyRuleBasedHinrichs(Metric):
+    def __init__(self) -> None:
+        super().__init__()
+        self.logger = main_logger.getChild(self.__class__.__name__)
+
     def assess(
         self,
         data: pd.DataFrame,
@@ -26,60 +31,83 @@ class ConsistencyRuleBasedHinrichs(Metric):
         """
         if metric_config is None:
             raise ValueError(
-                "Metric configuration is required for rule-based consistency assessment."
+                f"Metric configuration is required for metric {ConsistencyRuleBasedHinrichs.__name__} but None was provided."
             )
         if isinstance(metric_config, str):
             raise ValueError(
-                "Metric configuration must be a ConsistencyRuleBasedHinrichsConfig instance. JSON loading is not supported."
+                f"Metric configuration must be an instance of {ConsistencyRuleBasedHinrichsConfig.__name__}. JSON loading is not supported."
             )
         if not isinstance(metric_config, ConsistencyRuleBasedHinrichsConfig):
             raise ValueError(
-                "Metric configuration must be a ConsistencyRuleBasedHinrichsConfig instance."
+                f"Metric configuration must be an instance of {ConsistencyRuleBasedHinrichsConfig.__name__} but was of type {type(metric_config)}."
             )
 
-        rules = metric_config.rules
+        attribute_rules = metric_config.attribute_rules or {}
+        tuple_rules = metric_config.tuple_rules or []
 
         results: List[DQResult] = []
-        total_rows = len(data)
+
+        if tuple_rules:
+            degree_of_violation: pd.Series[float] = data.apply(
+                lambda x: self.sum_rules(tuple_rules, x), axis="columns"
+            )
+
+            dq_measurements = 1 / (1 + degree_of_violation)
+            min_quality = dq_measurements.min()
+            for row_index, dq_value in dq_measurements.items():
+                certainty = sqrt(
+                    (1 - dq_value + min_quality) * min_quality
+                )
+
+                results.append(
+                    DQResult(
+                        mesTime=pd.Timestamp.now(),
+                        DQvalue=dq_value,
+                        DQdimension=DQDimension.CONSISTENCY,
+                        DQmetric=self.__class__.__name__,
+                        columnNames=[],
+                        rowIndex=int(str(row_index)),
+                        DQannotations={
+                            "certainty": certainty,
+                        },
+                    )
+                )
 
         for col_name in data.columns:
-            column_rules = rules.get(col_name, [])
-            if len(column_rules) == 0:
-                print(
+            column_rules = attribute_rules.get(col_name, [])
+            if not column_rules:
+                self.logger.info(
                     f"No consistency rules defined for column '{col_name}'. Skipping."
                 )
                 continue
 
-            max_violation = 0.0
-            column_results: List[DQResult] = []
+            degree_of_violation: pd.Series[float] = data[col_name].apply(
+                lambda x: self.sum_rules(column_rules, x)
+            )
 
-            for row_index in range(total_rows):
-                degree_of_violation = sum(
-                    rule(data.at[row_index, col_name]) for rule in column_rules
-                )
-                measurement = 1 / (1 + degree_of_violation)
-                max_violation = max(max_violation, degree_of_violation)
+            dq_measurements = 1 / (1 + degree_of_violation)
+            min_quality = dq_measurements.min()
 
-                result = DQResult(
-                    mesTime=pd.Timestamp.now(),
-                    DQvalue=float(measurement),
-                    DQdimension=DQDimension.CONSISTENCY,
-                    DQmetric=self.__class__.__name__,
-                    columnNames=[col_name],
-                    rowIndex=row_index,
-                )
-                column_results.append(result)
-
-            maximum_rules_coverage = 1 / (1 + max_violation)
-            for result in column_results:
+            for row_index, dq_value in dq_measurements.items():
                 certainty = sqrt(
-                    (1 - result.DQvalue + maximum_rules_coverage)
-                    * maximum_rules_coverage
+                    (1 - dq_value + min_quality) * min_quality
                 )
-                result.DQannotations = {
-                    "certainty": certainty,
-                }
 
-            results.extend(column_results)
+                results.append(
+                    DQResult(
+                        mesTime=pd.Timestamp.now(),
+                        DQvalue=dq_value,
+                        DQdimension=DQDimension.CONSISTENCY,
+                        DQmetric=self.__class__.__name__,
+                        columnNames=[col_name],
+                        rowIndex=int(str(row_index)),
+                        DQannotations={
+                            "certainty": certainty,
+                        },
+                    )
+                )
 
         return results
+
+    def sum_rules(self, rules: List[Callable], value: Any) -> float:
+        return float(sum(rule(value) for rule in rules))

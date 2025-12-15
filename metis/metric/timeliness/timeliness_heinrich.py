@@ -7,11 +7,15 @@ from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.metric.timeliness.config import TimelinessConfig
 from metis.utils.dq_dimension import DQDimension
-from metis.utils.logging import logger
+from metis.utils.logging import logger as main_logger
 from metis.utils.result import DQResult
 
 
 class TimelinessHeinrich(Metric):
+    def __init__(self) -> None:
+        super().__init__()
+        self.logger = main_logger.getChild(self.__class__.__name__)
+
     def assess(
         self,
         data: pd.DataFrame,
@@ -44,7 +48,7 @@ class TimelinessHeinrich(Metric):
         for col_name in data.columns:
             decline_rate = config.decline_rate_per_column.get(col_name)
             if decline_rate is None:
-                logger.info(
+                self.logger.info(
                     f"Decline rate for column '{col_name}' is not specified in the configuration. Skipping."
                 )
                 continue
