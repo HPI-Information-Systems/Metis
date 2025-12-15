@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 
 import pandas as pd
 
@@ -34,7 +34,7 @@ class CorrectnessHeinrich(Metric):
 
         for col_name in data.columns:
             for row_index in range(total_rows):
-                measurement, certainty = self.measure_correctness(
+                measurement = self.measure_correctness(
                     data.at[row_index, col_name],
                     reference_value=reference.at[row_index, col_name],
                     dtype=data[col_name].dtype,
@@ -42,35 +42,26 @@ class CorrectnessHeinrich(Metric):
 
                 result = DQResult(
                     mesTime=pd.Timestamp.now(),
-                    DQvalue=float(measurement),
+                    DQvalue=measurement,
                     DQdimension=DQDimension.CORRECTNESS,
                     DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
                     rowIndex=row_index,
-                    DQannotations={
-                        "certainty": certainty,
-                    },
                 )
                 results.append(result)
 
         return results
 
-    def measure_correctness(
-        self, value, *, reference_value, dtype
-    ) -> Tuple[float, float]:
+    def measure_correctness(self, value, *, reference_value, dtype) -> float:
         if value == reference_value:
-            return 1, 1
+            return 1
         if pd.isna(value) or pd.isna(reference_value):
-            return 0, 1
+            return 0
         if dtype == "int64" or dtype == "float64":
-            return (
-                clamp(
-                    1
-                    - abs(value - reference_value)
-                    / max(abs(reference_value), abs(value)),
-                    0,
-                    1,
-                ),
+            return clamp(
+                1
+                - abs(value - reference_value) / max(abs(reference_value), abs(value)),
+                0,
                 1,
             )
         if dtype == "object":
@@ -78,9 +69,7 @@ class CorrectnessHeinrich(Metric):
             correctness = (
                 1 - levenshtein_distance(str(value), str(reference_value)) / max_len
             )
-            return correctness, 1 / (
-                1 + max_len / 10
-            )  # certainty decreases with length
+            return correctness
         raise ValueError(
             f"Unsupported dtype for correctness measurement: {dtype} (value: {value}, reference_value: {reference_value})"
         )

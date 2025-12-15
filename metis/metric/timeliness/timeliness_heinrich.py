@@ -43,7 +43,6 @@ class TimelinessHeinrich(Metric):
 
         results = []
         total_rows = len(data)
-        decline_rate_variance = 0.1
 
         for col_name in data.columns:
             decline_rate = config.decline_rate_per_column.get(col_name)
@@ -60,7 +59,6 @@ class TimelinessHeinrich(Metric):
                 delta = assessment_date - ingestion_date
                 age = delta.days / 365
                 measurement = exp(-decline_rate * age) if pd.notna(age) else 0
-                certainty = 1 / (1 + decline_rate * decline_rate_variance * age)
 
                 result = DQResult(
                     mesTime=pd.Timestamp.now(),
@@ -69,9 +67,6 @@ class TimelinessHeinrich(Metric):
                     DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
                     rowIndex=row_index,
-                    DQannotations={
-                        "certainty": certainty,
-                    },
                 )
                 results.append(result)
 
