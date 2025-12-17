@@ -4,14 +4,16 @@ from typing import Any, Callable, List, Union
 import pandas as pd
 
 from metis.metric.config import MetricConfig
-from metis.metric.consistency.config import ConsistencyRuleBasedHinrichsConfig
+from metis.metric.consistency.consistency_ruleBasedHinrichs_config import (
+    consistency_ruleBasedHinrichs_config,
+)
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.logging import logger as main_logger
 from metis.utils.result import DQResult
 
 
-class ConsistencyRuleBasedHinrichs(Metric):
+class consistency_ruleBasedHinrichs(Metric):
     def __init__(self) -> None:
         super().__init__()
         self.logger = main_logger.getChild(self.__class__.__name__)
@@ -23,23 +25,25 @@ class ConsistencyRuleBasedHinrichs(Metric):
         metric_config: str | None | MetricConfig = None,
     ) -> List[DQResult]:
         """
-        Assess the consistency of the data by checking each value for the given rules.
+        Assess the consistency of the data by checking the given rules for each value. The rules are defined in the metric configuration. There are attribute rules that apply to individual columns and tuple rules that apply to entire rows. The quality measurement is calculated as 1 / (1 + degree_of_violation), where degree_of_violation is the sum of the result of all applicable rules for a given value/row.
+        Additionally, this metric assesses the certainty of the measurement based on the minimum quality in the assessed data. The certainty is calculated as sqrt((1 - dq_value) * (1 - min_quality)), where dq_value is the quality measurement for the specific value/row and min_quality is the lowest quality measurement observed in the dataset.
 
         :param data: DataFrame to assess.
+        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing consistency results.
         """
         if metric_config is None:
             raise ValueError(
-                f"Metric configuration is required for metric {ConsistencyRuleBasedHinrichs.__name__} but None was provided."
+                f"Metric configuration is required for metric {consistency_ruleBasedHinrichs.__name__} but None was provided."
             )
         if isinstance(metric_config, str):
             raise ValueError(
-                f"Metric configuration must be an instance of {ConsistencyRuleBasedHinrichsConfig.__name__}. JSON loading is not supported."
+                f"Metric configuration must be an instance of {consistency_ruleBasedHinrichs_config.__name__}. JSON loading is not supported."
             )
-        if not isinstance(metric_config, ConsistencyRuleBasedHinrichsConfig):
+        if not isinstance(metric_config, consistency_ruleBasedHinrichs_config):
             raise ValueError(
-                f"Metric configuration must be an instance of {ConsistencyRuleBasedHinrichsConfig.__name__} but was of type {type(metric_config)}."
+                f"Metric configuration must be an instance of {consistency_ruleBasedHinrichs_config.__name__} but was of type {type(metric_config)}."
             )
 
         attribute_rules = metric_config.attribute_rules or {}
@@ -55,9 +59,7 @@ class ConsistencyRuleBasedHinrichs(Metric):
             dq_measurements = 1 / (1 + degree_of_violation)
             min_quality = dq_measurements.min()
             for row_index, dq_value in dq_measurements.items():
-                certainty = sqrt(
-                    (1 - dq_value + min_quality) * min_quality
-                )
+                certainty = sqrt((1 - dq_value) * (1 - min_quality))
 
                 results.append(
                     DQResult(
@@ -89,9 +91,7 @@ class ConsistencyRuleBasedHinrichs(Metric):
             min_quality = dq_measurements.min()
 
             for row_index, dq_value in dq_measurements.items():
-                certainty = sqrt(
-                    (1 - dq_value + min_quality) * min_quality
-                )
+                certainty = sqrt((1 - dq_value + min_quality) * min_quality)
 
                 results.append(
                     DQResult(

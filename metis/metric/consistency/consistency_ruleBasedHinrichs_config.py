@@ -8,9 +8,9 @@ from metis.metric.config import MetricConfig
 
 
 @dataclass(kw_only=True)
-class ConsistencyRuleBasedHinrichsConfig(MetricConfig):
+class consistency_ruleBasedHinrichs_config(MetricConfig):
     """
-    Configuration class for the ConsistencyRuleBasedHinrichs metric.
+    Configuration class for the consistency_ruleBasedHinrichs metric.
 
     Accepts a dictionary mapping attribute names to lists of functions that define consistency rules.
     :param attribute_rules: Dictionary of functions that define consistency rules for each column given by the key

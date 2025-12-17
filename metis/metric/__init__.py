@@ -1,10 +1,10 @@
 from .completeness.completeness import Completeness
 from .consistency.consistency import Consistency
-from .consistency.consistency_ruleBasedHinrichs import ConsistencyRuleBasedHinrichs
-from .correctness.correctness_heinrich import CorrectnessHeinrich
+from .consistency.consistency_ruleBasedHinrichs import consistency_ruleBasedHinrichs
+from .correctness.correctness_heinrich import correctness_heinrich
 from .metric import Metric
 from .minimality.column_minimality_duplicateCount import (
     column_minimality_duplicateCount,
 )
-from .timeliness.timeliness_heinrich import TimelinessHeinrich
+from .timeliness.timeliness_heinrich import timeliness_heinrich
 from .validity.out_of_vocabulary import OutOfVocabulary

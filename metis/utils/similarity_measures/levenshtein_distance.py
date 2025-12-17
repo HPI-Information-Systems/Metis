@@ -1,5 +1,6 @@
 # https://stackoverflow.com/a/32558749
 def levenshtein_distance(s1: str, s2: str) -> int:
+    """Calculate the Levenshtein distance between s1 and s2."""
     if len(s1) > len(s2):
         s1, s2 = s2, s1
 

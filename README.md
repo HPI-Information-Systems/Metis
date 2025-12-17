@@ -35,7 +35,9 @@ New metrics inside those folders should follow the naming format: `{DimensionNam
 - **DimensionName**: The quality dimension being measured (e.g., `Completeness`, `Minimality`)
 - **Technique**: The calculation or method used  (e.g., `MissingRatio`, `HierarchicalClustering`)
 
-Examples: `completeness_MissingRatio`, `minimality_DuplicateRatio`
+Examples: `completeness_missingRatio`, `minimality_duplicateRatio`
+
+The file name and class name of each metric should be equal. If a metric has a specific config class, the name of the config class should be `{MetricName}_config` (e.g., `completeness_missingRatio_config`).
 
 The granularities at which a metric can operate are handled inside the metric itself and are configurable through the metric config. This enables each metric to handle reusing results for coarser granularities individually.
 
