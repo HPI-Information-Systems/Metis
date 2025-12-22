@@ -5,6 +5,7 @@ from typing import Any, List, TypeVar
 import pandas as pd
 
 from metis.metric.config import MetricConfig
+from metis.utils.logging import logger as main_logger
 from metis.utils.result import DQResult
 
 C = TypeVar("C", bound=MetricConfig)
@@ -13,7 +14,7 @@ C = TypeVar("C", bound=MetricConfig)
 class Metric(ABC):
     """
     Abstract base class for metrics.
-    All metric classes should inherit from this class and implement the `compute` method.
+    All metric classes should inherit from this class and implement the `assess` method.
     """
 
     registry = {}
@@ -21,6 +22,9 @@ class Metric(ABC):
     def __init_subclass__(cls):
         super().__init_subclass__()
         Metric.registry[cls.__name__] = cls
+
+    def __init__(self) -> None:
+        self.logger = main_logger.getChild(self.__class__.__name__)
 
     @abstractmethod
     def assess(

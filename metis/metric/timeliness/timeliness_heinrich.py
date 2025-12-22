@@ -75,7 +75,3 @@ class timeliness_heinrich(Metric):
                 results.append(result)
 
         return results
-
-        return results
-
-        return results

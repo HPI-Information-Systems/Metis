@@ -1,6 +1,7 @@
 from .completeness.completeness import Completeness
 from .consistency.consistency import Consistency
 from .consistency.consistency_ruleBasedHinrichs import consistency_ruleBasedHinrichs
+from .consistency.consistency_ruleBasedPipino import consistency_ruleBasedPipino
 from .correctness.correctness_heinrich import correctness_heinrich
 from .metric import Metric
 from .minimality.column_minimality_duplicateCount import (
