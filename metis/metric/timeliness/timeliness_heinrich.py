@@ -1,6 +1,7 @@
-from math import exp
+from math import exp, floor
 from typing import List
 
+import numpy as np
 import pandas as pd
 
 from metis.metric.config import MetricConfig
@@ -8,8 +9,10 @@ from metis.metric.metric import Metric
 from metis.metric.timeliness.timeliness_heinrich_config import (
     timeliness_heinrich_config,
 )
+from metis.utils.datetime.datetime_precision import determine_datetime_precision
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.logging import logger as main_logger
+from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
 
@@ -46,32 +49,90 @@ class timeliness_heinrich(Metric):
         )
 
         results = []
-        total_rows = len(data)
+
+        warn_unconfigured_columns(
+            self.logger,
+            set(data.columns),
+            set(config.decline_rate_per_column.keys()),
+            "decline rates",
+        )
+
+        ingestion_dates = pd.to_datetime(data[ingestion_date_column])
+        ages_in_days = (
+            (assessment_date - ingestion_dates).dt.total_seconds() / 60 / 60 / 24
+        )
+        precision_of_dates = data[ingestion_date_column].apply(
+            determine_datetime_precision
+        )
+        age_and_precision = pd.DataFrame(
+            {"age": ages_in_days, "precision": precision_of_dates}
+        )
 
         for col_name in data.columns:
             decline_rate = config.decline_rate_per_column.get(col_name)
             if decline_rate is None:
-                self.logger.info(
-                    f"Decline rate for column '{col_name}' is not specified in the configuration. Skipping."
-                )
                 continue
 
-            for row_index in range(total_rows):
-                ingestion_date = pd.to_datetime(
-                    str(data.at[row_index, ingestion_date_column]), dayfirst=True
-                )
-                delta = assessment_date - ingestion_date
-                age = delta.days / 365
-                measurement = exp(-decline_rate * age) if pd.notna(age) else 0
-
+            timeliness = pd.Series(np.exp(-decline_rate * ages_in_days))
+            certainty = age_and_precision.apply(
+                lambda row: self.certainty(
+                    row["age"],
+                    decline_rate or 0,
+                    row["precision"],
+                ),
+                axis=1,
+            )
+            for (index, timeliness_value), (_, certainty_value) in zip(
+                timeliness.items(), certainty.items()
+            ):
                 result = DQResult(
                     mesTime=pd.Timestamp.now(),
-                    DQvalue=measurement,
+                    DQvalue=timeliness_value,
                     DQdimension=DQDimension.TIMELINESS,
                     DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
-                    rowIndex=row_index,
+                    rowIndex=int(str(index)),
+                    DQannotations={
+                        "certainty": certainty_value,
+                    },
                 )
                 results.append(result)
 
         return results
+
+    def certainty(self, age: float, decline_rate: float, precision: str) -> float:
+        """
+        Calculate the certainty of the timeliness measurement based on age, decline rate, and datetime precision.
+
+        :param age: The age of the data in days.
+        :param decline_rate: The decline rate per day.
+        :param precision: The precision of the datetime ('year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond').
+        :return: The certainty of the measurement.
+        """
+        lower_age_bound, upper_age_bound = self.age_precision_bounds(age, precision)
+        # max_quality_difference = abs(exp(-decline_rate) - 1)
+        unscaled_difference = abs(
+            exp(-decline_rate * upper_age_bound) - exp(-decline_rate * lower_age_bound)
+        )
+        return 1 - unscaled_difference
+
+    def age_precision_bounds(self, age: float, precision: str):
+        """
+        Get the precision factor based on the datetime precision.
+
+        :param precision: The precision of the datetime ('year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond').
+        :return: The corresponding precision factor.
+        """
+        precision_factors = {
+            "year": 365.25,
+            "month": 30,
+            "day": 1,
+            "hour": 1.0 / 24,
+            "minute": 1.0 / (24 * 60),
+            "second": 1.0 / (24 * 60 * 60),
+            "microsecond": 1.0 / (24 * 60 * 60 * 1_000_000),
+        }
+        factor = precision_factors.get(precision, 1)
+        lower_bound = floor(age / factor) * factor
+        upper_bound = (floor(age / factor) + 1) * factor
+        return lower_bound, upper_bound
