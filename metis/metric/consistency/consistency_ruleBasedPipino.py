@@ -1,5 +1,4 @@
-from math import sqrt
-from typing import Any, Callable, List, Union
+from typing import List, Union
 
 import pandas as pd
 
@@ -9,6 +8,7 @@ from metis.metric.consistency.consistency_ruleBasedPipino_config import (
 )
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
 
@@ -63,47 +63,53 @@ class consistency_ruleBasedPipino(Metric):
                     )
                 )
 
-        extraneous_rules = set(attribute_rules.keys()) - set(data.columns)
-        if extraneous_rules:
-            self.logger.warning(
-                f"The following columns have consistency rules defined but are not present in the data: {extraneous_rules}. These rules will be ignored."
-            )
-
-        extraneous_columns = set(data.columns) - set(attribute_rules.keys())
-        if extraneous_columns:
-            self.logger.info(
-                f"The following columns are present in the data but have no consistency rules defined: {extraneous_columns}. These columns will be skipped."
-            )
+        warn_unconfigured_columns(
+            self.logger,
+            set(data.columns),
+            set(attribute_rules.keys()),
+            "consistency rules",
+        )
 
         for col_name in data.columns:
             column_rules = attribute_rules.get(col_name, [])
             if not column_rules:
                 continue
 
-            degree_of_violation: pd.Series[float] = data[col_name].apply(
-                lambda x: self.sum_rules(column_rules, x)
+            fulfilled_rules_mask = pd.DataFrame(
+                {
+                    f"rule_{i}": data[col_name].dropna().apply(rule)
+                    for i, rule in enumerate(column_rules)
+                }
             )
 
-            dq_measurements = 1 - degree_of_violation / len(column_rules)
-            min_quality = dq_measurements.min()
+            dq_measurements = fulfilled_rules_mask.sum(axis=1) / len(column_rules)
+            certainties = self.certainties(fulfilled_rules_mask)
 
-            for row_index, dq_value in dq_measurements.items():
+            for (row_index, dq_value), certainty in zip(
+                dq_measurements.items(), certainties.values
+            ):
                 results.append(
                     self.create_result(
                         dq_value,
                         col_name,
                         int(str(row_index)),
-                        self.certainty(dq_value, min_quality),
+                        float(certainty),
                     )
                 )
 
         return results
 
-    def sum_rules(self, rules: List[Callable], value: Any) -> float:
-        return float(sum(rule(value) for rule in rules))
-
-    def certainty(self, dq_value: float, min_quality: float) -> float:
-        return sqrt((1 - dq_value) * (1 - min_quality))
+    def certainties(self, fulfilled_rules_mask: pd.DataFrame):
+        rule_fulfillment_percentage = fulfilled_rules_mask.mean(axis=0)
+        rule_distance_to_mean_percentage = (
+            rule_fulfillment_percentage - rule_fulfillment_percentage.mean()
+        )
+        rule_certainties = ~fulfilled_rules_mask * rule_distance_to_mean_percentage.where(
+            rule_distance_to_mean_percentage >= 0, 0
+        ) + fulfilled_rules_mask * rule_distance_to_mean_percentage.where(
+            rule_distance_to_mean_percentage < 0, 0
+        )
+        return 1 - rule_certainties.abs().sum(axis=1)
 
     def create_result(
         self, dq_value: float, col_name: str | None, row_index: int, certainty: float

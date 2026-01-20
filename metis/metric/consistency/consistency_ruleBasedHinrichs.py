@@ -9,6 +9,7 @@ from metis.metric.consistency.consistency_ruleBasedHinrichs_config import (
 )
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
 
@@ -68,17 +69,12 @@ class consistency_ruleBasedHinrichs(Metric):
                     )
                 )
 
-        extraneous_rules = set(attribute_rules.keys()) - set(data.columns)
-        if extraneous_rules:
-            self.logger.warning(
-                f"The following columns have consistency rules defined but are not present in the data: {extraneous_rules}. These rules will be ignored."
-            )
-
-        extraneous_columns = set(data.columns) - set(attribute_rules.keys())
-        if extraneous_columns:
-            self.logger.info(
-                f"The following columns are present in the data but have no consistency rules defined: {extraneous_columns}. These columns will be skipped."
-            )
+        warn_unconfigured_columns(
+            self.logger,
+            set(data.columns),
+            set(attribute_rules.keys()),
+            "consistency rules",
+        )
 
         for col_name in data.columns:
             column_rules = attribute_rules.get(col_name, [])

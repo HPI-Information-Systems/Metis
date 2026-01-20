@@ -17,9 +17,9 @@ class consistency_ruleBasedPipino_config(MetricConfig):
     :param tuple_rules: List of functions that define consistency rules for entire tuples
     """
 
-    attribute_rules: Dict[str, List[Callable[[Any], float]]] | None = None
+    attribute_rules: Dict[str, List[Callable[[Any], bool]]] | None = None
 
-    tuple_rules: List[Callable[[pd.Series], float]] | None = None
+    tuple_rules: List[Callable[[pd.Series], bool]] | None = None
 
     def to_json(self):
         return {
