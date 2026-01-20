@@ -112,11 +112,9 @@ class completeness_nullAndDMVRate(Metric):
 
         return results
 
-    # TODO: assess the confidence of FAHES using publicly available datasets with DMVs and checking the precision and recall of the detected DMVs (or some other metric, because given the detected dmvs, we actually only look at true positives and false positives); confidence per datatype probably useful
     def certainty(self, null_count: int, dmv_count: int, total_count: int):
         # certainty = P(missing rate is correct) = P(nulls are correct) * P(DMVs are correct) = P(detected nulls are correct) * P(detected DMVs are correct) * P(all DMVs found) = (1 - NULLABLE_COLUMN_RATE)^(null_count) * (1)^(null_count) * (FAHES_PRECISION)^(dmv_count) * (FAHES_RECALL)^(unflagged_count)
         minimum = min(FAHES_PRECISION, FAHES_RECALL) ** total_count
-        # maximum = max(FAHES_PRECISION, FAHES_RECALL) ** total_count
         certainty = float(
             (
                 FAHES_PRECISION**dmv_count

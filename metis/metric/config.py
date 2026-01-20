@@ -18,3 +18,10 @@ class MetricConfig:
         :return: An instance of the configuration class.
         """
         return cls(**config_dict)
+
+    def validate(self):
+        """
+        Validate the configuration parameters.
+        This method should be overridden by subclasses to implement specific validation logic.
+        """
+        pass

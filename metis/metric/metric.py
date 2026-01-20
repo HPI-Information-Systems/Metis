@@ -81,20 +81,31 @@ class Metric(ABC):
 
     def load_config(self, config: Any, model: type[C]) -> C:
         """
-        Load metric-specific configuration from a JSON file.
+        Load metric-specific configuration from a JSON file path, JSON string or the correct config model instance. Also validates the configuration using its validate method.
 
-        :param config: Path to the JSON configuration file or a JSON string.
+        :param config: Path to the JSON configuration file, a JSON string or an instance of the config model.
         :return: An instance of the metric-specific configuration class.
         """
         if isinstance(config, model):
+            config.validate()
             return config
 
-        if isinstance(config, str) and config.endswith(".json"):
-            with open(config, "r") as f:
-                return model(**json.load(f))
-
         if isinstance(config, str):
-            return model(**json.loads(config))
+            try:
+                if config.endswith(".json"):
+                    with open(config, "r") as f:
+                        config_dict = json.load(f)
+                else:
+                    config_dict = json.loads(config)
+
+                parsed_config = model(**config_dict)
+            except Exception as e:
+                raise ValueError(
+                    f"Failed to load metric configuration from {config}: {e}"
+                ) from e
+
+            parsed_config.validate()
+            return parsed_config
 
         raise TypeError(
             f"Invalid config type: {type(config)}. Expected str or {model}."
