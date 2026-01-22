@@ -47,19 +47,24 @@ class consistency_ruleBasedPipino(Metric):
         results: List[DQResult] = []
 
         if tuple_rules:
-            degree_of_violation: pd.Series[float] = data.apply(
-                lambda x: self.sum_rules(tuple_rules, x), axis="columns"
+            fulfilled_rules_mask = pd.DataFrame(
+                {
+                    f"rule_{i}": data.apply(rule, axis="columns")
+                    for i, rule in enumerate(tuple_rules)
+                }
             )
 
-            dq_measurements = 1 - degree_of_violation / len(tuple_rules)
-            min_quality = dq_measurements.min()
-            for row_index, dq_value in dq_measurements.items():
+            dq_measurements = fulfilled_rules_mask.sum(axis=1) / len(tuple_rules)
+            certainties = self.certainties(fulfilled_rules_mask)
+            for (row_index, dq_value), certainty in zip(
+                dq_measurements.items(), certainties.values
+            ):
                 results.append(
                     self.create_result(
                         dq_value,
                         None,
                         int(str(row_index)),
-                        self.certainty(dq_value, min_quality),
+                        float(certainty),
                     )
                 )
 
@@ -101,15 +106,9 @@ class consistency_ruleBasedPipino(Metric):
 
     def certainties(self, fulfilled_rules_mask: pd.DataFrame):
         rule_fulfillment_percentage = fulfilled_rules_mask.mean(axis=0)
-        rule_distance_to_mean_percentage = (
-            rule_fulfillment_percentage - rule_fulfillment_percentage.mean()
+        return (
+            (1 - fulfilled_rules_mask - rule_fulfillment_percentage).abs().mean(axis=1)
         )
-        rule_certainties = ~fulfilled_rules_mask * rule_distance_to_mean_percentage.where(
-            rule_distance_to_mean_percentage >= 0, 0
-        ) + fulfilled_rules_mask * rule_distance_to_mean_percentage.where(
-            rule_distance_to_mean_percentage < 0, 0
-        )
-        return 1 - rule_certainties.abs().sum(axis=1)
 
     def create_result(
         self, dq_value: float, col_name: str | None, row_index: int, certainty: float
