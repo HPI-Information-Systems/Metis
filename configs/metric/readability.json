@@ -1,0 +1,7 @@
+{
+  "use_llm_fallback": true,
+  "llm_mode": "fallback",
+  "use_llm_for_difficulty": false,
+  "use_llm_for_cognates": false,
+  "min_token_length": 2
+}

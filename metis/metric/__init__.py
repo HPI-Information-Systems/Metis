@@ -3,3 +3,4 @@ from .completeness.completeness_nullRatio import completeness_nullRatio
 from .consistency.consistency_countFDViolations import consistency_countFDViolations
 from .minimality.minimality_duplicateCount import minimality_duplicateCount
 from .validity.validity_outOfVocabulary import validity_outOfVocabulary
+import metis.metric.readability.readability 
