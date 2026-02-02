@@ -7,54 +7,66 @@ class DQResult:
     def __init__(
             self,
             mesTime: pd.Timestamp,
-            DQvalue: float,
             DQdimension: DQDimension,
             DQmetric: str,
+            DQgranularity: str,
+            DQvalue: float,
+            DQexplanation: Union[dict, None] = None,
+            runtime: Union[float, None] = None,
+            tableName: Union[str, None] = None,
             columnNames: Union[List[str], None] = None,
             rowIndex: Union[int, None] = None,
-            DQannotations: Union[dict, None] = None,
+            experimentTag:  Union[str, None] = None,
             dataset: Union[str, None] = None,
-            tableName: Union[str, None] = None,
+            configJson: Union[dict, None] = None,
     ):
         """Create a data-quality result representing a single assessed value.
 
         Required arguments
         - `mesTime: pd.Timestamp`: The time at which the result was assessed.
-        - `DQvalue: float`: Numeric outcome of the assessment (quantitative only).
         - `DQdimension: DQDimension`: Data quality dimension assessed (e.g. DQDimension.COMPLETENESS, DQDimension.ACCURACY).
         - `DQmetric: str`: Name of the specific metric within the dimension.
+        - `DQgranularity: str`: Granularity of the metric (e.g. 'column', 'table', 'cell').
+        - `DQvalue: float`: Numeric outcome of the assessment (quantitative only).
 
         Optional arguments
+        - `DQexplanation: Optional[dict]`: Arbitrary additional information
+            produced by the metric (no fixed schema required).
+        - `runtime: Optional[float]`: Time taken to compute the metric, in seconds.
+        - `tableName: Optional[str]`: Table name within the dataset. Also
+            typically set by the `metis.dq_orchestrator.DQOrchestrator`.
         - `columnNames: Optional[List[str]]`: Columns that this result pertains to.
             For a column-level metric this is typically a single-item list; for
             a table-level metric this may be `None` or an empty list.
         - `rowIndex: Optional[int]`: Row index associated with the result. Use
             together with `columnNames` to represent a cell-level result, or for
             row-based metrics.
-        - `DQannotations: Optional[dict]`: Arbitrary additional information
-            produced by the metric (no fixed schema required).
+        - `experimentTag: Optional[str]`: Tag to identify a specific run
         - `dataset: Optional[str]`: Dataset identifier. This is commonly set by
             the orchestrator and may be left `None` when creating results manually.
-        - `tableName: Optional[str]`: Table name within the dataset. Also
-            typically set by the `metis.dq_orchestrator.DQOrchestrator`.
+        - `configJson: Optional[dict]`: Configuration used for the metric as a JSON object.
 
         Notes
         - The `metis.dq_orchestrator.DQOrchestrator`
             will populate `dataset` and `tableName` when it assembles results
             across metrics and datasets.
         - `DQvalue` currently expects a quantitative (float) score. If you
-            need to encode non-numeric outcomes consider using `DQannotations`
+            need to encode non-numeric outcomes consider using `DQexplanation`
             to store auxiliary information while keeping `DQvalue` numeric.
         """
         self._mesTime = mesTime
-        self._DQvalue = DQvalue
         self._DQdimension = DQdimension
         self._DQmetric = DQmetric
-        self._dataset = dataset
+        self._DQgranularity = DQgranularity
+        self._DQvalue = DQvalue
+        self._DQexplanation = DQexplanation
+        self._runtime = runtime
         self._tableName = tableName
         self._columnNames = columnNames
         self._rowIndex = rowIndex
-        self._DQannotations = DQannotations
+        self._experimentTag = experimentTag
+        self._dataset = dataset
+        self._configJson = configJson
 
     @property
     def mesTime(self):
@@ -63,14 +75,6 @@ class DQResult:
     @mesTime.setter
     def mesTime(self, value):
         self._mesTime = value
-
-    @property
-    def DQvalue(self):
-        return self._DQvalue
-
-    @DQvalue.setter
-    def DQvalue(self, value):
-        self._DQvalue = value
 
     @property
     def DQdimension(self):
@@ -89,12 +93,36 @@ class DQResult:
         self._DQmetric = value
 
     @property
-    def dataset(self):
-        return self._dataset
+    def DQgranularity(self):
+        return self._DQgranularity
 
-    @dataset.setter
-    def dataset(self, value):
-        self._dataset = value
+    @DQgranularity.setter
+    def DQgranularity(self, value):
+        self._DQgranularity = value
+
+    @property
+    def DQvalue(self):
+        return self._DQvalue
+
+    @DQvalue.setter
+    def DQvalue(self, value):
+        self._DQvalue = value
+
+    @property
+    def DQexplanation(self):
+        return self._DQexplanation
+
+    @DQexplanation.setter
+    def DQexplanation(self, value):
+        self._DQexplanation = value
+
+    @property
+    def runtime(self):
+        return self._runtime
+
+    @runtime.setter
+    def runtime(self, value):
+        self._runtime = value
 
     @property
     def tableName(self):
@@ -121,22 +149,42 @@ class DQResult:
         self._rowIndex = value
 
     @property
-    def DQannotations(self):
-        return self._DQannotations
+    def experimentTag(self):
+        return self._experimentTag
 
-    @DQannotations.setter
-    def DQannotations(self, value):
-        self._DQannotations = value
+    @experimentTag.setter
+    def experimentTag(self, value):
+        self._experimentTag = value
+
+    @property
+    def dataset(self):
+        return self._dataset
+
+    @dataset.setter
+    def dataset(self, value):
+        self._dataset = value
+
+    @property
+    def configJson(self):
+        return self._configJson
+
+    @configJson.setter
+    def configJson(self, value):
+        self._configJson = value
 
     def as_json(self):
         return {
             "mesTime": self._mesTime,
-            "DQvalue": self._DQvalue,
             "DQdimension": self._DQdimension,
             "DQmetric": self._DQmetric,
-            "dataset": self._dataset,
+            "DQgranularity": self._DQgranularity,
+            "DQvalue": self._DQvalue,
+            "DQexplanation": self._DQexplanation,
+            "runtime": self._runtime,
             "tableName": self._tableName,
             "columnNames": self._columnNames,
             "rowIndex": self._rowIndex,
-            "DQannotations": self._DQannotations
+            "experimentTag": self._experimentTag,
+            "dataset": self._dataset,
+            "configJson": self._configJson,
         }

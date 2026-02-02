@@ -30,18 +30,15 @@ The metric should return a list of ```metis.utils.result.DQResult```. This can b
 ### Metric naming convention
 
 Metrics are organized by dimension (e.g., `completeness`, `minimality`), where one folder exists for each.
-New metrics inside those folders should follow the naming format: `{DimensionName}_{Technique}`
+New metrics should follow the naming format: `{DimensionName}_{Technique}`
 
 - **DimensionName**: The quality dimension being measured (e.g., `Completeness`, `Minimality`)
-- **Technique**: The calculation or method used  (e.g., `MissingRatio`, `HierarchicalClustering`)
+- **Technique**: The calculation or method used (e.g., `NullRatio`, `DuplicateCount`)
+- **Granularity**: The level of analysis (e.g., `cell`, `row`, `column`, `table`) should be passed as a parameter through the metric config file if the metric can be applied at different granularity levels.
 
-Examples: `completeness_missingRatio`, `minimality_duplicateRatio`
+Examples: `completeness_NullRatio`, `minimality_DuplicateCount`
 
-The file name and class name of each metric should be equal. If a metric has a specific config class, the name of the config class should be `{MetricName}_config` (e.g., `completeness_missingRatio_config`).
-
-The granularities at which a metric can operate are handled inside the metric itself and are configurable through the metric config. This enables each metric to handle reusing results for coarser granularities individually.
-
-- **Granularity**: The level of analysis (e.g., `cell`, `row`, `column`, `table`)
+- **Granularity**: The level of analysis (e.g., `cell`, `row`, `column`, `table`) should be passed as a parameter through the metric config file if the metric can be applied at different granularity levels.
 
 ## Output: creating a DQResult
 

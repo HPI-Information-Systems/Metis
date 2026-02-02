@@ -14,16 +14,18 @@ def register_models(results_table_name: str):
         __table_args__ = {"extend_existing": True}
 
         id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-        mes_time: Mapped[datetime] = mapped_column(
-            DateTime(timezone=True), server_default=func.now()
-        )
-        dq_value: Mapped[float] = mapped_column(Double)
+        mes_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
         dq_dimension: Mapped[str]
         dq_metric: Mapped[str]
-        column_name: Mapped[List[str] | None] = mapped_column(JSON)
-        row_index: Mapped[int | None]
-        dq_annotations: Mapped[dict | None] = mapped_column(JSON)
-        dataset: Mapped[str | None]
+        dq_granularity: Mapped[str]
+        dq_value: Mapped[float] = mapped_column(Double)
+        dq_explanation: Mapped[dict | None] = mapped_column(JSON)
+        runtime: Mapped[float | None] = mapped_column(Double)
         table_name: Mapped[str | None]
+        column_names: Mapped[List[str] | None] = mapped_column(JSON)
+        row_index: Mapped[int | None]
+        experiment_tag: Mapped[str | None]
+        dataset: Mapped[str | None]
+        config_json: Mapped[dict | None] = mapped_column(JSON)
 
     return Base, DQResultModel

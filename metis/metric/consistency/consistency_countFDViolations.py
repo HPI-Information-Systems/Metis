@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Union
 
 import pandas as pd
 
@@ -9,13 +9,8 @@ from metis.utils.dq_dimension import DQDimension
 from metis.utils.result import DQResult
 
 
-class Consistency(Metric):
-    def assess(
-        self,
-        data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
-        metric_config: str | MetricConfig | None = None,
-    ) -> List[DQResult]:
+class consistency_countFDViolations(Metric):
+    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, None] = None, metric_config: Union[MetricConfig, str, None] = None) -> List[DQResult]:
         """
         Assess the consistency of a dataset by checking the compliance of a functional dependency specified in the metric_config.
 
@@ -60,11 +55,13 @@ class Consistency(Metric):
 
             result = DQResult(
                 mesTime=pd.Timestamp.now(),
-                DQvalue=consistency,
                 DQdimension=DQDimension.CONSISTENCY,
-                DQmetric="Consistency",
+                DQmetric="CountFDViolations",
+                DQgranularity="table",
+                DQvalue=consistency,
+                DQexplanation={f"{determinant}:{dependent}": violations},  # FD
                 columnNames=[determinant],
-                DQannotations={f"{determinant}:{dependent}": violations},  # FD
+                configJson=metric_conf
             )
             results.append(result)
 

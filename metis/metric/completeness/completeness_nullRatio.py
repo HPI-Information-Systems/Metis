@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 import pandas as pd
 
@@ -8,15 +8,10 @@ from metis.utils.dq_dimension import DQDimension
 from metis.utils.result import DQResult
 
 
-class Completeness(Metric):
-    def assess(
-        self,
-        data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
-        metric_config: str | MetricConfig | None = None,
-    ) -> List[DQResult]:
+class completeness_nullRatio(Metric):
+    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, None] = None, metric_config: Union[MetricConfig, str, None] = None) -> List[DQResult]:
         """
-        Assess the completeness of the data by checking for missing values.
+        Assess the completeness of the data by checking for null values.
 
         :param data: DataFrame to assess.
         :param reference: Optional reference DataFrame (not used in this metric).
@@ -27,14 +22,15 @@ class Completeness(Metric):
         total_rows = len(data)
 
         for column in data.columns:
-            missing_count = data[column].isna().sum()
-            completeness = (total_rows - int(missing_count)) / total_rows
+            null_count = data[column].isnull().sum()
+            completeness = (total_rows - int(null_count)) / total_rows
 
             result = DQResult(
                 mesTime=pd.Timestamp.now(),
-                DQvalue=completeness,
                 DQdimension=DQDimension.COMPLETENESS,
-                DQmetric="Completeness",
+                DQmetric="NullRatio",
+                DQgranularity="column",
+                DQvalue=completeness,
                 columnNames=[column],
             )
             results.append(result)

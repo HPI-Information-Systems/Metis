@@ -27,14 +27,18 @@ class DatabaseWriter(DQResultWriter):
             db_entities = [
                 self.DQResultModel(
                     mes_time=result.mesTime.to_pydatetime(),
-                    dq_value=result.DQvalue,
                     dq_dimension=result.DQdimension,
                     dq_metric=result.DQmetric,
-                    column_name=result.columnNames,
-                    row_index=result.rowIndex,
-                    dq_annotations=result.DQannotations,
-                    dataset=result.dataset,
+                    dq_granularity=result.DQgranularity,
+                    dq_value=result.DQvalue,
+                    dq_explanation=result.DQexplanation,
+                    runtime=result.runtime,
                     table_name=result.tableName,
+                    column_names=result.columnNames,
+                    row_index=result.rowIndex,
+                    experiment_tag=result.experimentTag,
+                    dataset=result.dataset,
+                    config_json=result.configJson,
                 )
                 for result in results
             ]

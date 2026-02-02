@@ -4,10 +4,10 @@ from typing import List, Union
 from metis.utils.result import DQResult
 from metis.metric.metric import Metric
 
-class column_minimality_duplicateCount(Metric):
+class minimality_duplicateCount(Metric):
     def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, None] = None, metric_config: Union[str, None] = None) -> List[DQResult]:
         """
-        Assess the uniqueness for each attribute of a dataset by checking for unique values. 
+        Assess the minimality for each attribute of a dataset by checking for unique values. 
         
         :param data: DataFrame to assess.
         :param metric_config: Optional configuration for the metric.
@@ -19,20 +19,21 @@ class column_minimality_duplicateCount(Metric):
         for column in data.columns:
             # Count values that appear exactly once (not duplicated)
             unique_count = (~data[column].duplicated(keep=False)).sum()
-            uniqueness = unique_count / total_rows if total_rows > 0 else 0
+            minimality = unique_count / total_rows if total_rows > 0 else 0
             
             # Attributes with 100% unique values are candidate keys
             annotations = {}
-            if uniqueness == 1.0:
+            if minimality == 1.0:
                 annotations = {"CandidateKey": "CandidateKey"}
 
             result = DQResult(
                 mesTime=pd.Timestamp.now(),
-                DQvalue=uniqueness,
                 DQdimension="Minimality",
-                DQmetric="Column_Minimality_DuplicateCount",
+                DQmetric="DuplicateCount",
+                DQgranularity="column",
+                DQvalue=minimality,
+                DQexplanation=annotations,
                 columnNames=[column],
-                DQannotations=annotations
             )
             results.append(result)
         

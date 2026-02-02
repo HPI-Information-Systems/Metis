@@ -1,11 +1,9 @@
-from .completeness.completeness import Completeness
-from .consistency.consistency import Consistency
+from .completeness.completeness_nullRatio import completeness_nullRatio
+from .consistency.consistency_countFDViolations import consistency_countFDViolations
 from .consistency.consistency_ruleBasedHinrichs import consistency_ruleBasedHinrichs
 from .consistency.consistency_ruleBasedPipino import consistency_ruleBasedPipino
 from .correctness.correctness_heinrich import correctness_heinrich
 from .metric import Metric
-from .minimality.column_minimality_duplicateCount import (
-    column_minimality_duplicateCount,
-)
+from .minimality.minimality_duplicateCount import minimality_duplicateCount
 from .timeliness.timeliness_heinrich import timeliness_heinrich
-from .validity.out_of_vocabulary import OutOfVocabulary
+from .validity.validity_outOfVocabulary import validity_outOfVocabulary

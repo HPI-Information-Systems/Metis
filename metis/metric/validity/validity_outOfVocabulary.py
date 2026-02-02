@@ -8,7 +8,7 @@ import nltk
 from nltk.corpus import words as nltk_words
 nltk.download("words", quiet=True)
 
-class OutOfVocabulary(Metric):
+class validity_outOfVocabulary(Metric):
     def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, set, None] = None, metric_config: Union[str, None] = None) -> List[DQResult]:
         """
         General vocabulary check at token level.
@@ -63,11 +63,12 @@ class OutOfVocabulary(Metric):
 
             result = DQResult(
                 mesTime=pd.Timestamp.now(),
-                DQvalue=dq_value,
                 DQdimension="Validity",
                 DQmetric="OutOfVocabulary",
+                DQgranularity="column",
+                DQvalue=dq_value,
+                DQexplanation=annotations,
                 columnNames=[column],
-                DQannotations=annotations,
             )
             results.append(result)
 
