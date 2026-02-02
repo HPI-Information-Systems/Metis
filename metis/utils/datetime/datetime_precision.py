@@ -1,6 +1,9 @@
 import datetime
+from typing import Literal
 
 from dateutil import parser
+
+DTPrecision = Literal["year", "month", "day", "hour", "minute", "second", "microsecond"]
 
 
 class datetimespy(datetime.datetime):
@@ -10,7 +13,7 @@ class datetimespy(datetime.datetime):
         return super().replace(*args, **kwargs)
 
 
-def determine_datetime_precision(dt_str):
+def determine_datetime_precision(dt_str: str) -> DTPrecision:
     default = datetimespy.now()
     parser.parse(dt_str, default=default)
 
