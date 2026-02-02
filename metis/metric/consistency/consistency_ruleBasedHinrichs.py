@@ -63,9 +63,10 @@ class consistency_ruleBasedHinrichs(Metric):
                         DQmetric=self.__class__.__name__,
                         columnNames=[],
                         rowIndex=int(str(row_index)),
-                        DQannotations={
+                        DQexplanation={
                             "certainty": self.certainty(dq_value, min_quality)
                         },
+                        DQgranularity="row",
                     )
                 )
 
@@ -97,9 +98,10 @@ class consistency_ruleBasedHinrichs(Metric):
                         DQmetric=self.__class__.__name__,
                         columnNames=[col_name],
                         rowIndex=int(str(row_index)),
-                        DQannotations={
+                        DQexplanation={
                             "certainty": self.certainty(dq_value, min_quality)
                         },
+                        DQgranularity="cell",
                     )
                 )
 

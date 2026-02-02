@@ -56,6 +56,7 @@ class completeness_nullRate(Metric):
                 DQdimension=DQDimension.COMPLETENESS,
                 DQmetric=self.__class__.__name__,
                 columnNames=data.columns.tolist(),
+                DQgranularity="table",
             )
             results.append(result)
             return results
@@ -77,6 +78,9 @@ class completeness_nullRate(Metric):
                 DQmetric=self.__class__.__name__,
                 columnNames=col_names,
                 rowIndex=row_index,
+                DQgranularity=(
+                    "row" if config.aggregation_axis == "columns" else "column"
+                ),
             )
             results.append(result)
 

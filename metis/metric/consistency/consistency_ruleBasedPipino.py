@@ -120,7 +120,8 @@ class consistency_ruleBasedPipino(Metric):
             DQmetric=self.__class__.__name__,
             columnNames=[col_name] if col_name else [],
             rowIndex=row_index,
-            DQannotations={
+            DQexplanation={
                 "certainty": certainty,
             },
+            DQgranularity="cell" if col_name else "row",
         )

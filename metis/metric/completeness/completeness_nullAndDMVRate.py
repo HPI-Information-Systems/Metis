@@ -84,7 +84,8 @@ class completeness_nullAndDMVRate(Metric):
                 DQdimension=DQDimension.COMPLETENESS,
                 DQmetric=self.__class__.__name__,
                 columnNames=data.columns.tolist(),
-                DQannotations={"certainty": float(table_certainty)},
+                DQexplanation={"certainty": float(table_certainty)},
+                DQgranularity="table",
             )
             results.append(result)
             return results
@@ -106,14 +107,16 @@ class completeness_nullAndDMVRate(Metric):
                 DQmetric=self.__class__.__name__,
                 columnNames=col_names,
                 rowIndex=row_index,
-                DQannotations={"certainty": float(row["certainty"])},
+                DQexplanation={"certainty": float(row["certainty"])},
+                DQgranularity=(
+                    "row" if config.aggregation_axis == "columns" else "column"
+                ),
             )
             results.append(result)
 
         return results
 
     def certainty(self, null_count: int, dmv_count: int, total_count: int):
-        # certainty = P(missing rate is correct) = P(nulls are correct) * P(DMVs are correct) = P(detected nulls are correct) * P(detected DMVs are correct) * P(all DMVs found) = (1 - NULLABLE_COLUMN_RATE)^(null_count) * (1)^(null_count) * (FAHES_PRECISION)^(dmv_count) * (FAHES_RECALL)^(unflagged_count)
         minimum = min(FAHES_PRECISION, FAHES_RECALL) ** total_count
         certainty = float(
             (

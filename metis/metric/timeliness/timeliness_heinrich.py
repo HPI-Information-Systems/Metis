@@ -102,9 +102,10 @@ class timeliness_heinrich(Metric):
                     DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
                     rowIndex=int(str(index)),
-                    DQannotations={
+                    DQexplanation={
                         "certainty": certainty_value,
                     },
+                    DQgranularity="cell",
                 )
                 results.append(result)
 

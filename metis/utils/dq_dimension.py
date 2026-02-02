@@ -8,3 +8,5 @@ class DQDimension(StrEnum):
     CORRECTNESS = "Correctness"
     COMPLETENESS = "Completeness"
     TIMELINESS = "Timeliness"
+    MINIMALITY = "Minimality"
+    VALIDITY = "Validity"

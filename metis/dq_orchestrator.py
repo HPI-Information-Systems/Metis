@@ -114,9 +114,12 @@ class DQOrchestrator:
     def get_dq_result(self, query: str) -> List[DQResult]:
         return []
 
-    def _should_measure_runtime(self, metric_config: str | None) -> bool:
+    def _should_measure_runtime(self, metric_config: MetricConfig | str | None) -> bool:
         if metric_config is None:
             return False
+
+        if isinstance(metric_config, MetricConfig):
+            return getattr(metric_config, "measure_runtime", False)
 
         try:
             parsed = json.loads(metric_config)

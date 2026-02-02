@@ -47,6 +47,7 @@ class correctness_heinrich(Metric):
                     DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
                     rowIndex=row_index,
+                    DQgranularity="cell",
                 )
                 results.append(result)
 

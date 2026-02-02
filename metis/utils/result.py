@@ -26,7 +26,7 @@ class DQResult:
         - `mesTime: pd.Timestamp`: The time at which the result was assessed.
         - `DQdimension: DQDimension`: Data quality dimension assessed (e.g. DQDimension.COMPLETENESS, DQDimension.ACCURACY).
         - `DQmetric: str`: Name of the specific metric within the dimension.
-        - `DQgranularity: str`: Granularity of the metric (e.g. 'column', 'table', 'cell').
+        - `DQgranularity: str`: Granularity of the metric (e.g. 'column', 'table', 'cell', 'row').
         - `DQvalue: float`: Numeric outcome of the assessment (quantitative only).
 
         Optional arguments

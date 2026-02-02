@@ -1,4 +1,5 @@
 from .completeness.completeness_nullRatio import completeness_nullRatio
+from .completeness.completeness_nullAndDMVRate import completeness_nullAndDMVRate
 from .consistency.consistency_countFDViolations import consistency_countFDViolations
 from .consistency.consistency_ruleBasedHinrichs import consistency_ruleBasedHinrichs
 from .consistency.consistency_ruleBasedPipino import consistency_ruleBasedPipino
