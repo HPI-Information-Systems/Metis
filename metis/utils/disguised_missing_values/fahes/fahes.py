@@ -6,6 +6,8 @@ from statistics import mean
 
 import pandas as pd
 
+"""FAHES paper: https://raulcastrofernandez.com/papers/kdd18-fahes.pdf, Code: https://github.com/qcri/FAHES_Code.git, and Demo: https://github.com/qcri/Fahes_Demo.git"""
+
 FAHES_PRECISION = mean([0.384, 0.484, 0.385, 0.371, 0.522])
 FAHES_RECALL = mean([0.952, 0.978, 0.87, 0.929, 0.725])
 FAHES_F1 = 2 * FAHES_PRECISION * FAHES_RECALL / (FAHES_PRECISION + FAHES_RECALL)
@@ -48,7 +50,7 @@ def call_fahes(tab_full_name, output_dir):
 
 
 # Based on https://github.com/qcri/Fahes_Demo.git
-def run_fahes(data: Path | str | pd.DataFrame) -> pd.DataFrame:
+def run_fahes(data: Path | str | pd.DataFrame) -> pd.DataFrame | None:
     """
     Run FAHES on the given data file and return the resulting DataFrame. The resulting DataFrame contains the disguised missing values identified by FAHES.
     Example resulting DataFrame structure:
@@ -76,8 +78,8 @@ def run_fahes(data: Path | str | pd.DataFrame) -> pd.DataFrame:
         with tempfile.TemporaryDirectory() as results_dir:
             call_fahes(str(data_file_path.absolute()), results_dir)
             result_file = Path(results_dir) / ("DMV_" + data_file_path.name)
-
-            return pd.read_csv(result_file)
+            if result_file.stat().st_size > 0:
+                return pd.read_csv(result_file)
     finally:
         if tmp_file is not None:
             tmp_file.close()

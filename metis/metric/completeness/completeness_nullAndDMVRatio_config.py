@@ -5,9 +5,9 @@ from metis.metric.config import MetricConfig
 
 
 @dataclass
-class completeness_nullAndDMVRate_config(MetricConfig):
+class completeness_nullAndDMVRatio_config(MetricConfig):
     """
-    Configuration class for the completeness_nullAndDMVRate metric.
+    Configuration class for the completeness_nullAndDMVRatio metric.
 
     :param aggregation_axis: Axis along which to aggregate completeness ('index': aggregate each column; 'columns': aggregate each row).
     :param aggregate_all: Whether to aggregate all completeness results into a single value for the whole input data.

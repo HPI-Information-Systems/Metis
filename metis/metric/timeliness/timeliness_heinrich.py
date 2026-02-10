@@ -50,6 +50,12 @@ class timeliness_heinrich(Metric):
 
         results = []
 
+        if not ingestion_date_column or ingestion_date_column not in data.columns:
+            self.logger.warning(
+                f"Ingestion date column '{ingestion_date_column}' is not present in the data."
+            )
+            return results
+
         warn_unconfigured_columns(
             self.logger,
             set(data.columns),
@@ -57,13 +63,9 @@ class timeliness_heinrich(Metric):
             "decline rates",
         )
 
-        if not ingestion_date_column or ingestion_date_column not in data.columns:
-            self.logger.warning(
-                f"Ingestion date column '{ingestion_date_column}' is not present in the data."
-            )
-            return results
-
-        ingestion_dates = pd.to_datetime(data[ingestion_date_column])
+        ingestion_dates = pd.to_datetime(
+            data[ingestion_date_column], **(config.to_datetime_kwargs or {})
+        )
         ages_in_days = (
             (assessment_date - ingestion_dates).dt.total_seconds() / 60 / 60 / 24
         )

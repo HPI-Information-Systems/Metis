@@ -2,8 +2,8 @@ from typing import List
 
 import pandas as pd
 
-from metis.metric.completeness.completeness_nullAndDMVRate_config import (
-    completeness_nullAndDMVRate_config,
+from metis.metric.completeness.completeness_nullAndDMVRatio_config import (
+    completeness_nullAndDMVRatio_config,
 )
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
@@ -20,7 +20,7 @@ IS_NULL_MARKER = 1
 IS_DMV_MARKER = 2
 
 
-class completeness_nullAndDMVRate(Metric):
+class completeness_nullAndDMVRatio(Metric):
     def assess(
         self,
         data: pd.DataFrame,
@@ -28,7 +28,7 @@ class completeness_nullAndDMVRate(Metric):
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
-        Assess the completeness of the data by checking for null values and disguised missing values.
+        Assess the completeness of the data by checking for null values and disguised missing values. To detect disguised missing values, the FAHES algorithm by Qahtan et al. is applied to the data (paper: https://doi.org/10.1145/3219819.3220109). The completeness quality measurement is calculated as the ratio of valid values (non-null and non-disguised missing) to the total number of values. The metric can be configured using `completeness_nullAndDMVRatio_config` to calculate the completeness on column, row level, or table-level granularity.
 
         :param data: DataFrame to assess.
         :param reference: Optional reference DataFrame (not used in this metric).
@@ -36,7 +36,7 @@ class completeness_nullAndDMVRate(Metric):
         :return: List of DQResult objects containing completeness results.
         """
 
-        config = self.load_config(metric_config, completeness_nullAndDMVRate_config)
+        config = self.load_config(metric_config, completeness_nullAndDMVRatio_config)
 
         results = []
 
@@ -47,10 +47,11 @@ class completeness_nullAndDMVRate(Metric):
             IS_VALID_MARKER, index=data.index, columns=data.columns
         )
         marked_cells[data.isna()] = IS_NULL_MARKER
-        for _, dmv_row in dmvs.iterrows():
-            col = dmv_row["Attribute Name"]
-            val = dmv_row["DMV"]
-            marked_cells.loc[data[col] == val, col] = IS_DMV_MARKER
+        if dmvs is not None:
+            for _, dmv_row in dmvs.iterrows():
+                col = dmv_row["Attribute Name"]
+                val = dmv_row["DMV"]
+                marked_cells.loc[data[col] == val, col] = IS_DMV_MARKER
 
         def counts(marks: pd.Series):
             return (
@@ -117,11 +118,12 @@ class completeness_nullAndDMVRate(Metric):
         return results
 
     def certainty(self, null_count: int, dmv_count: int, total_count: int):
-        minimum = min(FAHES_PRECISION, FAHES_RECALL) ** total_count
-        certainty = float(
-            (
-                FAHES_PRECISION**dmv_count
-                * FAHES_RECALL ** (total_count - null_count - dmv_count)
+        minimum = (1 - FAHES_PRECISION) + (1 - FAHES_RECALL)
+        return (
+            1
+            - (
+                (1 - FAHES_PRECISION) * (dmv_count / total_count)
+                + (1 - FAHES_RECALL) * (null_count / total_count)
             )
+            / minimum
         )
-        return (certainty - minimum) / (1 - minimum)
