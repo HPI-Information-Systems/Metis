@@ -150,239 +150,239 @@ def _sample_df(df: pd.DataFrame, sample_size: Optional[int], rng: random.Random)
 class ReadabilityLLM(Metric):
     """Hybrid readability metric: WordNet-first with LLM fallback (lazy backend loading)."""
 
-def assess(
-    self,
-    data: pd.DataFrame,
-    reference: Union[pd.DataFrame, None] = None,
-    metric_config: Union[str, None] = None,
-) -> List[DQResult]:
-    cfg = ReadabilityLLMConfig.from_metric_config(metric_config)
-    rng = random.Random(cfg.random_seed)
+    def assess(
+        self,
+        data: pd.DataFrame,
+        reference: Union[pd.DataFrame, None] = None,
+        metric_config: Union[str, None] = None,
+    ) -> List[DQResult]:
+        cfg = ReadabilityLLMConfig.from_metric_config(metric_config)
+        rng = random.Random(cfg.random_seed)
 
-    text_cols = _select_text_columns(data, cfg.ignore_numeric_columns)
-    df = _sample_df(data, cfg.sample_size, rng)
+        text_cols = _select_text_columns(data, cfg.ignore_numeric_columns)
+        df = _sample_df(data, cfg.sample_size, rng)
 
-    abbreviations = load_abbreviations(cfg.abbr_csv)
-    wordnet = WordNetScorer(abbreviations=abbreviations)
-    baseline = WordNetOnlyAdapter(wordnet)
-    hybrid = HybridScorer(cfg, wordnet=wordnet, backend=None)
+        abbreviations = load_abbreviations(cfg.abbr_csv)
+        wordnet = WordNetScorer(abbreviations=abbreviations)
+        baseline = WordNetOnlyAdapter(wordnet)
+        hybrid = HybridScorer(cfg, wordnet=wordnet, backend=None)
 
-    llm_mode = str(getattr(cfg, "llm_mode", "fallback")).lower()
-    total_llm_tokens_used = 0
-    total_unique_tokens_seen = 0
+        llm_mode = str(getattr(cfg, "llm_mode", "fallback")).lower()
+        total_llm_tokens_used = 0
+        total_unique_tokens_seen = 0
 
-    # A) SCHEMA
-    schema_wordnet = 0.0
-    schema_hybrid = 0.0
-    schema_label_scores_wordnet: Dict[str, float] = {}
-    schema_label_scores_hybrid: Dict[str, float] = {}
+        # A) SCHEMA
+        schema_wordnet = 0.0
+        schema_hybrid = 0.0
+        schema_label_scores_wordnet: Dict[str, float] = {}
+        schema_label_scores_hybrid: Dict[str, float] = {}
 
-    if cfg.compute_schema:
-        labels = [str(c) for c in data.columns]
-        case_scores = compute_case_consistency_scores(labels)
+        if cfg.compute_schema:
+            labels = [str(c) for c in data.columns]
+            case_scores = compute_case_consistency_scores(labels)
 
-        for label in labels:
-            toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
-            s_case = float(case_scores.get(label, 1.0))
-            schema_label_scores_wordnet[label] = schema_label_score(toks, s_case, baseline)
-        schema_wordnet = float(sum(schema_label_scores_wordnet.values()) / len(schema_label_scores_wordnet)) if schema_label_scores_wordnet else 0.0
+            for label in labels:
+                toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
+                s_case = float(case_scores.get(label, 1.0))
+                schema_label_scores_wordnet[label] = schema_label_score(toks, s_case, baseline)
+            schema_wordnet = float(sum(schema_label_scores_wordnet.values()) / len(schema_label_scores_wordnet)) if schema_label_scores_wordnet else 0.0
 
-        schema_llm_tokens = set()
-        for label in labels:
-            toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
-            for t in toks:
-                hybrid.score_fast(t)
-                if hybrid.needs_llm(t):
-                    schema_llm_tokens.add(t)
+            schema_llm_tokens = set()
+            for label in labels:
+                toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
+                for t in toks:
+                    hybrid.score_fast(t)
+                    if hybrid.needs_llm(t):
+                        schema_llm_tokens.add(t)
 
-        # Lazy backend build + batch scoring only if needed
-        if cfg.use_llm_fallback and schema_llm_tokens:
-            if hybrid.backend is None:
-                hybrid.backend = _build_backend(cfg)
-            if hybrid.backend is not None:
-                hybrid.score_llm_batch(sorted(schema_llm_tokens))
+            # Lazy backend build + batch scoring only if needed
+            if cfg.use_llm_fallback and schema_llm_tokens:
+                if hybrid.backend is None:
+                    hybrid.backend = _build_backend(cfg)
+                if hybrid.backend is not None:
+                    hybrid.score_llm_batch(sorted(schema_llm_tokens))
 
-        for label in labels:
-            toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
-            s_case = float(case_scores.get(label, 1.0))
-            schema_label_scores_hybrid[label] = schema_label_score(toks, s_case, hybrid)
-        schema_hybrid = float(sum(schema_label_scores_hybrid.values()) / len(schema_label_scores_hybrid)) if schema_label_scores_hybrid else 0.0
+            for label in labels:
+                toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
+                s_case = float(case_scores.get(label, 1.0))
+                schema_label_scores_hybrid[label] = schema_label_score(toks, s_case, hybrid)
+            schema_hybrid = float(sum(schema_label_scores_hybrid.values()) / len(schema_label_scores_hybrid)) if schema_label_scores_hybrid else 0.0
 
-    # B) CONTENT
-    col_wordnet: Dict[str, float] = {}
-    col_combined: Dict[str, float] = {}
-    col_ann: Dict[str, Dict[str, Any]] = {}
+        # B) CONTENT
+        col_wordnet: Dict[str, float] = {}
+        col_combined: Dict[str, float] = {}
+        col_ann: Dict[str, Dict[str, Any]] = {}
 
-    for col in text_cols:
-        series = df[col].dropna()
-        if series.empty:
-            col_wordnet[col] = 0.0
-            col_combined[col] = 0.0
-            col_ann[col] = {"content_readability_wordnet_only": 0.0}
-            continue
-
-        uniq_tokens = set()
-        llm_tokens = set()
-
-        for v in series:
-            toks = [t for t in split_text(v) if len(t) >= cfg.min_token_length]
-            for t in toks:
-                uniq_tokens.add(t)
-                hybrid.score_fast(t)
-                if hybrid.needs_llm(t):
-                    llm_tokens.add(t)
-
-        if cfg.use_llm_fallback and llm_tokens:
-            if hybrid.backend is None:
-                hybrid.backend = _build_backend(cfg)
-            if hybrid.backend is not None:
-                hybrid.score_llm_batch(sorted(llm_tokens))
-
-        total_unique_tokens_seen += len(uniq_tokens)
-        total_llm_tokens_used += len(llm_tokens)
-
-        cell_scores_wordnet = []
-        cell_scores_hybrid = []
-        unknown_counter = Counter()
-        difficult_counter = Counter()
-
-        for v in series:
-            toks = [t for t in split_text(v) if len(t) >= cfg.min_token_length]
-            if not toks:
+        for col in text_cols:
+            series = df[col].dropna()
+            if series.empty:
+                col_wordnet[col] = 0.0
+                col_combined[col] = 0.0
+                col_ann[col] = {"content_readability_wordnet_only": 0.0}
                 continue
-            cell_scores_wordnet.append(content_cell_score(toks, baseline, None, None))
-            cell_scores_hybrid.append(content_cell_score(toks, hybrid, unknown_counter, difficult_counter))
 
-        s_wordnet = float(sum(cell_scores_wordnet) / len(cell_scores_wordnet)) if cell_scores_wordnet else 0.0
-        s_bottomup = float(sum(cell_scores_hybrid) / len(cell_scores_hybrid)) if cell_scores_hybrid else 0.0
+            uniq_tokens = set()
+            llm_tokens = set()
 
-        # optional top-down
-        s_topdown = None
-        if cfg.column_level_llm_score and cfg.use_llm_fallback:
-            if hybrid.backend is None:
-                hybrid.backend = _build_backend(cfg)
-            if hybrid.backend is not None:
-                values = [str(x) for x in series.unique().tolist() if str(x).strip() != ""]
-                values.sort()
-                k = max(1, int(cfg.column_level_llm_sample_values))
-                if len(values) > k:
-                    idxs = rng.sample(range(len(values)), k)
-                    sample_vals = [values[i] for i in sorted(idxs)]
-                else:
-                    sample_vals = values
-                s_topdown = float(hybrid.backend.score_column(col, sample_vals))
+            for v in series:
+                toks = [t for t in split_text(v) if len(t) >= cfg.min_token_length]
+                for t in toks:
+                    uniq_tokens.add(t)
+                    hybrid.score_fast(t)
+                    if hybrid.needs_llm(t):
+                        llm_tokens.add(t)
 
-        if cfg.column_level_llm_score and s_topdown is not None:
-            gamma = cfg.column_level_llm_gamma
-            s_combined = gamma * s_bottomup + (1.0 - gamma) * s_topdown
-        else:
-            s_combined = s_bottomup
+            if cfg.use_llm_fallback and llm_tokens:
+                if hybrid.backend is None:
+                    hybrid.backend = _build_backend(cfg)
+                if hybrid.backend is not None:
+                    hybrid.score_llm_batch(sorted(llm_tokens))
 
-        col_wordnet[col] = s_wordnet
-        col_combined[col] = float(s_combined)
+            total_unique_tokens_seen += len(uniq_tokens)
+            total_llm_tokens_used += len(llm_tokens)
 
-        col_ann[col] = {
-            "content_readability_wordnet_only": float(s_wordnet),
-            "content_readability_bottom_up": float(s_bottomup),
-            "content_readability_top_down": (float(s_topdown) if s_topdown is not None else None),
-            "content_readability_combined": float(s_combined),
-            "top_unknown_words": [w for w, _ in unknown_counter.most_common(10)],
-            "top_difficult_words": [w for w, _ in difficult_counter.most_common(10)],
-            "llm_tokens_count": int(len(llm_tokens)),
-            "unique_tokens_count": int(len(uniq_tokens)),
-            "llm_mode": llm_mode,
-            "llm_tokens_share": float(len(llm_tokens) / len(uniq_tokens)) if len(uniq_tokens) else 0.0,
-            "schema_readability_column_name_wordnet_only": float(schema_label_scores_wordnet.get(col, 0.0)) if cfg.compute_schema else None,
-            "schema_readability_column_name_hybrid": float(schema_label_scores_hybrid.get(col, 0.0)) if cfg.compute_schema else None,
-            "use_llm_fallback": bool(cfg.use_llm_fallback),
-            "hf_model_id": cfg.hf_model_id if cfg.use_llm_fallback else None,
-            "hf_device": cfg.hf_device if cfg.use_llm_fallback else None,
-            "hf_dtype": cfg.hf_dtype if cfg.use_llm_fallback else None,
-            "column_level_llm_score_enabled": bool(cfg.column_level_llm_score),
-            "column_level_llm_gamma": float(cfg.column_level_llm_gamma),
-        }
+            cell_scores_wordnet = []
+            cell_scores_hybrid = []
+            unknown_counter = Counter()
+            difficult_counter = Counter()
 
-    content_wordnet = float(sum(col_wordnet.values()) / len(col_wordnet)) if col_wordnet else 0.0
-    content_hybrid = float(sum(col_combined.values()) / len(col_combined)) if col_combined else 0.0
-    content_uplift = float(content_hybrid - content_wordnet)
+            for v in series:
+                toks = [t for t in split_text(v) if len(t) >= cfg.min_token_length]
+                if not toks:
+                    continue
+                cell_scores_wordnet.append(content_cell_score(toks, baseline, None, None))
+                cell_scores_hybrid.append(content_cell_score(toks, hybrid, unknown_counter, difficult_counter))
 
-    llm_tokens_share_total = float(total_llm_tokens_used / total_unique_tokens_seen) if total_unique_tokens_seen else 0.0
+            s_wordnet = float(sum(cell_scores_wordnet) / len(cell_scores_wordnet)) if cell_scores_wordnet else 0.0
+            s_bottomup = float(sum(cell_scores_hybrid) / len(cell_scores_hybrid)) if cell_scores_hybrid else 0.0
 
-    now = pd.Timestamp.now()
-    results: List[DQResult] = []
+            # optional top-down
+            s_topdown = None
+            if cfg.column_level_llm_score and cfg.use_llm_fallback:
+                if hybrid.backend is None:
+                    hybrid.backend = _build_backend(cfg)
+                if hybrid.backend is not None:
+                    values = [str(x) for x in series.unique().tolist() if str(x).strip() != ""]
+                    values.sort()
+                    k = max(1, int(cfg.column_level_llm_sample_values))
+                    if len(values) > k:
+                        idxs = rng.sample(range(len(values)), k)
+                        sample_vals = [values[i] for i in sorted(idxs)]
+                    else:
+                        sample_vals = values
+                    s_topdown = float(hybrid.backend.score_column(col, sample_vals))
 
-    results.append(
-        DQResult(
-            mesTime=now,
-            DQvalue=float(content_hybrid),
-            DQdimension="Readability",
-            DQmetric="readability_llm_content_wordnetFirst_fallback",
-            columnNames=None,
-            rowIndex=None,
-            DQgranularity="table",
-            DQexplanation={
-                "content_readability": float(content_hybrid),
-                "content_readability_wordnet_only": float(content_wordnet),
-                "llm_uplift_content": float(content_uplift),
+            if cfg.column_level_llm_score and s_topdown is not None:
+                gamma = cfg.column_level_llm_gamma
+                s_combined = gamma * s_bottomup + (1.0 - gamma) * s_topdown
+            else:
+                s_combined = s_bottomup
+
+            col_wordnet[col] = s_wordnet
+            col_combined[col] = float(s_combined)
+
+            col_ann[col] = {
+                "content_readability_wordnet_only": float(s_wordnet),
+                "content_readability_bottom_up": float(s_bottomup),
+                "content_readability_top_down": (float(s_topdown) if s_topdown is not None else None),
+                "content_readability_combined": float(s_combined),
+                "top_unknown_words": [w for w, _ in unknown_counter.most_common(10)],
+                "top_difficult_words": [w for w, _ in difficult_counter.most_common(10)],
+                "llm_tokens_count": int(len(llm_tokens)),
+                "unique_tokens_count": int(len(uniq_tokens)),
                 "llm_mode": llm_mode,
-                "llm_tokens_count_total": int(total_llm_tokens_used),
-                "unique_tokens_count_total": int(total_unique_tokens_seen),
-                "llm_tokens_share_total": float(llm_tokens_share_total),
-                "sample_size": cfg.sample_size,
-                "random_seed": cfg.random_seed,
-                "min_token_length": cfg.min_token_length,
+                "llm_tokens_share": float(len(llm_tokens) / len(uniq_tokens)) if len(uniq_tokens) else 0.0,
+                "schema_readability_column_name_wordnet_only": float(schema_label_scores_wordnet.get(col, 0.0)) if cfg.compute_schema else None,
+                "schema_readability_column_name_hybrid": float(schema_label_scores_hybrid.get(col, 0.0)) if cfg.compute_schema else None,
                 "use_llm_fallback": bool(cfg.use_llm_fallback),
                 "hf_model_id": cfg.hf_model_id if cfg.use_llm_fallback else None,
                 "hf_device": cfg.hf_device if cfg.use_llm_fallback else None,
                 "hf_dtype": cfg.hf_dtype if cfg.use_llm_fallback else None,
                 "column_level_llm_score_enabled": bool(cfg.column_level_llm_score),
-                "column_level_llm_sample_values": int(cfg.column_level_llm_sample_values),
                 "column_level_llm_gamma": float(cfg.column_level_llm_gamma),
-            },
-            dataset=None,
-            tableName=None,
-        )
-    )
+            }
 
-    if cfg.compute_schema:
+        content_wordnet = float(sum(col_wordnet.values()) / len(col_wordnet)) if col_wordnet else 0.0
+        content_hybrid = float(sum(col_combined.values()) / len(col_combined)) if col_combined else 0.0
+        content_uplift = float(content_hybrid - content_wordnet)
+
+        llm_tokens_share_total = float(total_llm_tokens_used / total_unique_tokens_seen) if total_unique_tokens_seen else 0.0
+
+        now = pd.Timestamp.now()
+        results: List[DQResult] = []
+
         results.append(
             DQResult(
                 mesTime=now,
-                DQvalue=float(schema_hybrid),
+                DQvalue=float(content_hybrid),
                 DQdimension="Readability",
-                DQmetric="readability_llm_schema_wordnetFirst_fallback",
+                DQmetric="readability_llm_content_wordnetFirst_fallback",
                 columnNames=None,
                 rowIndex=None,
                 DQgranularity="table",
                 DQexplanation={
-                    "schema_readability": float(schema_hybrid),
-                    "schema_readability_wordnet_only": float(schema_wordnet),
-                    "llm_uplift_schema": float(schema_hybrid - schema_wordnet),
+                    "content_readability": float(content_hybrid),
+                    "content_readability_wordnet_only": float(content_wordnet),
+                    "llm_uplift_content": float(content_uplift),
                     "llm_mode": llm_mode,
+                    "llm_tokens_count_total": int(total_llm_tokens_used),
+                    "unique_tokens_count_total": int(total_unique_tokens_seen),
+                    "llm_tokens_share_total": float(llm_tokens_share_total),
+                    "sample_size": cfg.sample_size,
+                    "random_seed": cfg.random_seed,
+                    "min_token_length": cfg.min_token_length,
                     "use_llm_fallback": bool(cfg.use_llm_fallback),
+                    "hf_model_id": cfg.hf_model_id if cfg.use_llm_fallback else None,
+                    "hf_device": cfg.hf_device if cfg.use_llm_fallback else None,
+                    "hf_dtype": cfg.hf_dtype if cfg.use_llm_fallback else None,
+                    "column_level_llm_score_enabled": bool(cfg.column_level_llm_score),
+                    "column_level_llm_sample_values": int(cfg.column_level_llm_sample_values),
+                    "column_level_llm_gamma": float(cfg.column_level_llm_gamma),
                 },
                 dataset=None,
                 tableName=None,
             )
         )
 
-    for col in text_cols:
-        results.append(
-            DQResult(
-                mesTime=now,
-                DQvalue=float(col_combined.get(col, 0.0)),
-                DQdimension="Readability",
-                DQmetric="readability_llm_content_column",
-                columnNames=[col],
-                rowIndex=None,
-                DQgranularity="column",
-                DQexplanation=col_ann.get(col, {}),
-                dataset=None,
-                tableName=None,
+        if cfg.compute_schema:
+            results.append(
+                DQResult(
+                    mesTime=now,
+                    DQvalue=float(schema_hybrid),
+                    DQdimension="Readability",
+                    DQmetric="readability_llm_schema_wordnetFirst_fallback",
+                    columnNames=None,
+                    rowIndex=None,
+                    DQgranularity="table",
+                    DQexplanation={
+                        "schema_readability": float(schema_hybrid),
+                        "schema_readability_wordnet_only": float(schema_wordnet),
+                        "llm_uplift_schema": float(schema_hybrid - schema_wordnet),
+                        "llm_mode": llm_mode,
+                        "use_llm_fallback": bool(cfg.use_llm_fallback),
+                    },
+                    dataset=None,
+                    tableName=None,
+                )
             )
-        )
 
-    return results
+        for col in text_cols:
+            results.append(
+                DQResult(
+                    mesTime=now,
+                    DQvalue=float(col_combined.get(col, 0.0)),
+                    DQdimension="Readability",
+                    DQmetric="readability_llm_content_column",
+                    columnNames=[col],
+                    rowIndex=None,
+                    DQgranularity="column",
+                    DQexplanation=col_ann.get(col, {}),
+                    dataset=None,
+                    tableName=None,
+                )
+            )
+
+        return results
 
 
 class readability_llm(ReadabilityLLM):

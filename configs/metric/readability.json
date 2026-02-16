@@ -3,5 +3,9 @@
   "llm_mode": "fallback",
   "use_llm_for_difficulty": false,
   "use_llm_for_cognates": false,
-  "min_token_length": 2
+  "min_token_length": 2,
+  "hf_model_id": "Qwen/Qwen2.5-3B-Instruct",
+  "hf_device": "auto",
+  "hf_dtype": "auto",
+  "llm_batch_size": 80
 }

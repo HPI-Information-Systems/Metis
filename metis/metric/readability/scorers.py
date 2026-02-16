@@ -7,8 +7,9 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from .config import ReadabilityConfig
+from typing import Any
 from .llm_backend import LLMBackend
+
 
 try:
     from nltk.corpus import wordnet as wn  # type: ignore
@@ -118,7 +119,7 @@ class WordNetOnlyAdapter:
 class HybridScorer:
     _digit_or_symbol = re.compile(r"[0-9]|[^a-zA-Z_]")
 
-    def __init__(self, cfg: ReadabilityConfig, wordnet: WordNetScorer, backend: Optional[LLMBackend]) -> None:
+    def __init__(self, cfg: Any, wordnet: WordNetScorer, backend: Optional[LLMBackend]) -> None:
         self.cfg = cfg
         self.wordnet = wordnet
         self.backend = backend if cfg.use_llm_fallback else None

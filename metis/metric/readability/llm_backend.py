@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from email.mime import text
-from email.mime import text
 import json
 import re
 from dataclasses import dataclass
@@ -117,9 +115,9 @@ class HFTransformersBackend(LLMBackend):
 
         gen = self.model.generate(
             input_ids,
-    attention_mask=attention_mask,
-    max_new_tokens=self.max_new_tokens,
-    do_sample=True,
+            attention_mask=attention_mask,
+            max_new_tokens=self.max_new_tokens,
+            do_sample=True,
         )
         return self.tokenizer.decode(gen[0], skip_special_tokens=True)
 
