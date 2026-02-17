@@ -34,7 +34,7 @@ def timestamp_similarity(a: pd.Timestamp, b: pd.Timestamp) -> float:
 # -------------------------------
 # Category similarity
 # -------------------------------
-def category_similarity(a: Any, b: Any) -> float:
+def category_similarity(a: any, b: any) -> float:
     return 1.0 if a == b else 0.0
 
 # -------------------------------
