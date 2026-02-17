@@ -1,3 +1,5 @@
+import os
+import json
 from abc import ABC, abstractmethod
 import pandas as pd
 from typing import List, Union
@@ -65,3 +67,18 @@ class Metric(ABC):
                     agreement score.
                 """
                 raise NotImplementedError()
+
+    def load_metric_config(self, metric_config):
+        if metric_config is None:
+            return {}
+
+        metric_config = metric_config.strip()
+
+        if metric_config.startswith("{"):
+            return json.loads(metric_config)
+
+        if not os.path.exists(metric_config):
+            raise ValueError(f"metric_config is neither JSON nor file path: {metric_config}")
+
+        with open(metric_config, "r", encoding="utf-8") as f:
+            return json.load(f)
