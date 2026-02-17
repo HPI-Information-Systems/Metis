@@ -2,6 +2,7 @@ import json
 from typing import Dict, List, Type
 
 import pandas as pd
+import time
 
 from metis.loader.csv_loader import CSVLoader
 from metis.metric import Metric
@@ -63,11 +64,23 @@ class DQOrchestrator:
                 raise ValueError(f"Metric {metric} is not registered.")
             metric_instance: Metric = metric_class()
             for df_name, df in self.dataframes.items():
-                incomplete_metric_results = metric_instance.assess(
-                    data=df,
-                    reference=self.reference_dataframes.get(df_name),
-                    metric_config=metric_config,
-                )
+                measure_runtime = self._should_measure_runtime(metric_config)
+                if measure_runtime:
+                    start = time.perf_counter()
+                    incomplete_metric_results = metric_instance.assess(
+                        data=df,
+                        reference=self.reference_dataframes.get(df_name),
+                        metric_config=metric_config,
+                    )
+                    elapsed = time.perf_counter() - start
+                    for result in incomplete_metric_results:
+                        result.runtime = elapsed
+                else:
+                    incomplete_metric_results = metric_instance.assess(
+                        data=df,
+                        reference=self.reference_dataframes.get(df_name),
+                        metric_config=metric_config,
+                    )
                 for result in incomplete_metric_results:
                     result.tableName = df_name
                     result.dataset = self.data_paths[df_name]
@@ -77,3 +90,21 @@ class DQOrchestrator:
 
     def get_dq_result(self, query: str) -> List[DQResult]:
         return []
+
+    def _should_measure_runtime(self, metric_config: str | None) -> bool:
+        if metric_config is None:
+            return False
+
+        try:
+            parsed = json.loads(metric_config)
+        except Exception:
+            try:
+                with open(metric_config, "r") as f:
+                    parsed = json.load(f)
+            except Exception:
+                return False
+
+        if not isinstance(parsed, dict):
+            return False
+
+        return bool(parsed.get("measure_runtime", False))

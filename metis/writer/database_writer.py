@@ -28,6 +28,7 @@ class DatabaseWriter(DQResultWriter):
                     dq_granularity=result.DQgranularity,
                     dq_value=result.DQvalue,
                     dq_explanation=result.DQexplanation,
+                    runtime=result.runtime,
                     table_name=result.tableName,
                     column_names=result.columnNames,
                     row_index=result.rowIndex,
