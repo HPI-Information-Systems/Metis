@@ -229,19 +229,76 @@ class HybridScorer:
         return self.score_fast(t)
 
 # Calculates the readability of a column name (at the schema level) based on its tokens and case sensitivity.
-def schema_label_score(tokens: List[str], s_case: float, scorer) -> float:
+def schema_label_score(tokens, s_case, scorer):
+    """
+    Ehrlinger et al. 2019 (Eq. 5): Red(s) = avg_i ( #fcrit_i / #crit )
+
+    #crit = 4 Kriterien:
+      1) Word existence (WordNet)
+      2) case consistency
+      3) synonyms (fulfilled = no synonyms)
+      4) hypernyms (fulfilled = no hypernyms)
+
+    scorer: WordNetOnlyAdapter oder HybridScorer (beide unterstützen score_fast()).
+    """
     if not tokens:
         return 0.0
-    scores = []
+
+    # (2) Case consistency is label-global
+    case_ok = 1 if float(s_case) >= 1.0 else 0
+
+    # Abbreviation-Shortcut (falls verfügbar)
+    abbr = None
+    if hasattr(scorer, "wordnet") and hasattr(scorer.wordnet, "abbreviations"):
+        abbr = scorer.wordnet.abbreviations or {}
+
+    per_token_scores: List[float] = []
     for t in tokens:
-        E, D, A, _ = scorer.score(t)
-        if E == 0.0:
-            scores.append(0.0)
+        tt = str(t).strip().lower()
+        if not tt:
+            continue
+
+        # (1) existence über scorer (WordNet / Hybrid)
+        if hasattr(scorer, "score_fast"):
+            E, _, _, _ = scorer.score_fast(tt)
         else:
-            # NOTE: schema-score formula not changed here. If you need it DQ4AI-identical,
-            # we can align it similarly (unweighted) depending on what DQ4AI defines for schema.
-            scores.append((3.0 * E + 2.0 * D + 1.0 * s_case + 1.0 * A) / 7.0)
-    return float(sum(scores) / len(scores)) if scores else 0.0
+            E, _, _, _ = scorer.score(tt)
+
+        exists_ok = 1 if float(E) > 0.0 else 0
+
+        # (3)/(4) synonyms/hypernyms
+        # criterion fulfilled if WordNet provides synsets / hypernyms
+        
+        if abbr is not None and tt in abbr:
+            # Abbreviations are treated as fully fulfilled
+            syn_ok = 1
+            hyp_ok = 1
+        else:
+            syn_ok = 0
+            hyp_ok = 0
+
+            if wn is not None and exists_ok == 1:
+                try:
+                    synsets = wn.synsets(tt)
+                except Exception:
+                    synsets = []
+
+                # Synonyms criterion fulfilled if at least one synset exists
+                syn_ok = 1 if len(synsets) > 0 else 0
+
+                # Hypernyms criterion fulfilled if at least one hypernym relation exists
+                has_hypernym = False
+                for ss in synsets:
+                    if ss.hypernyms():
+                        has_hypernym = True
+                        break
+
+                hyp_ok = 1 if has_hypernym else 0
+
+        fcrit = exists_ok + case_ok + syn_ok + hyp_ok
+        per_token_scores.append(fcrit / 4.0)
+
+    return float(sum(per_token_scores) / len(per_token_scores)) if per_token_scores else 0.0
 
 # Calculates readability per cell (content level) from tokens. In addition, counters are kept for analysis/annotations.
 def content_cell_score(tokens, scorer, unknown_counter=None, difficult_counter=None, llm_candidate_counter=None) -> float:

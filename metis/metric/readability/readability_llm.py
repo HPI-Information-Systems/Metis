@@ -59,11 +59,6 @@ class ReadabilityLLMConfig:
     llm_batch_size: int = 80
     llm_trigger: LLMTriggerConfig = field(default_factory=LLMTriggerConfig)
 
-    # Optional top-down column scoring
-    column_level_llm_score: bool = False
-    column_level_llm_sample_values: int = 100
-    column_level_llm_gamma: float = 0.5
-
     @staticmethod
     def from_metric_config(metric_config: Optional[str]) -> "ReadabilityLLMConfig":
         cfg = ReadabilityLLMConfig()
@@ -115,11 +110,7 @@ class ReadabilityLLMConfig:
                 wordnet_unknown_only=bool(trig.get("wordnet_unknown_only", cfg.llm_trigger.wordnet_unknown_only)),
                 also_if_contains_digit_or_symbol=bool(trig.get("also_if_contains_digit_or_symbol", cfg.llm_trigger.also_if_contains_digit_or_symbol)),
             )
-
-        cfg.column_level_llm_score = bool(data.get("column_level_llm_score", cfg.column_level_llm_score))
-        cfg.column_level_llm_sample_values = int(data.get("column_level_llm_sample_values", cfg.column_level_llm_sample_values))
-        cfg.column_level_llm_gamma = float(data.get("column_level_llm_gamma", cfg.column_level_llm_gamma))
-        cfg.column_level_llm_gamma = max(0.0, min(1.0, cfg.column_level_llm_gamma))
+        
         return cfg
 
 # ---------------- Helpers ----------------
@@ -299,26 +290,7 @@ class ReadabilityLLM(Metric):
             s_bottomup = float(sum(cell_scores_hybrid) / len(cell_scores_hybrid)) if cell_scores_hybrid else 0.0
 
             # optional top-down
-            s_topdown = None
-            if cfg.column_level_llm_score and cfg.use_llm_fallback:
-                if hybrid.backend is None:
-                    hybrid.backend = _build_backend(cfg)
-                if hybrid.backend is not None:
-                    values = [str(x) for x in series.unique().tolist() if str(x).strip() != ""]
-                    values.sort()
-                    k = max(1, int(cfg.column_level_llm_sample_values))
-                    if len(values) > k:
-                        idxs = rng.sample(range(len(values)), k)
-                        sample_vals = [values[i] for i in sorted(idxs)]
-                    else:
-                        sample_vals = values
-                    s_topdown = float(hybrid.backend.score_column(col, sample_vals))
-
-            if cfg.column_level_llm_score and s_topdown is not None:
-                gamma = cfg.column_level_llm_gamma
-                s_combined = gamma * s_bottomup + (1.0 - gamma) * s_topdown
-            else:
-                s_combined = s_bottomup
+            s_combined = s_bottomup
 
             col_wordnet[col] = s_wordnet
             col_combined[col] = float(s_combined)
@@ -326,7 +298,6 @@ class ReadabilityLLM(Metric):
             col_ann[col] = {
                 "content_readability_wordnet_only": float(s_wordnet),
                 "content_readability_bottom_up": float(s_bottomup),
-                "content_readability_top_down": (float(s_topdown) if s_topdown is not None else None),
                 "content_readability_combined": float(s_combined),
                 "top_unknown_words": [w for w, _ in unknown_counter.most_common(10)],
                 "top_difficult_words": [w for w, _ in difficult_counter.most_common(10)],
@@ -340,8 +311,6 @@ class ReadabilityLLM(Metric):
                 "hf_model_id": cfg.hf_model_id if cfg.use_llm_fallback else None,
                 "hf_device": cfg.hf_device if cfg.use_llm_fallback else None,
                 "hf_dtype": cfg.hf_dtype if cfg.use_llm_fallback else None,
-                "column_level_llm_score_enabled": bool(cfg.column_level_llm_score),
-                "column_level_llm_gamma": float(cfg.column_level_llm_gamma),
             }
 
         content_wordnet = float(sum(col_wordnet.values()) / len(col_wordnet)) if col_wordnet else 0.0
@@ -380,9 +349,6 @@ class ReadabilityLLM(Metric):
                         "hf_model_id": cfg.hf_model_id if cfg.use_llm_fallback else None,
                         "hf_device": cfg.hf_device if cfg.use_llm_fallback else None,
                         "hf_dtype": cfg.hf_dtype if cfg.use_llm_fallback else None,
-                        "column_level_llm_score_enabled": bool(cfg.column_level_llm_score),
-                        "column_level_llm_sample_values": int(cfg.column_level_llm_sample_values),
-                        "column_level_llm_gamma": float(cfg.column_level_llm_gamma),
                     },
                     dataset=None,
                     tableName=None,

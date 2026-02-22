@@ -171,10 +171,6 @@ class ReadabilityWordNet(Metric):
             col_ann[col] = {
                 "content_readability_wordnet_only": float(s),
                 "use_llm_fallback": False,
-                "llm_mode": "none",
-                "llm_tokens_count": 0,
-                "unique_tokens_count": 0,
-                "llm_tokens_share": 0.0,
                 "schema_readability_column_name_wordnet_only": float(schema_label_scores.get(col, 0.0)) if cfg.compute_schema else None,
             }
 
@@ -187,25 +183,21 @@ class ReadabilityWordNet(Metric):
 
         if cfg.output_table:
             results.append(
-            DQResult(
-                mesTime=now,
-                DQvalue=float(content_wordnet),
-                DQdimension="Readability",
-                DQmetric="readability_wordnet",
-                columnNames=None,
-                rowIndex=None,
-                DQgranularity="table",
-                DQexplanation={
-                    "content_readability_wordnet_only": float(content_wordnet),
-                    "use_llm_fallback": False,
-                    "sample_size": cfg.sample_size,
-                    "random_seed": cfg.random_seed,
-                    "min_token_length": cfg.min_token_length,
-                },
-                dataset=None,
-                tableName=None,
+                DQResult(
+                    mesTime=now,
+                    DQvalue=float(content_wordnet),
+                    DQdimension="Readability",
+                    DQmetric="readability_wordnet",
+                    columnNames=None,
+                    rowIndex=None,
+                    DQgranularity="table",
+                    DQexplanation={
+                        "content_readability_wordnet_only": float(content_wordnet),
+                        "use_llm_fallback": False},
+                    dataset=None,
+                    tableName=None
+                )
             )
-        )
 
         if cfg.compute_schema:
             results.append(
