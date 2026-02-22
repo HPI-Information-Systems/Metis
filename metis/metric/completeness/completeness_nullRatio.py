@@ -62,7 +62,7 @@ class completeness_nullRatio(Metric):
                 columnNames=data.columns.tolist(),
                 DQgranularity="table",
                 DQexplanation={
-                    "null_count": not_null_ratios["null_count"].sum(),
+                    "null_count": float(not_null_ratios["null_count"].sum()),
                 }
             )
             results.append(result)
@@ -89,7 +89,7 @@ class completeness_nullRatio(Metric):
                     "row" if config.aggregation_axis == "columns" else "column"
                 ),
                 DQexplanation={
-                    "null_count": row["null_count"],
+                    "null_count": float(row["null_count"]),
                 }
             )
             results.append(result)

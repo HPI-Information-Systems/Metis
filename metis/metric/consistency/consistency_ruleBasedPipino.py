@@ -82,12 +82,12 @@ class consistency_ruleBasedPipino(Metric):
 
             fulfilled_rules_mask = pd.DataFrame(
                 {
-                    f"rule_{i}": data[col_name].dropna().apply(rule)
+                    f"rule_{i}": data[col_name].apply(rule)
                     for i, rule in enumerate(column_rules)
                 }
             )
 
-            dq_measurements = fulfilled_rules_mask.sum(axis=1) / len(column_rules)
+            dq_measurements = fulfilled_rules_mask.mean(axis=1)
             certainties = self.certainties(fulfilled_rules_mask)
 
             for (row_index, dq_value), certainty in zip(
