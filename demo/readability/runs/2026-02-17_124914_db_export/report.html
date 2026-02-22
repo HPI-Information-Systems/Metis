@@ -1,0 +1,168 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Readability Report (DQ4AI-style)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+    h1,h2 { margin: 0 0 10px 0; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 14px; }
+    th { background: #f5f5f5; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body>
+
+<h1>Readability Report (DQ4AI-style)</h1>
+<p class="mono">Run folder: demo/readability/runs/2026-02-17_124914_db_export</p>
+
+<div class="card">
+  <h2>Configuration</h2>
+  <ul>
+    <li><b>use_llm_fallback</b>: None</li>
+    <li><b>llm_mode</b>: None</li>
+    <li><b>hf_model_id</b>: None</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Table-level Summary</h2>
+  <div class="grid">
+    <div>
+      <h3>Content</h3>
+      <ul>
+        <li><b>WordNet</b>: 0.286510379666904</li>
+        <li><b>WordNet+LLM fallback</b>: 0.3614271055331913</li>
+        <li><b>Uplift</b>: 0.07491672586628728</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Schema</h3>
+      <ul>
+        <li><b>WordNet</b>: 0.5714285714285714</li>
+        <li><b>WordNet+LLM fallback</b>: 0.5714285714285714</li>
+        <li><b>Uplift</b>: 0.0</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>LLM Usage</h3>
+  <ul>
+    <li><b>llm_tokens_count_total</b>: None</li>
+    <li><b>unique_tokens_count_total</b>: None</li>
+    <li><b>llm_tokens_share_total</b>: None</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Plots</h2>
+  <h3>Table scores (WordNet vs Hybrid)</h3><img src='figs/table_scores.png' style='max-width:100%; border:1px solid #ddd; border-radius:8px;'/>
+  <h3>Top column uplift (Hybrid - WordNet)</h3><img src='figs/top_column_uplift.png' style='max-width:100%; border:1px solid #ddd; border-radius:8px;'/>
+  <p><i>Missing figure: top_llm_token_share.png</i></p>
+</div>
+
+<div class="card">
+  <h2>Column-level Comparison (Top uplift)</h2>
+  <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>table_name</th>
+      <th>column_name_norm</th>
+      <th>wordnet_score</th>
+      <th>llm_score</th>
+      <th>uplift</th>
+      <th>llm_tokens_share</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Countries Capitals</td>
+      <td>['capital']</td>
+      <td>0.264499</td>
+      <td>0.374634</td>
+      <td>0.110136</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Countries Capitals</td>
+      <td>['capital']</td>
+      <td>0.264499</td>
+      <td>0.374634</td>
+      <td>0.110136</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Countries Capitals</td>
+      <td>['capital']</td>
+      <td>0.264499</td>
+      <td>0.374634</td>
+      <td>0.110136</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Countries Capitals</td>
+      <td>['capital']</td>
+      <td>0.264499</td>
+      <td>0.374634</td>
+      <td>0.110136</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Countries Capitals</td>
+      <td>['country']</td>
+      <td>0.308522</td>
+      <td>0.348220</td>
+      <td>0.039698</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Countries Capitals</td>
+      <td>['country']</td>
+      <td>0.308522</td>
+      <td>0.348220</td>
+      <td>0.039698</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Countries Capitals</td>
+      <td>['country']</td>
+      <td>0.308522</td>
+      <td>0.348220</td>
+      <td>0.039698</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Countries Capitals</td>
+      <td>['country']</td>
+      <td>0.308522</td>
+      <td>0.348220</td>
+      <td>0.039698</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="card">
+  <h2>Column-level LLM Token Share (Top)</h2>
+  <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>table_name</th>
+      <th>column_name_norm</th>
+      <th>llm_tokens_count</th>
+      <th>unique_tokens_count</th>
+      <th>llm_tokens_share</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</div>
+
+</body>
+</html>

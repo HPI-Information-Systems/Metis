@@ -31,6 +31,10 @@ class ReadabilityWordNetConfig:
 
     # Schema (separate)
     compute_schema: bool = True
+    # Output toggles
+    output_cells: bool = False
+    output_columns: bool = True
+    output_table: bool = True
 
     @staticmethod
     def from_metric_config(metric_config: Optional[str]) -> "ReadabilityWordNetConfig":
@@ -46,6 +50,13 @@ class ReadabilityWordNetConfig:
                 raise ValueError(f"metric_config is neither JSON nor an existing path: {metric_config}")
             with open(metric_config, "r", encoding="utf-8") as f:
                 data = json.load(f)
+        if isinstance(data, dict) and ("common" in data or "wordnet" in data or "llm" in data):
+            common = data.get("common", {})
+            wordnet = data.get("wordnet", {})
+            if isinstance(common, dict) and isinstance(wordnet, dict):
+                merged = dict(common)
+                merged.update(wordnet)
+                data = merged
 
         cfg.sample_size = data.get("sample_size", cfg.sample_size)
         cfg.random_seed = int(data.get("random_seed", cfg.random_seed))
@@ -53,6 +64,9 @@ class ReadabilityWordNetConfig:
         cfg.abbr_csv = data.get("abbr_csv", cfg.abbr_csv)
         cfg.ignore_numeric_columns = bool(data.get("ignore_numeric_columns", cfg.ignore_numeric_columns))
         cfg.compute_schema = bool(data.get("compute_schema", cfg.compute_schema))
+        cfg.output_cells = bool(data.get("output_cells", cfg.output_cells))
+        cfg.output_columns = bool(data.get("output_columns", cfg.output_columns))
+        cfg.output_table = bool(data.get("output_table", cfg.output_table))
         return cfg
 
 
@@ -110,6 +124,7 @@ class ReadabilityWordNet(Metric):
         # B) CONTENT
         col_scores: Dict[str, float] = {}
         col_ann: Dict[str, Dict[str, Any]] = {}
+        all_cell_results: List[DQResult] = []
 
         for col in text_cols:
             series = df[col].dropna()
@@ -118,12 +133,38 @@ class ReadabilityWordNet(Metric):
                 col_ann[col] = {"content_readability_wordnet_only": 0.0}
                 continue
 
-            cell_scores = []
-            for v in series:
+            cell_scores: List[float] = []
+            cell_results: List[DQResult] = []
+
+            for row_pos, (src_idx, v) in enumerate(series.items()):
                 toks = [t for t in split_text(v) if len(t) >= cfg.min_token_length]
                 if not toks:
                     continue
-                cell_scores.append(content_cell_score(toks, baseline, None, None))
+
+                z = float(content_cell_score(toks, baseline, None, None))
+                cell_scores.append(z)
+
+                if cfg.output_cells:
+                    cell_results.append(
+                        DQResult(
+                            mesTime=pd.Timestamp.now(),
+                            DQdimension="Readability",
+                            DQmetric="readability_wordnet",
+                            DQgranularity="cell",
+                            DQvalue=z,
+                            columnNames=[col],
+                            rowIndex=row_pos,  # stable integer position (never crashes)
+                            DQexplanation={
+                                "content_readability_wordnet_only": z,
+                                "use_llm_fallback": False,
+                                "source_row_index": (None if pd.isna(src_idx) else str(src_idx)),
+                            },
+                            dataset=None,
+                            tableName=None,
+                        )
+                    )                 
+            if cfg.output_cells:
+                all_cell_results.extend(cell_results)
 
             s = float(sum(cell_scores) / len(cell_scores)) if cell_scores else 0.0
             col_scores[col] = s
@@ -141,13 +182,16 @@ class ReadabilityWordNet(Metric):
 
         now = pd.Timestamp.now()
         results: List[DQResult] = []
+        if cfg.output_cells:
+            results.extend(all_cell_results)
 
-        results.append(
+        if cfg.output_table:
+            results.append(
             DQResult(
                 mesTime=now,
                 DQvalue=float(content_wordnet),
                 DQdimension="Readability",
-                DQmetric="readability_wordnet_content",
+                DQmetric="readability_wordnet",
                 columnNames=None,
                 rowIndex=None,
                 DQgranularity="table",
@@ -169,10 +213,10 @@ class ReadabilityWordNet(Metric):
                     mesTime=now,
                     DQvalue=float(schema_wordnet),
                     DQdimension="Readability",
-                    DQmetric="readability_wordnet_schema",
+                    DQmetric="readability_wordnet",
                     columnNames=None,
                     rowIndex=None,
-                    DQgranularity="table",
+                    DQgranularity="schema",
                     DQexplanation={
                         "schema_readability_wordnet_only": float(schema_wordnet),
                         "use_llm_fallback": False,
@@ -182,21 +226,22 @@ class ReadabilityWordNet(Metric):
                 )
             )
 
-        for col in text_cols:
-            results.append(
-                DQResult(
-                    mesTime=now,
-                    DQvalue=float(col_scores.get(col, 0.0)),
-                    DQdimension="Readability",
-                    DQmetric="readability_wordnet_content_column",
-                    columnNames=[col],
-                    rowIndex=None,
-                    DQgranularity="column",
-                    DQexplanation=col_ann.get(col, {}),
-                    dataset=None,
-                    tableName=None,
+        if cfg.output_columns:
+            for col in text_cols:
+                results.append(
+                    DQResult(
+                        mesTime=now,
+                        DQvalue=float(col_scores.get(col, 0.0)),
+                        DQdimension="Readability",
+                        DQmetric="readability_wordnet",
+                        columnNames=[col],
+                        rowIndex=None,
+                        DQgranularity="column",
+                        DQexplanation=col_ann.get(col, {}),
+                        dataset=None,
+                        tableName=None,
+                    )
                 )
-            )
 
         return results
 

@@ -1,0 +1,15 @@
+{
+  "dataset_cfg": "data/countries-capitals.json",
+  "metrics": [
+    "readability_wordnet",
+    "readability_llm"
+  ],
+  "metric_configs": [
+    "configs/metric/readability.json",
+    "configs/metric/readability.json"
+  ],
+  "run_dir": "demo\\readability\\runs\\2026-02-16_185753_countries-capitals",
+  "raw_results_file": "demo\\readability\\runs\\2026-02-16_185753_countries-capitals\\results_raw.jsonl",
+  "num_results": 4,
+  "source": "sqlite:dq_repository/dq_repository.db (filtered readability)"
+}

@@ -55,38 +55,42 @@ class DQOrchestrator:
                         f"Unsupported loader type: {config_data.get('loader', None)}"
                     )
 
-    def assess(self, metrics: List[str], metric_configs: List[str | None]) -> None:
-        results = []
+    def assess(self, metrics: List[str], metric_configs: List[str | None]) -> List[DQResult]:
+        results: List[DQResult] = []
 
         for metric, metric_config in zip(metrics, metric_configs):
-            metric_class: Type[Metric] | None = Metric.registry.get(metric)
-            if not metric_class:
-                raise ValueError(f"Metric {metric} is not registered.")
-            metric_instance: Metric = metric_class()
-            for df_name, df in self.dataframes.items():
-                measure_runtime = self._should_measure_runtime(metric_config)
-                if measure_runtime:
-                    start = time.perf_counter()
-                    incomplete_metric_results = metric_instance.assess(
-                        data=df,
-                        reference=self.reference_dataframes.get(df_name),
-                        metric_config=metric_config,
-                    )
-                    elapsed = time.perf_counter() - start
+                metric_class: Type[Metric] | None = Metric.registry.get(metric)
+                if not metric_class:
+                    raise ValueError(f"Metric {metric} is not registered.")
+                metric_instance: Metric = metric_class()
+
+                for df_name, df in self.dataframes.items():
+                    measure_runtime = self._should_measure_runtime(metric_config)
+                    if measure_runtime:
+                        start = time.perf_counter()
+                        incomplete_metric_results = metric_instance.assess(
+                            data=df,
+                            reference=self.reference_dataframes.get(df_name),
+                            metric_config=metric_config,
+                        )
+                        elapsed = time.perf_counter() - start
+                        for result in incomplete_metric_results:
+                            result.runtime = elapsed
+                    else:
+                        incomplete_metric_results = metric_instance.assess(
+                            data=df,
+                            reference=self.reference_dataframes.get(df_name),
+                            metric_config=metric_config,
+                        )
+
                     for result in incomplete_metric_results:
-                        result.runtime = elapsed
-                else:
-                    incomplete_metric_results = metric_instance.assess(
-                        data=df,
-                        reference=self.reference_dataframes.get(df_name),
-                        metric_config=metric_config,
-                    )
-                for result in incomplete_metric_results:
-                    result.tableName = df_name
-                    result.dataset = self.data_paths[df_name]
-                    results.append(result)
+                        result.tableName = df_name
+                        result.dataset = self.data_paths[df_name]
+                        results.append(result)
 
         self.writer.write(results)
+        return results
+
 
     def get_dq_result(self, query: str) -> List[DQResult]:
         return []

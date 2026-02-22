@@ -1,0 +1,3 @@
+loader,name,file_name,delimiter,encoding,header,nrows,usecols,parse_dates,decimal,thousands
+CSV,Countries Capitals,countries-capitals.csv,",",utf-8,0,,country,False,.,
+CSV,Countries Capitals,countries-capitals.csv,",",utf-8,0,,capital,False,.,

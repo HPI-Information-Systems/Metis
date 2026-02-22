@@ -1,0 +1,9 @@
+table_name,column_name_norm,wordnet_score,wordnet_expl,llm_score,llm_expl,uplift,llm_tokens_count,unique_tokens_count,llm_tokens_share
+Countries Capitals,['capital'],0.2644986449864503,{},0.3746341463414633,{},0.11013550135501299,,,
+Countries Capitals,['capital'],0.2644986449864503,{},0.3746341463414633,{},0.11013550135501299,,,
+Countries Capitals,['capital'],0.2644986449864503,{},0.3746341463414633,{},0.11013550135501299,,,
+Countries Capitals,['capital'],0.2644986449864503,{},0.3746341463414633,{},0.11013550135501299,,,
+Countries Capitals,['country'],0.3085221143473577,{},0.3482200647249192,{},0.039697950377561464,,,
+Countries Capitals,['country'],0.3085221143473577,{},0.3482200647249192,{},0.039697950377561464,,,
+Countries Capitals,['country'],0.3085221143473577,{},0.3482200647249192,{},0.039697950377561464,,,
+Countries Capitals,['country'],0.3085221143473577,{},0.3482200647249192,{},0.039697950377561464,,,

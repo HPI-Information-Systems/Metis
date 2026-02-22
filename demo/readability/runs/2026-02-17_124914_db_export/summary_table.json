@@ -1,0 +1,34 @@
+{
+  "wordnet_content_n": 2,
+  "wordnet_content_mean": 0.286510379666904,
+  "wordnet_content_values": [
+    0.286510379666904,
+    0.286510379666904
+  ],
+  "llm_content_n": 2,
+  "llm_content_mean": 0.3614271055331913,
+  "llm_content_values": [
+    0.3614271055331913,
+    0.3614271055331913
+  ],
+  "wordnet_schema_n": 2,
+  "wordnet_schema_mean": 0.5714285714285714,
+  "wordnet_schema_values": [
+    0.5714285714285714,
+    0.5714285714285714
+  ],
+  "llm_schema_n": 2,
+  "llm_schema_mean": 0.5714285714285714,
+  "llm_schema_values": [
+    0.5714285714285714,
+    0.5714285714285714
+  ],
+  "uplift_content_mean": 0.07491672586628728,
+  "uplift_schema_mean": 0.0,
+  "llm_tokens_count_total": null,
+  "unique_tokens_count_total": null,
+  "llm_tokens_share_total": null,
+  "hf_model_id": null,
+  "llm_mode": null,
+  "use_llm_fallback": null
+}
