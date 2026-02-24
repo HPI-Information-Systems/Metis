@@ -4,6 +4,7 @@
 The readability metric evaluates the readability of tabular data on two levels:  
 - Schema readability – readability of column labels  
 - Data Readability – Readability of the actual cell contents  
+
 The implementation combines:  
 - WordNet-based lexical evaluation  
 - Optional LLM support (fallback or strict)  
@@ -20,7 +21,7 @@ The metric generates results (DQResult) with the following DQgranularity values:
 |column|Readability per text column|
 |cell|Readability of individual cells (optional)|
 
-**Please note: The scheme is calculated without weighting synonyms and homonyms. Correct weights can be found in the paper https://personales.upv.es/thinkmind/dl/conferences/dbkda/dbkda_2019/dbkda_2019_1_30_50036.pdf.**  
+**Please note: The scheme is calculated without weighting synonyms and homonyms. Correct weights can be found in the paper [Link](https://personales.upv.es/thinkmind/dl/conferences/dbkda/dbkda_2019/dbkda_2019_1_30_50036.pdf).**  
 
 ## 3. Pipeline modes  
 The metric supports two implementations:  
