@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import math
 from collections import Counter
 from typing import Dict, List, Optional, Tuple
 
@@ -12,7 +13,7 @@ from .llm_backend import LLMBackend
 
 
 try:
-    from nltk.corpus import wordnet as wn  # type: ignore
+    from nltk.corpus import wordnet as wn  
 except Exception:  # pragma: no cover
     wn = None
 
@@ -57,40 +58,47 @@ class WordNetScorer:
     @staticmethod
     def _check_wordnet() -> bool:
         try:
-            _ = wn.synsets("test")  # type: ignore[union-attr]
+            _ = wn.synsets("test")  
             return True
         except Exception:
             return False
 
     def score(self, token: str) -> Tuple[float, float, float]:
-        # Normalize token
         t = token.strip().lower()
         if not t:
             return (0.0, 0.0, 0.0)
         if t in self.cache:
             return self.cache[t]
-        
-        # Abbreviations are treated as "existing" (E=1). 
-        # D and A must come from LLM in HybridScorer (strict or fallback).
+
+        # Abbreviations: treat as existing and unambiguous
         if t in self.abbreviations:
-            res = (1.0, 0.0, 0.0) 
+            res = (1.0, float("nan"), 1.0)  # D not available, A = 1
             self.cache[t] = res
             return res
 
-        # WordNet lookup lookup -> only Existence (E) is reliable here
+        synsets = []
         if self.wordnet_available:
             try:
-                synsets = wn.synsets(t)  # type: ignore[union-attr]
+                synsets = wn.synsets(t)  
             except Exception:
                 synsets = []
+
             E = 1.0 if synsets else 0.0
         else:
-            # Keep old "best effort" behavior if WordNet isn't available.
-            E = 0.5 if t.isalpha() else 0.0
+            # If WordNet is not available, do NOT give partial credit
+            E = 0.0
 
-        # D and A are set to 0 placeholders and can be overwritten by LLM in HybridScorer (strict/fallback).
-        D = 0.0  # CHANGED (was length heuristic)
-        A = 0.0  # CHANGED (was always 0 anyway, but now explicitly "placeholder")
+        # Difficulty not derived from WordNet here (leave as NaN so we can ignore it in normalization)
+        D = float("nan")
+
+        # Ambiguity from WordNet polysemy:
+        # fewer senses (synsets) => higher A
+        if E == 0.0:
+            A = float("nan")
+        else:
+            n = len(synsets)
+            # A in (0,1], A=1 when exactly one sense
+            A = 1.0 / float(n) if n > 0 else 1.0
 
         res = (float(E), float(D), float(A))
         self.cache[t] = res
@@ -183,13 +191,13 @@ class HybridScorer:
                 continue
            
             # skip if already LLM-scored
-            cur = self.cache.get(tt, None)  # ADDED
-            if cur is not None and cur[3] == "llm":  # ADDED
-                continue  # ADDED
+            cur = self.cache.get(tt, None)
+            if cur is not None and cur[3] == "llm": 
+                continue  
 
-            if str(self.cfg.llm_mode).lower() == "strict":  # ADDED
+            if str(self.cfg.llm_mode).lower() == "strict":  
                 # strict mode: always query (D and A must come from LLM)
-                to_query.append(tt)  # ADDED
+                to_query.append(tt)  
             else:
                 # fallback mode: only query if WordNet says unknown (E==0) or trigger conditions apply
                 Ewn, _, _, _ = self.score_fast(tt)
@@ -239,7 +247,7 @@ def schema_label_score(tokens, s_case, scorer):
       3) synonyms (fulfilled = no synonyms)
       4) hypernyms (fulfilled = no hypernyms)
 
-    scorer: WordNetOnlyAdapter oder HybridScorer (beide unterstützen score_fast()).
+    scorer: WordNetOnlyAdapter or HybridScorer (both support score_fast()).
     """
     if not tokens:
         return 0.0
@@ -247,7 +255,7 @@ def schema_label_score(tokens, s_case, scorer):
     # (2) Case consistency is label-global
     case_ok = 1 if float(s_case) >= 1.0 else 0
 
-    # Abbreviation-Shortcut (falls verfügbar)
+    # Abbreviation-Shortcut (if available)
     abbr = None
     if hasattr(scorer, "wordnet") and hasattr(scorer.wordnet, "abbreviations"):
         abbr = scorer.wordnet.abbreviations or {}
@@ -258,7 +266,7 @@ def schema_label_score(tokens, s_case, scorer):
         if not tt:
             continue
 
-        # (1) existence über scorer (WordNet / Hybrid)
+        # (1) existence via scorer (WordNet / Hybrid)
         if hasattr(scorer, "score_fast"):
             E, _, _, _ = scorer.score_fast(tt)
         else:
@@ -283,22 +291,22 @@ def schema_label_score(tokens, s_case, scorer):
                 except Exception:
                     synsets = []
 
-                # Synonyms criterion fulfilled if at least one synset exists
-                syn_ok = 1 if len(synsets) > 0 else 0
+                # Synonyms criterion fulfilled if NO synset exists (presence reduces schema readability)
+                syn_ok = 1 if len(synsets) == 0 else 0
 
-                # Hypernyms criterion fulfilled if at least one hypernym relation exists
+                # Hypernyms criterion fulfilled if NO hypernym relation exists (presence reduces schema readability)
                 has_hypernym = False
                 for ss in synsets:
                     if ss.hypernyms():
                         has_hypernym = True
                         break
-
-                hyp_ok = 1 if has_hypernym else 0
+                hyp_ok = 1 if not has_hypernym else 0
 
         fcrit = exists_ok + case_ok + syn_ok + hyp_ok
         per_token_scores.append(fcrit / 4.0)
 
     return float(sum(per_token_scores) / len(per_token_scores)) if per_token_scores else 0.0
+
 
 # Calculates readability per cell (content level) from tokens. In addition, counters are kept for analysis/annotations.
 def content_cell_score(tokens, scorer, unknown_counter=None, difficult_counter=None, llm_candidate_counter=None) -> float:
@@ -320,7 +328,18 @@ def content_cell_score(tokens, scorer, unknown_counter=None, difficult_counter=N
         else:
             # Content formula already correct: unweighted mean over criteria
             # score_word = (E + D + A) / 3
-            s = (E + D + A) / 3.0
+            vals = [E]
+
+            # include D only if it is a real number (not NaN)
+            if not (isinstance(D, float) and math.isnan(D)):
+                vals.append(D)
+
+            # include A only if it is a real number (not NaN)
+            if not (isinstance(A, float) and math.isnan(A)):
+                vals.append(A)
+
+            s = float(sum(vals) / len(vals))
+
             word_scores.append(s)
             if difficult_counter is not None and D < 0.6:
                 difficult_counter[t] += 1
