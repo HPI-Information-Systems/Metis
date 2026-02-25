@@ -1,0 +1,512 @@
+{
+    "@context": {
+      "@language": "en",
+      "@vocab": "https://schema.org/",
+      "citeAs": "cr:citeAs",
+      "column": "cr:column",
+      "conformsTo": "dct:conformsTo",
+      "cr": "http://mlcommons.org/croissant/",
+      "data": {
+        "@id": "cr:data",
+        "@type": "@json"
+      },
+      "dataBiases": "cr:dataBiases",
+      "dataCollection": "cr:dataCollection",
+      "dataType": {
+        "@id": "cr:dataType",
+        "@type": "@vocab"
+      },
+      "dct": "http://purl.org/dc/terms/",
+      "extract": "cr:extract",
+      "field": "cr:field",
+      "fileProperty": "cr:fileProperty",
+      "fileObject": "cr:fileObject",
+      "fileSet": "cr:fileSet",
+      "format": "cr:format",
+      "includes": "cr:includes",
+      "isEnumeration": "cr:isEnumeration",
+      "isLiveDataset": "cr:isLiveDataset",
+      "jsonPath": "cr:jsonPath",
+      "key": "cr:key",
+      "md5": "cr:md5",
+      "parentField": "cr:parentField",
+      "path": "cr:path",
+      "personalSensitiveInformation": "cr:personalSensitiveInformation",
+      "recordSet": "cr:recordSet",
+      "references": "cr:references",
+      "regex": "cr:regex",
+      "repeated": "cr:repeated",
+      "replace": "cr:replace",
+      "sc": "https://schema.org/",
+      "separator": "cr:separator",
+      "source": "cr:source",
+      "subField": "cr:subField",
+      "transform": "cr:transform",
+      "wd": "https://www.wikidata.org/wiki/"
+    },
+    "alternateName": "Exploring Aircraft Safety, Damage, and Impact of Bird Collisions",
+    "conformsTo": "http://mlcommons.org/croissant/1.0",
+    "license": {
+      "@type": "sc:CreativeWork",
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    "distribution": [
+      {
+        "contentUrl": "https://www.kaggle.com/api/v1/datasets/download/iamtapendu/bird-strike-by-aircafts-data?datasetVersionNumber=1",
+        "contentSize": "1.421 MB",
+        "md5": "Wio7es8yDWhDtedFSIpSaA==",
+        "encodingFormat": "application/zip",
+        "@id": "archive.zip",
+        "@type": "cr:FileObject",
+        "name": "archive.zip",
+        "description": "Archive containing all the contents of the Bird Strikes in Aviation: Aircraft Collisions dataset"
+      },
+      {
+        "contentUrl": "Bird_strikes.csv",
+        "containedIn": {
+          "@id": "archive.zip"
+        },
+        "encodingFormat": "text/csv",
+        "@id": "Bird_strikes.csv_fileobject",
+        "@type": "cr:FileObject",
+        "name": "Bird_strikes.csv",
+        "description": "Birds Strikes"
+      }
+    ],
+    "recordSet": [
+      {
+        "field": [
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "RecordID"
+              }
+            },
+            "@id": "Bird_strikes.csv/RecordID",
+            "@type": "cr:Field",
+            "name": "RecordID",
+            "description": "Unique id for each row"
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "AircraftType"
+              }
+            },
+            "@id": "Bird_strikes.csv/AircraftType",
+            "@type": "cr:Field",
+            "name": "AircraftType",
+            "description": "The type of aircraft."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "AirportName"
+              }
+            },
+            "@id": "Bird_strikes.csv/AirportName",
+            "@type": "cr:Field",
+            "name": "AirportName",
+            "description": "Airport where the strike occurred."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "AltitudeBin"
+              }
+            },
+            "@id": "Bird_strikes.csv/AltitudeBin",
+            "@type": "cr:Field",
+            "name": "AltitudeBin",
+            "description": "The altitude range (in feet) at which the bird strike occurred, divided into bins (e.g., '(1000, 2000]', '(30, 50]')."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "MakeModel"
+              }
+            },
+            "@id": "Bird_strikes.csv/MakeModel",
+            "@type": "cr:Field",
+            "name": "MakeModel",
+            "description": "Make and model of the aircraft involved."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "NumberStruck"
+              }
+            },
+            "@id": "Bird_strikes.csv/NumberStruck",
+            "@type": "cr:Field",
+            "name": "NumberStruck",
+            "description": "The number of birds that were struck."
+          },
+          {
+            "dataType": ["sc:Integer"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "NumberStruckActual"
+              }
+            },
+            "@id": "Bird_strikes.csv/NumberStruckActual",
+            "@type": "cr:Field",
+            "name": "NumberStruckActual",
+            "description": "The actual number of birds that were struck."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "Effect"
+              }
+            },
+            "@id": "Bird_strikes.csv/Effect",
+            "@type": "cr:Field",
+            "name": "Effect",
+            "description": "Impact of the strike on the aircraft, whether it caused any damage or not."
+          },
+          {
+            "dataType": ["sc:Date"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "FlightDate"
+              }
+            },
+            "@id": "Bird_strikes.csv/FlightDate",
+            "@type": "cr:Field",
+            "name": "FlightDate",
+            "description": "Date of the incident."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "Damage"
+              }
+            },
+            "@id": "Bird_strikes.csv/Damage",
+            "@type": "cr:Field",
+            "name": "Damage",
+            "description": "Description of damage caused."
+          },
+          {
+            "dataType": ["sc:Integer"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "Engines"
+              }
+            },
+            "@id": "Bird_strikes.csv/Engines",
+            "@type": "cr:Field",
+            "name": "Engines",
+            "description": "Number of engines on the aircraft."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "Operator"
+              }
+            },
+            "@id": "Bird_strikes.csv/Operator",
+            "@type": "cr:Field",
+            "name": "Operator",
+            "description": "Airline or operator of the aircraft."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "OriginState"
+              }
+            },
+            "@id": "Bird_strikes.csv/OriginState",
+            "@type": "cr:Field",
+            "name": "OriginState",
+            "description": " U.S. state of departure."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "FlightPhase"
+              }
+            },
+            "@id": "Bird_strikes.csv/FlightPhase",
+            "@type": "cr:Field",
+            "name": "FlightPhase",
+            "description": "Phase of flight during the strike."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "ConditionsPrecipitation"
+              }
+            },
+            "@id": "Bird_strikes.csv/ConditionsPrecipitation",
+            "@type": "cr:Field",
+            "name": "ConditionsPrecipitation",
+            "description": "Weather precipitation at the time."
+          },
+          {
+            "dataType": ["sc:Boolean"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "RemainsCollected?"
+              }
+            },
+            "@id": "Bird_strikes.csv/RemainsCollected%3F",
+            "@type": "cr:Field",
+            "name": "RemainsCollected?",
+            "description": "Wether bird remains were collected after the strike."
+          },
+          {
+            "dataType": ["sc:Boolean"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "RemainsSentToSmithsonian"
+              }
+            },
+            "@id": "Bird_strikes.csv/RemainsSentToSmithsonian",
+            "@type": "cr:Field",
+            "name": "RemainsSentToSmithsonian",
+            "description": "Whether bird remains were sent to the Smithsonian Institution for study."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "Remarks"
+              }
+            },
+            "@id": "Bird_strikes.csv/Remarks",
+            "@type": "cr:Field",
+            "name": "Remarks",
+            "description": "Additional incident details from pilots and other staff."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "WildlifeSize"
+              }
+            },
+            "@id": "Bird_strikes.csv/WildlifeSize",
+            "@type": "cr:Field",
+            "name": "WildlifeSize",
+            "description": "Size of the wildlife involved."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "ConditionsSky"
+              }
+            },
+            "@id": "Bird_strikes.csv/ConditionsSky",
+            "@type": "cr:Field",
+            "name": "ConditionsSky",
+            "description": "Sky condition at the time."
+          },
+          {
+            "dataType": ["sc:Text"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "WildlifeSpecies"
+              }
+            },
+            "@id": "Bird_strikes.csv/WildlifeSpecies",
+            "@type": "cr:Field",
+            "name": "WildlifeSpecies",
+            "description": "Species of wildlife involved."
+          },
+          {
+            "dataType": ["sc:Boolean"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "PilotWarned"
+              }
+            },
+            "@id": "Bird_strikes.csv/PilotWarned",
+            "@type": "cr:Field",
+            "name": "PilotWarned",
+            "description": "If the pilot was warned."
+          },
+          {
+            "dataType": ["sc:Float"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "Cost"
+              }
+            },
+            "@id": "Bird_strikes.csv/Cost",
+            "@type": "cr:Field",
+            "name": "Cost",
+            "description": "Cost resulting from the incident."
+          },
+          {
+            "dataType": ["sc:Integer"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "Altitude"
+              }
+            },
+            "@id": "Bird_strikes.csv/Altitude",
+            "@type": "cr:Field",
+            "name": "Altitude",
+            "description": "Specific altitude at which the bird strike occurred."
+          },
+          {
+            "dataType": ["sc:Integer"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "PeopleInjured"
+              }
+            },
+            "@id": "Bird_strikes.csv/PeopleInjured",
+            "@type": "cr:Field",
+            "name": "PeopleInjured",
+            "description": "Number of people injured."
+          },
+          {
+            "dataType": ["sc:Boolean"],
+            "source": {
+              "fileObject": {
+                "@id": "Bird_strikes.csv_fileobject"
+              },
+              "extract": {
+                "column": "IsAircraftLarge?"
+              }
+            },
+            "@id": "Bird_strikes.csv/IsAircraftLarge%3F",
+            "@type": "cr:Field",
+            "name": "IsAircraftLarge?",
+            "description": "Indicates if the aircraft was large."
+          }
+        ],
+        "@id": "Bird_strikes.csv",
+        "@type": "cr:RecordSet",
+        "name": "Bird_strikes.csv",
+        "description": "Birds Strikes"
+      }
+    ],
+    "version": 1,
+    "keywords": [
+      "subject \u003E earth and nature \u003E animals",
+      "technique \u003E data visualization",
+      "technique \u003E exploratory data analysis",
+      "audience \u003E beginner",
+      "subject \u003E science and technology \u003E transportation \u003E aviation",
+      "subject \u003E science and technology \u003E transportation"
+    ],
+    "isAccessibleForFree": true,
+    "includedInDataCatalog": {
+      "@type": "sc:DataCatalog",
+      "name": "Kaggle",
+      "url": "https://www.kaggle.com"
+    },
+    "creator": {
+      "@type": "sc:Person",
+      "name": "Tapendu Karmakar",
+      "url": "/iamtapendu",
+      "image": "https://storage.googleapis.com/kaggle-avatars/thumbnails/7162438-kg.jpg"
+    },
+    "publisher": {
+      "@type": "sc:Organization",
+      "name": "Kaggle",
+      "url": "https://www.kaggle.com/organizations/kaggle",
+      "image": "https://storage.googleapis.com/kaggle-organizations/4/thumbnail.png"
+    },
+    "thumbnailUrl": "https://storage.googleapis.com/kaggle-datasets-images/6093759/9916230/6a434a3f31009f33f833630dcdaae447/dataset-card.png?t=2024-11-15-15-26-40",
+    "dateModified": "2024-11-15T13:41:24.79",
+    "datePublished": "2024-11-15T13:41:24.79",
+    "@type": "sc:Dataset",
+    "name": "Bird Strikes in Aviation: Aircraft Collisions",
+    "url": "https://www.kaggle.com/datasets/iamtapendu/bird-strike-by-aircafts-data/versions/1",
+    "description": "The FAA dataset (2000–2011) analyzes bird strikes in U.S. aviation, detailing trends, costs, affected airlines and airports, timing, flight phases, and risk factors to support safety and mitigation strategies."
+  }
+  

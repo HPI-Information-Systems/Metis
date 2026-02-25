@@ -1,5 +1,0 @@
-{
-  "name": "Countries Capitals",
-  "path": "data/countries-capitals.csv",
-  "loader": "csv"
-}

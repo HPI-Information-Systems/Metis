@@ -1,4 +1,4 @@
-# Readability Metric (METIS)
+# Readability Metric
 
 ## 1. Purpose of the metric  
 The readability metric evaluates the readability of tabular data on two levels:  
@@ -21,7 +21,7 @@ The metric generates results (DQResult) with the following DQgranularity values:
 |column|Readability per text column|
 |cell|Readability of individual cells (optional)|
 
-**Please note: The scheme is calculated without weighting synonyms and homonyms. Correct weights can be found in the paper [Link](https://personales.upv.es/thinkmind/dl/conferences/dbkda/dbkda_2019/dbkda_2019_1_30_50036.pdf).**  
+**Please note: The schema is calculated without weighting synonyms and homonyms. Correct weights can be found in the paper [2019_Ehrlinger](https://personales.upv.es/thinkmind/dl/conferences/dbkda/dbkda_2019/dbkda_2019_1_30_50036.pdf).**  
 
 ## 3. Pipeline modes  
 The metric supports two implementations:  
@@ -40,3 +40,4 @@ Metric:         readability_llm
 Configuration:  “llm_mode”: “strict”  
 Properties:     LLM dominates the evaluation, Higher computational effort  
 
+## Experiments

@@ -4,7 +4,7 @@
     "output_cells": false,
     "output_columns": true,
     "output_table": true,
-    "sample_size": null,
+    "sample_size": 2000,
     "random_seed": 13,
     "min_token_length": 2,
     "ignore_numeric_columns": true,
@@ -19,10 +19,10 @@
       "also_if_contains_digit_or_symbol": true
     },
     "hf_model_id": "Qwen/Qwen2.5-3B-Instruct",
-    "hf_device": "auto",
+    "hf_device": "cpu",
     "hf_dtype": "auto",
-    "hf_max_new_tokens": 512,
-    "llm_batch_size": 80,
+    "hf_max_new_tokens": 128,
+    "llm_batch_size": 10,
     "column_level_llm_score": false,
     "column_level_llm_sample_values": 100,
     "column_level_llm_gamma": 0.5
