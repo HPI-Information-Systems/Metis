@@ -53,16 +53,17 @@ the dataset configuration (data-configs),
 
 and the readability metric configuration.
 
-General Execution Command
+**General Execution Command**  
 python -m demo.readability.readability_experiment \
-  --experiment-name <experiment_name> \
-  --data-configs <path_to_dataset_config.json> \
-  --readability-config configs/metric/readability.json
-Example
-python -m demo.readability.readability_experiment \
-  --experiment-name readability_eval \
-  --data-configs data/readability_evaluation__auto.json \
-  --readability-config configs/metric/readability.json
+- experiment-name <experiment_name> \
+- data-configs <path_to_dataset_config.json> \
+- readability-config configs/metric/readability.json
+
+**Example**  
+> python -m demo.readability.readability_experiment \
+> -- experiment-name readability_eval \
+> -- data-configs data/readability_evaluation__auto.json \
+> -- readability-config configs/metric/readability.json
 
 Each execution creates a separate experiment directory under:
 
