@@ -1,0 +1,19 @@
+{
+    "loader": "CSV",
+    "name": "Drives",
+    "file_name": "drives.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "name",
+        "price",
+        "brand",
+        "size",
+        "instance_id"
+    ],
+    "parse_dates": false,
+    "decimal": ".",
+    "thousands": null
+}

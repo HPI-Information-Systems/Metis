@@ -1,0 +1,28 @@
+{
+    "loader": "CSV",
+    "name": "Notebooks1",
+    "file_name": "notebooks1.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "instance_id",
+        "brand",
+        "cpu_brand",
+        "cpu_model",
+        "cpu_type",
+        "cpu_frequency",
+        "ram_capacity",
+        "ram_type",
+        "ram_frequency",
+        "hdd_capacity",
+        "ssd_capacity",
+        "weight",
+        "dimensions",
+        "title"
+    ],
+    "parse_dates": false,
+    "decimal": ".",
+    "thousands": null
+}
