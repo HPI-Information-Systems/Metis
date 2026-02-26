@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 import pandas as pd
 from metis.metric.metric import Metric
 from metis.utils.result import DQResult
+from .readability_wordnet_config import readability_wordnet_config
 
 from .tokenization import split_identifier, split_text, compute_case_consistency_scores
 from .scorers import (
@@ -19,41 +20,7 @@ from .scorers import (
     schema_label_score,
     content_cell_score,
 )
-
-@dataclass
-class ReadabilityWordNetConfig:
-    # Core
-    sample_size: Optional[int] = None
-    random_seed: int = 13
-    min_token_length: int = 2
-    abbr_csv: Optional[str] = None
-    ignore_numeric_columns: bool = True
-
-    # Schema (separate)
-    compute_schema: bool = True
-
-    @staticmethod
-    def from_metric_config(metric_config: Optional[str]) -> "ReadabilityWordNetConfig":
-        cfg = ReadabilityWordNetConfig()
-        if metric_config is None:
-            return cfg
-
-        metric_config = metric_config.strip()
-        if metric_config.startswith("{"):
-            data = json.loads(metric_config)
-        else:
-            if not os.path.exists(metric_config):
-                raise ValueError(f"metric_config is neither JSON nor an existing path: {metric_config}")
-            with open(metric_config, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-        cfg.sample_size = data.get("sample_size", cfg.sample_size)
-        cfg.random_seed = int(data.get("random_seed", cfg.random_seed))
-        cfg.min_token_length = int(data.get("min_token_length", cfg.min_token_length))
-        cfg.abbr_csv = data.get("abbr_csv", cfg.abbr_csv)
-        cfg.ignore_numeric_columns = bool(data.get("ignore_numeric_columns", cfg.ignore_numeric_columns))
-        cfg.compute_schema = bool(data.get("compute_schema", cfg.compute_schema))
-        return cfg
+from ...utils.dq_dimension import DQDimension
 
 
 def _select_text_columns(df: pd.DataFrame, ignore_numeric: bool) -> List[str]:
@@ -84,7 +51,13 @@ class ReadabilityWordNet(Metric):
         reference: Union[pd.DataFrame, None] = None,
         metric_config: Union[str, None] = None,
     ) -> List[DQResult]:
-        cfg = ReadabilityWordNetConfig.from_metric_config(metric_config)
+
+        if metric_config is None:
+            raise ValueError(
+                f"Metric configuration is required for metric {readability_wordnet_config.__name__} but None was provided."
+            )
+
+        cfg = self.load_config(metric_config, readability_wordnet_config)
         rng = random.Random(cfg.random_seed)
 
         text_cols = _select_text_columns(data, cfg.ignore_numeric_columns)
@@ -146,7 +119,7 @@ class ReadabilityWordNet(Metric):
             DQResult(
                 mesTime=now,
                 DQvalue=float(content_wordnet),
-                DQdimension="Readability",
+                DQdimension=DQDimension.READABILITY,
                 DQmetric="readability_wordnet_content",
                 columnNames=None,
                 rowIndex=None,
@@ -168,7 +141,7 @@ class ReadabilityWordNet(Metric):
                 DQResult(
                     mesTime=now,
                     DQvalue=float(schema_wordnet),
-                    DQdimension="Readability",
+                    DQdimension=DQDimension.READABILITY,
                     DQmetric="readability_wordnet_schema",
                     columnNames=None,
                     rowIndex=None,
@@ -187,7 +160,7 @@ class ReadabilityWordNet(Metric):
                 DQResult(
                     mesTime=now,
                     DQvalue=float(col_scores.get(col, 0.0)),
-                    DQdimension="Readability",
+                    DQdimension=DQDimension.READABILITY,
                     DQmetric="readability_wordnet_content_column",
                     columnNames=[col],
                     rowIndex=None,
