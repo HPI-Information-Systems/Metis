@@ -8,15 +8,11 @@ from scipy.spatial.distance import squareform
 from semhash import SemHash
 
 from metis.metric.metric import Metric
+from metis.metric.minimality.minimality_clustering_config import minimality_clustering_config
+from metis.utils.dq_dimension import DQDimension
 from metis.utils.result import DQResult
 
-from metis.utils.similarity_measures import row_similarity
-
-defaultConfig = {
-    "use_semhash": False,
-    "similarity_threshold": 0.85,
-}
-
+from metis.utils.similarity_measures.similarity_measures import row_similarity
 
 class minimality_clustering(Metric):
     """
@@ -33,8 +29,12 @@ class minimality_clustering(Metric):
         metric_config: Union[str, None] = None,
     ) -> List[DQResult]:
 
-        config = self.load_metric_config(metric_config)
-        config = {**defaultConfig, **config}
+        if metric_config is None:
+            raise ValueError(
+                f"Metric configuration is required for metric {minimality_clustering_config.__name__} but None was provided."
+            )
+
+        config = self.load_config(metric_config, minimality_clustering_config)
 
         n_rows = len(data)
 
@@ -42,32 +42,32 @@ class minimality_clustering(Metric):
             minimality = 1.0
             num_clusters = n_rows
         else:
-            if config["use_semhash"]:
+            if config.use_semhash:
                 num_clusters = self._semhash_clusters(
-                    data, config["similarity_threshold"]
+                    data, config.similarity_threshold
                 )
             else:
                 num_clusters = self._custom_clusters(
-                    data, config["similarity_threshold"]
+                    data, config.similarity_threshold
                 )
 
             minimality = (num_clusters - 1) / (n_rows - 1)
 
         result = DQResult(
             mesTime=pd.Timestamp.now(),
-            DQdimension="Minimality",
+            DQdimension=DQDimension.MINIMALITY,
             DQmetric="clustering",
             DQgranularity="table",
             DQvalue=float(minimality),
             DQexplanation={
                 "total_rows": n_rows,
                 "clusters": num_clusters,
-                "use_semhash": config["use_semhash"],
-                "similarity_threshold": config["similarity_threshold"],
+                "use_semhash": config.use_semhash,
+                "similarity_threshold": config.similarity_threshold,
             },
             columnNames=None,
             rowIndex=None,
-            configJson=metric_config,
+            configJson=config.to_json(),
         )
 
         return [result]

@@ -5,7 +5,7 @@ import Levenshtein
 # -------------------------------
 # String similarity
 # -------------------------------
-def levenshtein_similarity(a: str, b: str) -> float:
+def normalized_levenshtein_similarity(a: str, b: str) -> float:
     """Normalized Levenshtein similarity between two strings."""
     if not a and not b:
         return 1.0
@@ -57,7 +57,7 @@ def row_similarity(row_a: pd.Series, row_b: pd.Series) -> float:
             continue
 
         if isinstance(a, str):
-            sims.append(levenshtein_similarity(a, b))
+            sims.append(normalized_levenshtein_similarity(a, b))
         elif isinstance(a, (int, float)):
             sims.append(numeric_similarity(a, b))
         elif isinstance(a, bool):
