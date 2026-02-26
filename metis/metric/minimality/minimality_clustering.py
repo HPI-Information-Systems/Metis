@@ -12,7 +12,7 @@ from metis.metric.minimality.minimality_clustering_config import minimality_clus
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.result import DQResult
 
-from metis.utils.similarity_measures.similarity_measures import row_similarity
+from metis.utils.similarity_measures.row import row_similarity
 
 class minimality_clustering(Metric):
     """

@@ -7,7 +7,7 @@ from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.numbers import clamp
 from metis.utils.result import DQResult
-from metis.utils.similarity_measures.levenshtein_distance import levenshtein_distance
+from metis.utils.similarity_measures.string import levenshtein_distance
 
 
 class correctness_heinrich(Metric):
