@@ -42,10 +42,7 @@ Properties:     LLM dominates the evaluation, Higher computational effort
 
 ## Experiments
 
-The readability experiments are executed per dataset and must be started individually.
-The batch execution script (run_readability_batch.ps1) is not part of the released repository to ensure transparent and reproducible experiment control.
-
-Each experiment is executed via the readability_experiment module by explicitly specifying:
+The readability experiments are executed per dataset and must be started individually.  Each experiment is executed via the readability_experiment module by explicitly specifying:
 - an experiment name,
 - the dataset configuration (data-configs),
 - and the readability metric configuration.
