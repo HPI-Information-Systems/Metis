@@ -46,18 +46,15 @@ The readability experiments are executed per dataset and must be started individ
 The batch execution script (run_readability_batch.ps1) is not part of the released repository to ensure transparent and reproducible experiment control.
 
 Each experiment is executed via the readability_experiment module by explicitly specifying:
-
-an experiment name,
-
-the dataset configuration (data-configs),
-
-and the readability metric configuration.
+- an experiment name,
+- the dataset configuration (data-configs),
+- and the readability metric configuration.
 
 **General Execution Command**  
-python -m demo.readability.readability_experiment \
-- experiment-name <experiment_name> \
-- data-configs <path_to_dataset_config.json> \
-- readability-config configs/metric/readability.json
+> python -m demo.readability.readability_experiment \
+> -- experiment-name <experiment_name> \
+> -- data-configs <path_to_dataset_config.json> \
+> -- readability-config configs/metric/readability.json
 
 **Example**  
 > python -m demo.readability.readability_experiment \
@@ -67,7 +64,7 @@ python -m demo.readability.readability_experiment \
 
 Each execution creates a separate experiment directory under:
 
-demo/readability/experiments/
+> demo/readability/experiments/
 
 containing all generated results (scores, summaries, and reports).
 
