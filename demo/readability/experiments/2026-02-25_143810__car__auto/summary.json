@@ -1,0 +1,9 @@
+{
+  "table_wordnet": 0.4640106481814004,
+  "table_llm": 0.5583228174935685,
+  "table_uplift": 0.09431216931216807,
+  "schema_wordnet": 0.42857142857142855,
+  "schema_llm": 0.5357142857142857,
+  "schema_uplift": 0.10714285714285715,
+  "llm_tokens_share_total": 0.2
+}
