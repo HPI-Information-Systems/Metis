@@ -1,0 +1,18 @@
+{
+    "loader": "CSV",
+    "name": "readability_evaluation_human_results",
+    "file_name": "readability_evaluation_human_results.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "words",
+        "readability",
+        "difficulty",
+        "wordExistence",
+        "synonyms",
+        "homonyms",
+        "hypernyms"
+    ]
+}

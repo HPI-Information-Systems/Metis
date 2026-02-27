@@ -187,10 +187,18 @@ class ReadabilityLLM(Metric):
             labels = [str(c) for c in data.columns]
             case_scores = compute_case_consistency_scores(labels)
 
+            schema_vocab = set()
+            for lab in labels:
+                schema_vocab.update(
+                    t.strip().lower()
+                    for t in split_identifier(lab)
+                    if len(t) >= cfg.min_token_length and str(t).strip()
+                )
+
             for label in labels:
                 toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
                 s_case = float(case_scores.get(label, 1.0))
-                schema_label_scores_wordnet[label] = schema_label_score(toks, s_case, baseline)
+                schema_label_scores_wordnet[label] = schema_label_score(toks, s_case, baseline, schema_vocab=schema_vocab)
             schema_wordnet = float(sum(schema_label_scores_wordnet.values()) / len(schema_label_scores_wordnet)) if schema_label_scores_wordnet else 0.0
 
             schema_llm_tokens = set()
@@ -207,11 +215,11 @@ class ReadabilityLLM(Metric):
                     hybrid.backend = _build_backend(cfg)
                 if hybrid.backend is not None:
                     hybrid.score_llm_batch(sorted(schema_llm_tokens))
-
+                    
             for label in labels:
                 toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
                 s_case = float(case_scores.get(label, 1.0))
-                schema_label_scores_hybrid[label] = schema_label_score(toks, s_case, hybrid)
+                schema_label_scores_hybrid[label] = schema_label_score(toks, s_case, hybrid, schema_vocab=schema_vocab)
             schema_hybrid = float(sum(schema_label_scores_hybrid.values()) / len(schema_label_scores_hybrid)) if schema_label_scores_hybrid else 0.0
 
         # B) CONTENT
@@ -244,6 +252,10 @@ class ReadabilityLLM(Metric):
                     hybrid.backend = _build_backend(cfg)
                 if hybrid.backend is not None:
                     hybrid.score_llm_batch(sorted(llm_tokens))
+                    print("LLM TOKENS:", sorted(llm_tokens))
+                    for t in sorted(llm_tokens):
+                        E, _, _ = wordnet.score(t)
+                        print("  WordNet existence (pure):", t, E)
 
             total_unique_tokens_seen += len(uniq_tokens)
             total_llm_tokens_used += len(llm_tokens)

@@ -1,0 +1,24 @@
+{
+    "loader": "CSV",
+    "name": "laptop_price_data",
+    "file_name": "laptop_price_data.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "Manufacturer",
+        "Model Name",
+        "Category",
+        "Screen Size",
+        "Screen",
+        "CPU",
+        "RAM",
+        " Storage",
+        "GPU",
+        "Operating System",
+        "Operating System Version",
+        "Weight",
+        "Price"
+    ]
+}

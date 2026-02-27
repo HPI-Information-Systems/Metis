@@ -115,10 +115,17 @@ class ReadabilityWordNet(Metric):
         if cfg.compute_schema:
             labels = [str(c) for c in data.columns]
             case_scores = compute_case_consistency_scores(labels)
+            schema_vocab = set()
+            for lab in labels:
+                schema_vocab.update(
+                    t.strip().lower()
+                    for t in split_identifier(lab)
+                    if len(t) >= cfg.min_token_length and str(t).strip()
+                )
             for label in labels:
                 toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
                 s_case = float(case_scores.get(label, 1.0))
-                schema_label_scores[label] = schema_label_score(toks, s_case, baseline)
+                schema_label_scores[label] = schema_label_score(toks, s_case, baseline, schema_vocab=schema_vocab)
             schema_wordnet = float(sum(schema_label_scores.values()) / len(schema_label_scores)) if schema_label_scores else 0.0
 
         # B) CONTENT

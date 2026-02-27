@@ -15,27 +15,83 @@ except Exception:  # pragma: no cover
 
 
 def _extract_json_object(text: str) -> dict:
-    # 1) Try direct parse
+    """
+    Extract the first complete JSON object from text.
+
+    Robust against:
+      - leading/trailing text
+      - multiple JSON objects
+      - fenced code blocks
+      - braces inside strings
+      - incomplete trailing generation (then returns {})
+    """
+    if not text:
+        return {}
+
+    # 1) direct parse
     try:
-        return json.loads(text)
+        v = json.loads(text)
+        return v if isinstance(v, dict) else {}
     except Exception:
         pass
 
-    # 2) JSON inside ```json ... ```
+    # 2) try fenced ```json ... ```
     fenced = re.search(r"```json\s*(\{.*?\})\s*```", text, flags=re.DOTALL | re.IGNORECASE)
     if fenced:
         try:
-            return json.loads(fenced.group(1))
+            v = json.loads(fenced.group(1))
+            return v if isinstance(v, dict) else {}
         except Exception:
             pass
 
-    # 3) First JSON object (non-greedy!)
-    m = re.search(r"\{.*?\}", text, flags=re.DOTALL)
-    if m:
-        try:
-            return json.loads(m.group(0))
-        except Exception:
-            return {}
+    # 3) brace-balancing: find first complete {...}
+    start = text.find("{")
+    if start < 0:
+        return {}
+
+    depth = 0
+    in_str = False
+    esc = False
+
+    for i in range(start, len(text)):
+        ch = text[i]
+
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+
+        # not in string:
+        if ch == '"':
+            in_str = True
+            continue
+
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                candidate = text[start:i + 1]
+                try:
+                    v = json.loads(candidate)
+                    return v if isinstance(v, dict) else {}
+                except Exception:
+                    # if this candidate isn't parsable, continue searching for another object
+                    # (rare, but can happen if model emitted malformed braces earlier)
+                    # Try to find a later '{' and restart.
+                    next_start = text.find("{", start + 1)
+                    if next_start < 0:
+                        return {}
+                    start = next_start
+                    depth = 0
+                    in_str = False
+                    esc = False
+
+    # no complete object found (likely truncated generation)
     return {}
 
 
@@ -79,7 +135,7 @@ class HFTransformersBackend(LLMBackend):
         else:
             torch_dtype = torch.float16 if self.device == "cuda" else torch.float32
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_id,
             dtype=torch_dtype,
@@ -117,66 +173,120 @@ class HFTransformersBackend(LLMBackend):
             input_ids,
             attention_mask=attention_mask,
             max_new_tokens=self.max_new_tokens,
-            do_sample=True,
+            do_sample=False,
         )
-        return self.tokenizer.decode(gen[0], skip_special_tokens=True)
+
+        new_tokens = gen[0][input_ids.shape[-1]:]
+        return self.tokenizer.decode(new_tokens, skip_special_tokens=True)
 
 
     def score_words(self, words: List[str]) -> Dict[str, Dict[str, float]]:
+        def _to_int(x: Any) -> int:
+            try:
+                return max(0, int(float(x)))
+            except Exception:
+                return 0
+
+        def _compute_A(d: Dict[str, Any]) -> float:
+            syn = _to_int(d.get("synonyms", 0))
+            hom = _to_int(d.get("homonyms", 0))
+            hyp = _to_int(d.get("hypernyms", 0))
+            A = (1.0/3.0) * (1.0/(syn+1.0) + 1.0/(hom+1.0) + 1.0/(hyp+1.0))
+            return _clamp01(A)
+
+        def _is_inner_object(d: Any) -> bool:
+            # Heuristik: sieht aus wie {"E":..., "D":..., "synonyms":...} statt {"token": {...}}
+            if not isinstance(d, dict):
+                return False
+            keys = set(d.keys())
+            allowed = {"E", "D", "synonyms", "homonyms", "hypernyms"}
+            return len(keys) > 0 and keys.issubset(allowed)
+
         prompt = (
-            "Return ONLY valid JSON. No extra text. No markdown. No list.\n"
-            "Output MUST be a JSON object where each key is exactly one token.\n"
-            "Each token maps to an object with numeric fields E,D,A in [0,1].\n"
-            "Example:\n"
-            "{\n"
-            "  \"token1\": {\"E\": 0.9, \"D\": 0.7, \"A\": 0.2},\n"
-            "  \"token2\": {\"E\": 0.0, \"D\": 0.0, \"A\": 0.0}\n"
-            "}\n\n"
+            "Return ONLY a JSON object. No extra text. No markdown.\n"
+            "Keys must match the provided tokens exactly.\n"
+            "Each value must be an object with:\n"
+            "  E: float in [0,1]\n"
+            "  D: float in [0,1]\n"
+            "  synonyms: integer >=0\n"
+            "  homonyms: integer >=0\n"
+            "  hypernyms: integer >=0\n"
             f"Tokens: {json.dumps(words)}\n"
         )
-        text = self._chat(prompt)
-        #print("\n[LLM RAW OUTPUT START]\n", text[:800], "\n[LLM RAW OUTPUT END]\n")
 
+        # --- FIX 1: Single-token "inner object" wrap ---
+        #if _is_inner_object(parsed) and len(words) == 1:
+        #    parsed = {words[0]: parsed}
+
+        text = self._chat(prompt)
         parsed = _extract_json_object(text)
 
-       # HARD FALLBACK: if JSON is missing/invalid, return conservative heuristic scores
+        # Retry once or twice if we couldn't parse a complete JSON object
         if not isinstance(parsed, dict) or len(parsed) == 0:
-            out = {}
-            for w in words:
-                ww = str(w)
-                if ww.isalpha():
-                    out[w] = {"E": 0.8, "D": 0.6, "A": 0.2}
-                else:
-                    out[w] = {"E": 0.0, "D": 0.0, "A": 0.0}
+            for _ in range(2):
+                retry_prompt = (
+                    "Return ONLY a JSON object. No extra text. No markdown.\n"
+                    "IMPORTANT: Output MUST be a single JSON object and MUST be complete.\n"
+                    "Keys must match the provided tokens exactly.\n"
+                    "Each value must be an object with fields: E, D, synonyms, homonyms, hypernyms.\n"
+                    f"Tokens: {json.dumps(words)}\n"
+                )
+                text = self._chat(retry_prompt)
+                parsed = _extract_json_object(text)
+                if isinstance(parsed, dict) and len(parsed) > 0:
+                    break
 
-            # Safety: ensure every requested word has an entry
-            for w in words:
-                out.setdefault(w, {"E": 0.0, "D": 0.0, "A": 0.0})
+        # If still no JSON, return conservative zeros instead of crashing
+        if not isinstance(parsed, dict) or len(parsed) == 0:
+            out = {w: {"E": 0.0, "D": 0.0, "A": 0.0} for w in words}
             return out
-    # Normal parsing path
-        out = {}
+        out: Dict[str, Dict[str, float]] = {}
+
+        # Fill whatever is present
         for w in words:
             v = parsed.get(w)
             if isinstance(v, dict):
-                out[w] = {
-                    "E": _clamp01(v.get("E", 0.0)),
-                    "D": _clamp01(v.get("D", 0.0)),
-                    "A": _clamp01(v.get("A", 0.0)),
-                }
+                E = _clamp01(v.get("E", 0.0))
+                D = _clamp01(v.get("D", 0.0))
+                A = _compute_A(v)
+                out[w] = {"E": E, "D": D, "A": A}
 
-        for w in words:
-            out.setdefault(w, {"E": 0.0, "D": 0.0, "A": 0.0})
+        missing = [w for w in words if w not in out]
+
+        # --- FIX 2: Retry missing tokens (small, targeted) ---
+        # (2 attempts are usually enough)
+        for _ in range(2):
+            if not missing:
+                break
+            retry_prompt = (
+                "Return ONLY a JSON object. No extra text. No markdown.\n"
+                "Keys must match the provided tokens exactly.\n"
+                "Example format:\n"
+                "{\n"
+                '  "TOKEN": {"E": 1.0, "D": 0.5, "synonyms": 0, "homonyms": 0, "hypernyms": 0}\n'
+                "}\n"
+                f"Tokens: {json.dumps(missing)}\n"
+            )
+            retry_text = self._chat(retry_prompt)
+            retry_parsed = _extract_json_object(retry_text)
+
+            # again handle single-token inner object
+            if _is_inner_object(retry_parsed) and len(missing) == 1:
+                retry_parsed = {missing[0]: retry_parsed}
+
+            if isinstance(retry_parsed, dict):
+                for w in list(missing):
+                    v = retry_parsed.get(w)
+                    if isinstance(v, dict):
+                        E = _clamp01(v.get("E", 0.0))
+                        D = _clamp01(v.get("D", 0.0))
+                        A = _compute_A(v)
+                        out[w] = {"E": E, "D": D, "A": A}
+
+            missing = [w for w in words if w not in out]
+
+        # --- FIX 3: Final conservative fill (no positive fallback) ---
+        for w in missing:
+            out[w] = {"E": 0.0, "D": 0.0, "A": 0.0}
 
         return out
-
-    def score_column(self, column_name: str, sample_values: List[str]) -> float:
-        prompt = (
-            "Return ONLY valid JSON. No extra text.\n"
-            "Output format: {\"score\": <float 0..1>}.\n"
-            "Score readability of the column values for general data consumers.\n\n"
-            f"Column name: {column_name}\n"
-            f"Sample values (unique, representative): {json.dumps(sample_values)}\n"
-        )
-        text = self._chat(prompt)
-        parsed = _extract_json_object(text)
-        return _clamp01(parsed.get("score", 0.0))

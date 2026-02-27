@@ -22,7 +22,7 @@
     "hf_device": "cpu",
     "hf_dtype": "auto",
     "hf_max_new_tokens": 128,
-    "llm_batch_size": 10,
+    "llm_batch_size": 5,
     "column_level_llm_score": false,
     "column_level_llm_sample_values": 100,
     "column_level_llm_gamma": 0.5

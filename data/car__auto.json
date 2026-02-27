@@ -1,0 +1,18 @@
+{
+    "loader": "CSV",
+    "name": "car",
+    "file_name": "car.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "buying",
+        "maint",
+        "doors",
+        "persons",
+        "lug_boot",
+        "safety",
+        "class"
+    ]
+}

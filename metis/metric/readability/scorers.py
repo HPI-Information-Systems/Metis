@@ -3,25 +3,25 @@ from __future__ import annotations
 import os
 import re
 import math
-from collections import Counter
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 import pandas as pd
 
-from typing import Any
 from .llm_backend import LLMBackend
 
-
 try:
-    from nltk.corpus import wordnet as wn  
+    from nltk.corpus import wordnet as wn
 except Exception:  # pragma: no cover
     wn = None
 
-# Loads a shortcut table from CSV to treat tokens such as id, addr, dept, etc. as “valid/readable” even if WordNet does not recognize them.
+
+# ----------------------------
+# Utilities
+# ----------------------------
+
 def load_abbreviations(abbr_csv: Optional[str]) -> Dict[str, str]:
-    if not abbr_csv:
-        return {}
-    if not os.path.exists(abbr_csv):
+    """Load abbreviation table to treat tokens like id, addr, dept as valid/readable."""
+    if not abbr_csv or not os.path.exists(abbr_csv):
         return {}
     try:
         df = pd.read_csv(abbr_csv)
@@ -31,7 +31,7 @@ def load_abbreviations(abbr_csv: Optional[str]) -> Dict[str, str]:
     abbr_col = None
     full_col = None
     for c in df.columns:
-        cl = c.lower()
+        cl = str(c).lower()
         if cl.startswith("abbr"):
             abbr_col = c
         if cl.startswith("full") or cl.endswith("term"):
@@ -42,74 +42,176 @@ def load_abbreviations(abbr_csv: Optional[str]) -> Dict[str, str]:
 
     out: Dict[str, str] = {}
     for _, row in df.iterrows():
-        ab = str(row[abbr_col]).strip().lower()
-        full = str(row[full_col]).strip()
+        ab = str(row.get(abbr_col, "")).strip().lower()
+        full = str(row.get(full_col, "")).strip()
         if ab and full:
             out[ab] = full
     return out
 
-# Initialization of WordNet-based scorer: Checks whether NLTK WordNet is available (wn.synsets(“test”)) and Cache for tokens to avoid repeated queries.
-class WordNetScorer:
+
+def _is_nan(x: Any) -> bool:
+    return isinstance(x, float) and math.isnan(x)
+
+
+# ----------------------------
+# WordNet helper (schema + cognates proxy)
+# ----------------------------
+
+class WordNetHelper:
     def __init__(self, abbreviations: Optional[Dict[str, str]] = None) -> None:
         self.abbreviations = abbreviations or {}
-        self.cache: Dict[str, Tuple[float, float, float]] = {}
         self.wordnet_available = wn is not None and self._check_wordnet()
+        self._synsets_cache: Dict[str, List[Any]] = {}
+        self._lemmas_cache: Dict[str, Set[str]] = {}
+        self._hypernyms_cache: Dict[str, Set[str]] = {}
 
     @staticmethod
     def _check_wordnet() -> bool:
         try:
-            _ = wn.synsets("test")  
+            _ = wn.synsets("test")  # type: ignore[attr-defined]
             return True
         except Exception:
             return False
 
-    def score(self, token: str) -> Tuple[float, float, float]:
-        t = token.strip().lower()
+    def synsets(self, t: str) -> List[Any]:
+        t = str(t).strip().lower()
         if not t:
-            return (0.0, 0.0, 0.0)
-        if t in self.cache:
-            return self.cache[t]
+            return []
+        if t in self._synsets_cache:
+            return self._synsets_cache[t]
+        if not self.wordnet_available:
+            self._synsets_cache[t] = []
+            return []
+        try:
+            ss = wn.synsets(t)  # type: ignore[attr-defined]
+        except Exception:
+            ss = []
+        self._synsets_cache[t] = ss
+        return ss
 
-        # Abbreviations: treat as existing and unambiguous
-        if t in self.abbreviations:
-            res = (1.0, float("nan"), 1.0)  # D not available, A = 1
-            self.cache[t] = res
-            return res
+    def existence(self, t: str) -> float:
+        tt = str(t).strip().lower()
+        if not tt:
+            return 0.0
+        if tt in self.abbreviations:
+            return 1.0
+        return 1.0 if len(self.synsets(tt)) > 0 else 0.0
 
-        synsets = []
-        if self.wordnet_available:
+    def synonym_lemmas(self, t: str) -> Set[str]:
+        """Proxy set of synonyms via lemma names across synsets."""
+        tt = str(t).strip().lower()
+        if not tt:
+            return set()
+        if tt in self._lemmas_cache:
+            return self._lemmas_cache[tt]
+        if tt in self.abbreviations:
+            self._lemmas_cache[tt] = set()
+            return set()
+
+        lemmas: Set[str] = set()
+        for ss in self.synsets(tt):
             try:
-                synsets = wn.synsets(t)  
+                names = ss.lemma_names()
             except Exception:
-                synsets = []
+                names = []
+            for l in names:
+                lemmas.add(str(l).lower().replace("_", " "))
+        lemmas.discard(tt)
+        lemmas.discard(tt.replace("_", " "))
+        self._lemmas_cache[tt] = lemmas
+        return lemmas
 
-            E = 1.0 if synsets else 0.0
-        else:
-            # If WordNet is not available, do NOT give partial credit
-            E = 0.0
+    def hypernym_lemmas(self, t: str) -> Set[str]:
+        """Proxy set of hypernyms via lemma names of direct hypernym synsets."""
+        tt = str(t).strip().lower()
+        if not tt:
+            return set()
+        if tt in self._hypernyms_cache:
+            return self._hypernyms_cache[tt]
+        if tt in self.abbreviations:
+            self._hypernyms_cache[tt] = set()
+            return set()
 
-        # Difficulty not derived from WordNet here (leave as NaN so we can ignore it in normalization)
-        D = float("nan")
+        hypers: Set[str] = set()
+        for ss in self.synsets(tt):
+            try:
+                hs = ss.hypernyms()
+            except Exception:
+                hs = []
+            for h in hs:
+                try:
+                    for l in h.lemma_names():
+                        hypers.add(str(l).lower().replace("_", " "))
+                except Exception:
+                    continue
+        hypers.discard(tt)
+        hypers.discard(tt.replace("_", " "))
+        self._hypernyms_cache[tt] = hypers
+        return hypers
 
-        # Ambiguity from WordNet polysemy:
-        # fewer senses (synsets) => higher A
+    def homonyms_count_proxy(self, t: str) -> int:
+        """
+        Proxy for 'homonyms' via polysemy: number of synsets - 1.
+        """
+        tt = str(t).strip().lower()
+        if not tt or tt in self.abbreviations:
+            return 0
+        return max(0, len(self.synsets(tt)) - 1)
+
+    def cognates_counts_wordnet(self, t: str) -> Tuple[int, int, int]:
+        """
+        Counts needed for DQ4AI Eq.(3) inner term:
+          synonyms, homonyms, hypernyms
+        """
+        tt = str(t).strip().lower()
+        if not tt or tt in self.abbreviations:
+            return (0, 0, 0)
+        syn = len(self.synonym_lemmas(tt))
+        hom = self.homonyms_count_proxy(tt)
+        hyp = len(self.hypernym_lemmas(tt))
+        return (syn, hom, hyp)
+
+    @staticmethod
+    def cognates_score_from_counts(syn: int, hom: int, hyp: int) -> float:
+        # Inner term of DQ4AI Eq.(3), mapped to [0,1]
+        return (1.0 / 3.0) * (1.0 / (syn + 1.0) + 1.0 / (hom + 1.0) + 1.0 / (hyp + 1.0))
+
+
+# ----------------------------
+# Word-level scorer used by METIS (E, D, A)
+# ----------------------------
+
+class WordNetScorer:
+    """
+    WordNet-based (fast) scorer:
+      E = existence (0/1)
+      D = NaN (not available from WordNet in our implementation)
+      A = cognates-score proxy (DQ4AI Eq.(3) inner term) from WordNet counts
+    """
+    def __init__(self, abbreviations: Optional[Dict[str, str]] = None) -> None:
+        self.helper = WordNetHelper(abbreviations=abbreviations)
+
+    def score(self, token: str) -> Tuple[float, float, float]:
+        t = str(token).strip().lower()
+        if not t:
+            return (0.0, float("nan"), 0.0)
+
+        E = float(self.helper.existence(t))
         if E == 0.0:
-            A = float("nan")
-        else:
-            n = len(synsets)
-            # A in (0,1], A=1 when exactly one sense
-            A = 1.0 / float(n) if n > 0 else 1.0
+            return (0.0, float("nan"), 0.0)
 
-        res = (float(E), float(D), float(A))
-        self.cache[t] = res
-        return res
+        D = float("nan")
+        syn, hom, hyp = self.helper.cognates_counts_wordnet(t)
+        A = float(self.helper.cognates_score_from_counts(syn, hom, hyp))
+        return (E, D, A)
 
-# Adapter that uses only WordNet scorer without LLM fallback, unified interface.
+
 class WordNetOnlyAdapter:
+    """Adapter to unify interface: returns (E, D, A, source)."""
     def __init__(self, wordnet: WordNetScorer) -> None:
         self.wordnet = wordnet
 
-    def score_fast(self, token: str):
+    def score_fast(self, token: str) -> Tuple[float, float, float, str]:
         E, D, A = self.wordnet.score(token)
         return (E, D, A, "wordnet")
 
@@ -119,229 +221,281 @@ class WordNetOnlyAdapter:
     def score_llm_batch(self, tokens: List[str]) -> None:
         return
 
-    def score(self, token: str):
+    def score(self, token: str) -> Tuple[float, float, float, str]:
         E, D, A = self.wordnet.score(token)
         return (E, D, A, "wordnet")
 
-# Hybrid scorer that first uses WordNet and falls back to LLM based on configuration.
+
+# ----------------------------
+# Ehrlinger 2019 schema readability (Eq.5, reproduced-ish)
+# ----------------------------
+
+def _case_ok(schema_case_score: float) -> int:
+    return 1 if float(schema_case_score) >= 1.0 else 0
+
+
+def schema_readability_ehrlinger_2019(
+    schema_tokens: List[str],
+    schema_case_score: float,
+    wnh: WordNetHelper,
+    schema_vocab: Optional[Iterable[str]] = None,
+) -> float:
+    """
+    Ehrlinger 2019 Eq.(5) approximation:
+      Red(s) = (1/|w|) * sum_i (#fcrit_i / 4)
+    Criteria:
+      1) existence
+      2) case consistency (label-global)
+      3) no-synonym-relation-with-schema
+      4) no-hypernym-relation-with-schema
+
+    NOTE: For strict reproduction you should pass schema_vocab (all schema tokens).
+    If schema_vocab is None, we fall back to label-local vocab (still meaningful, but not strict-reproduced).
+    """
+    tokens = [str(t).strip().lower() for t in (schema_tokens or []) if str(t).strip()]
+    if not tokens:
+        return 0.0
+
+    vocab_src = schema_vocab if schema_vocab is not None else tokens
+    vocab = set(str(t).strip().lower() for t in vocab_src if str(t).strip())
+    vocab.discard("")
+
+    c_ok = _case_ok(schema_case_score)
+
+    exists: Dict[str, int] = {t: (1 if wnh.existence(t) > 0.0 else 0) for t in vocab}
+    syn_lemmas: Dict[str, Set[str]] = {}
+    hyp_lemmas: Dict[str, Set[str]] = {}
+
+    for t in vocab:
+        if exists[t] == 1:
+            syn_lemmas[t] = wnh.synonym_lemmas(t)
+            hyp_lemmas[t] = wnh.hypernym_lemmas(t)
+        else:
+            syn_lemmas[t] = set()
+            hyp_lemmas[t] = set()
+
+    per_token_scores: List[float] = []
+    for t in tokens:
+        ex = exists.get(t, 0)
+
+        # synonyms fulfilled iff no schema token is in synonym lemma set (or vice versa)
+        syn_ok = 1
+        hyp_ok = 1
+
+        if ex != 1:
+            syn_ok = 0
+            hyp_ok = 0
+        else:
+            for u in vocab:
+                if u == t:
+                    continue
+                if u in syn_lemmas[t] or t in syn_lemmas[u]:
+                    syn_ok = 0
+                    break
+            for u in vocab:
+                if u == t:
+                    continue
+                if u in hyp_lemmas[t] or t in hyp_lemmas[u]:
+                    hyp_ok = 0
+                    break
+
+        fcrit = ex + c_ok + syn_ok + hyp_ok
+        per_token_scores.append(fcrit / 4.0)
+
+    return float(sum(per_token_scores) / len(per_token_scores)) if per_token_scores else 0.0
+
+
+def schema_label_score(tokens, s_case, scorer, schema_vocab=None) -> float:
+    """
+    Backward-compatible wrapper (METIS expects this signature).
+    If schema_vocab is None, we DO NOT crash; we fall back to label-local vocab.
+    """
+    wnh = None
+    if hasattr(scorer, "wordnet") and hasattr(scorer.wordnet, "helper"):
+        wnh = scorer.wordnet.helper
+    elif hasattr(scorer, "helper"):
+        wnh = scorer.helper
+
+    if wnh is None or not isinstance(wnh, WordNetHelper):
+        wnh = WordNetHelper()
+
+    return schema_readability_ehrlinger_2019(
+        schema_tokens=list(tokens or []),
+        schema_case_score=float(s_case),
+        wnh=wnh,
+        schema_vocab=schema_vocab,  # may be None => fallback behavior
+    )
+
+
+# ----------------------------
+# DQ4AI 2025 content readability (Eq.2/3/4, reproduced)
+# ----------------------------
+
+def content_cell_score(tokens, scorer, unknown_counter=None, difficult_counter=None, llm_candidate_counter=None) -> float:
+    """
+    DQ4AI 2025 reproduced aggregation:
+      Read(z,k) = (1/|Wz|) * sum_{w in Wz} S(w,k)
+      Read(z)   = (1/|K_eff|) * sum_{k in available criteria} Read(z,k)
+    Dependency: if E(w)=0 then D(w) and A(w) contribute 0.
+    """
+    toks = [str(t).strip().lower() for t in (tokens or []) if str(t).strip()]
+    if not toks:
+        return 0.0
+
+    n = float(len(toks))
+    sum_E = 0.0
+    sum_D = 0.0
+    sum_A = 0.0
+
+    has_D = False  # track if difficulty is available for this cell
+
+    for t in toks:
+        E, D, A, src = scorer.score(t)
+
+        E = float(E)
+        sum_E += E
+
+        if E == 0.0:
+            if unknown_counter is not None:
+                unknown_counter[t] += 1
+            # candidate counter: only if scorer would use LLM for this token
+            if llm_candidate_counter is not None and hasattr(scorer, "needs_llm") and scorer.needs_llm(t):
+                llm_candidate_counter[t] += 1
+            continue
+
+        # Difficulty only if present (LLM)
+        if not _is_nan(D):
+            has_D = True
+            d = float(D)
+            sum_D += d
+            if difficult_counter is not None and src == "llm" and d < 0.6:
+                difficult_counter[t] += 1
+
+        # Cognates (A) should exist for WordNet + LLM; if NaN -> treat as 0
+        if not _is_nan(A):
+            sum_A += float(A)
+
+    read_E = sum_E / n
+    read_A = sum_A / n
+
+    if has_D:
+        read_D = sum_D / n
+        return float((read_E + read_D + read_A) / 3.0)
+    else:
+        # WordNet-only behavior: only E and A are available
+        return float((read_E + read_A) / 2.0)
+
+
+# ----------------------------
+# Hybrid scorer (WordNet first, LLM fallback)
+# ----------------------------
+
 class HybridScorer:
     _digit_or_symbol = re.compile(r"[0-9]|[^a-zA-Z_]")
 
     def __init__(self, cfg: Any, wordnet: WordNetScorer, backend: Optional[LLMBackend]) -> None:
         self.cfg = cfg
         self.wordnet = wordnet
-        self.backend = backend if cfg.use_llm_fallback else None
+        # backend is allowed to be None (lazy init in readability_llm)
+        self.backend = backend if getattr(cfg, "use_llm_fallback", False) else None
         self.cache: Dict[str, Tuple[float, float, float, str]] = {}
 
-    # Fast scoring using WordNet with caching.
-    def score_fast(self, token: str):
-        t = token.strip().lower()
+    def _trig_bool(self, key: str, default: bool) -> bool:
+        """Read trigger bool from cfg.llm_trigger (supports dataclass/object OR dict OR missing)."""
+        trig = getattr(self.cfg, "llm_trigger", None)
+        if trig is None:
+            return default
+        if isinstance(trig, dict):
+            return bool(trig.get(key, default))
+        return bool(getattr(trig, key, default))
+
+    def score_fast(self, token: str) -> Tuple[float, float, float, str]:
+        t = str(token).strip().lower()
         if not t:
-            return (0.0, 0.0, 0.0, "none")
+            return (0.0, float("nan"), 0.0, "none")
         if t in self.cache:
             return self.cache[t]
-        E, D, A = self.wordnet.score(t)
-        self.cache[t] = (E, D, A, "wordnet")
-        return (E, D, A, "wordnet")
 
-    # Determine if LLM scoring is needed based on token characteristics and configuration. The code implements trigger logic that you parameterize in ReadabilityConfig.llm_trigger.
+        E, D, A = self.wordnet.score(t)
+        res = (float(E), float(D), float(A), "wordnet")
+        self.cache[t] = res
+        return res
+
     def needs_llm(self, token: str) -> bool:
-    # If LLM is disabled by config, never use it
-        if not self.cfg.use_llm_fallback:
+        # LLM global disabled?
+        if not getattr(self.cfg, "use_llm_fallback", False):
             return False
 
-        t = token.strip().lower()
+        t = str(token).strip().lower()
         if not t:
             return False
 
-        # numeric-only tokens are not LLM-scored
+        # numeric-only tokens: never LLM
         if t.isdigit():
             return False
 
-        mode = str(getattr(self.cfg, "llm_mode", "strict")).lower()
+        mode = str(getattr(self.cfg, "llm_mode", "fallback")).lower()
 
-        # strict: LLM for all tokens (except numeric-only)
+        # strict: always query (except numeric-only)
         if mode == "strict":
             return True
 
-        # fallback: LLM only if WordNet unknown (plus triggers)
+        # fallback:
         E, _, _, _ = self.score_fast(t)
 
-        # If WordNet knows the token and config enforces "unknown only": no LLM
-        if self.cfg.llm_trigger.wordnet_unknown_only and E > 0.0:
+        # unknown-only gate: if WordNet knows it -> no LLM
+        if self._trig_bool("wordnet_unknown_only", True) and float(E) > 0.0:
             return False
 
-        # Optional trigger: digit/symbol presence
-        if self.cfg.llm_trigger.also_if_contains_digit_or_symbol and self._digit_or_symbol.search(t):
-            return True
+        # optional trigger: digit/symbol inside token
+        if self._trig_bool("also_if_contains_digit_or_symbol", False):
+            if self._digit_or_symbol.search(t):
+                return True
 
-        # WordNet unknown => needs LLM
-        return E == 0.0
+        # default fallback: WordNet unknown
+        return float(E) == 0.0
 
-
-    # Evaluates a list of tokens via the LLM in batches and stores results in the cache. Only tokens classified as unknown by WordNet are requested.
     def score_llm_batch(self, tokens: List[str]) -> None:
         if self.backend is None or not tokens:
             return
 
+        mode = str(getattr(self.cfg, "llm_mode", "fallback")).lower()
         to_query: List[str] = []
+
         for t in tokens:
-            tt = t.strip().lower()
+            tt = str(t).strip().lower()
             if not tt:
                 continue
-           
-            # skip if already LLM-scored
-            cur = self.cache.get(tt, None)
-            if cur is not None and cur[3] == "llm": 
-                continue  
+            cur = self.cache.get(tt)
+            if cur is not None and cur[3] == "llm":
+                continue
 
-            if str(self.cfg.llm_mode).lower() == "strict":  
-                # strict mode: always query (D and A must come from LLM)
-                to_query.append(tt)  
-            else:
-                # fallback mode: only query if WordNet says unknown (E==0) or trigger conditions apply
-                Ewn, _, _, _ = self.score_fast(tt)
-                if Ewn == 0.0:
-                    to_query.append(tt)
+            if mode == "strict" or self.needs_llm(tt):
+                to_query.append(tt)
 
         if not to_query:
             return
 
-        # Batch processing
-        bs = max(10, int(self.cfg.llm_batch_size))
+        bs = max(1, int(getattr(self.cfg, "llm_batch_size", 10)))
         for i in range(0, len(to_query), bs):
-            batch = to_query[i:i+bs]
+            batch = to_query[i:i + bs]
             scored = self.backend.score_words(batch)
-            
-            # safety if backend returns unexpected type
-            if not isinstance(scored, dict):  # CHANGED
-                continue  # CHANGED
+            if not isinstance(scored, dict):
+                continue
 
             for w, s in scored.items():
-                # store full E/D/A from LLM
-                self.cache[w] = (
-                    float(s.get("E", 0.0)),
-                    float(s.get("D", 0.0)),
-                    float(s.get("A", 0.0)),
-                    "llm",
-                )
+                ww = str(w).strip().lower()
+                if not ww:
+                    continue
+                E = float(s.get("E", 0.0))
+                D = float(s.get("D", float("nan")))
+                A = float(s.get("A", 0.0))
+                self.cache[ww] = (E, D, A, "llm")
 
-    # Main scoring function that first checks the cache, then uses WordNet, and falls back to LLM if needed.
-    # NOTE: LLM scoring is performed via score_llm_batch() externally (pre-scan) in readability.py
-    def score(self, token: str):
-        t = token.strip().lower()
+    def score(self, token: str) -> Tuple[float, float, float, str]:
+        t = str(token).strip().lower()
         if not t:
-            return (0.0, 0.0, 0.0, "none")
+            return (0.0, float("nan"), 0.0, "none")
         if t in self.cache:
             return self.cache[t]
         return self.score_fast(t)
-
-# Calculates the readability of a column name (at the schema level) based on its tokens and case sensitivity.
-def schema_label_score(tokens, s_case, scorer):
-    """
-    Ehrlinger et al. 2019 (Eq. 5): Red(s) = avg_i ( #fcrit_i / #crit )
-
-    #crit = 4 Kriterien:
-      1) Word existence (WordNet)
-      2) case consistency
-      3) synonyms (fulfilled = no synonyms)
-      4) hypernyms (fulfilled = no hypernyms)
-
-    scorer: WordNetOnlyAdapter or HybridScorer (both support score_fast()).
-    """
-    if not tokens:
-        return 0.0
-
-    # (2) Case consistency is label-global
-    case_ok = 1 if float(s_case) >= 1.0 else 0
-
-    # Abbreviation-Shortcut (if available)
-    abbr = None
-    if hasattr(scorer, "wordnet") and hasattr(scorer.wordnet, "abbreviations"):
-        abbr = scorer.wordnet.abbreviations or {}
-
-    per_token_scores: List[float] = []
-    for t in tokens:
-        tt = str(t).strip().lower()
-        if not tt:
-            continue
-
-        # (1) existence via scorer (WordNet / Hybrid)
-        if hasattr(scorer, "score_fast"):
-            E, _, _, _ = scorer.score_fast(tt)
-        else:
-            E, _, _, _ = scorer.score(tt)
-
-        exists_ok = 1 if float(E) > 0.0 else 0
-
-        # (3)/(4) synonyms/hypernyms
-        # criterion fulfilled if WordNet provides synsets / hypernyms
-        
-        if abbr is not None and tt in abbr:
-            # Abbreviations are treated as fully fulfilled
-            syn_ok = 1
-            hyp_ok = 1
-        else:
-            syn_ok = 0
-            hyp_ok = 0
-
-            if wn is not None and exists_ok == 1:
-                try:
-                    synsets = wn.synsets(tt)
-                except Exception:
-                    synsets = []
-
-                # Synonyms criterion fulfilled if NO synset exists (presence reduces schema readability)
-                syn_ok = 1 if len(synsets) == 0 else 0
-
-                # Hypernyms criterion fulfilled if NO hypernym relation exists (presence reduces schema readability)
-                has_hypernym = False
-                for ss in synsets:
-                    if ss.hypernyms():
-                        has_hypernym = True
-                        break
-                hyp_ok = 1 if not has_hypernym else 0
-
-        fcrit = exists_ok + case_ok + syn_ok + hyp_ok
-        per_token_scores.append(fcrit / 4.0)
-
-    return float(sum(per_token_scores) / len(per_token_scores)) if per_token_scores else 0.0
-
-
-# Calculates readability per cell (content level) from tokens. In addition, counters are kept for analysis/annotations.
-def content_cell_score(tokens, scorer, unknown_counter=None, difficult_counter=None, llm_candidate_counter=None) -> float:
-    if not tokens:
-        return 0.0
-    word_scores = []
-    for t in tokens:
-        E, D, A, _ = scorer.score(t)
-
-        # Keep the gate: if existence is 0, score is 0
-        if E == 0.0:
-            word_scores.append(0.0)
-            if unknown_counter is not None:
-                unknown_counter[t] += 1
-            # Count only those unknowns that would actually trigger LLM
-            if llm_candidate_counter is not None and hasattr(scorer, "needs_llm") and scorer.needs_llm(t):
-                llm_candidate_counter[t] += 1
-
-        else:
-            # Content formula already correct: unweighted mean over criteria
-            # score_word = (E + D + A) / 3
-            vals = [E]
-
-            # include D only if it is a real number (not NaN)
-            if not (isinstance(D, float) and math.isnan(D)):
-                vals.append(D)
-
-            # include A only if it is a real number (not NaN)
-            if not (isinstance(A, float) and math.isnan(A)):
-                vals.append(A)
-
-            s = float(sum(vals) / len(vals))
-
-            word_scores.append(s)
-            if difficult_counter is not None and D < 0.6:
-                difficult_counter[t] += 1
-   
-    return float(sum(word_scores) / len(word_scores)) if word_scores else 0.0
