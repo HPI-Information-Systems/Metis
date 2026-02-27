@@ -1,7 +1,7 @@
 {
     "loader": "CSV",
     "name": "Restaurant",
-    "file_name": "restaurant.csv",
+    "file_name": "duplicate_detection/restaurant.csv",
     "delimiter": ",",
     "encoding": "utf-8",
     "header": 0,

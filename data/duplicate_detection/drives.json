@@ -1,7 +1,7 @@
 {
     "loader": "CSV",
     "name": "Drives",
-    "file_name": "drives.csv",
+    "file_name": "duplicate_detection/drives.csv",
     "delimiter": ",",
     "encoding": "utf-8",
     "header": 0,

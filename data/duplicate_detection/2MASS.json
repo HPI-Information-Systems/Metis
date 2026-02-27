@@ -1,7 +1,7 @@
 {
     "loader": "CSV",
     "name": "2MASS",
-    "file_name": "2mass.csv",
+    "file_name": "duplicate_detection/2MASS.csv",
     "delimiter": ",",
     "encoding": "utf-8",
     "header": 0,

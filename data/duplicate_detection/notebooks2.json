@@ -1,7 +1,7 @@
 {
     "loader": "CSV",
     "name": "Notebooks2",
-    "file_name": "notebooks2.csv",
+    "file_name": "duplicate_detection/notebooks2.csv",
     "delimiter": ",",
     "encoding": "utf-8",
     "header": 0,
