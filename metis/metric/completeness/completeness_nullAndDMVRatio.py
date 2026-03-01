@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 
 import pandas as pd
 
@@ -38,8 +38,6 @@ class completeness_nullAndDMVRatio(Metric):
 
         config = self.load_config(metric_config, completeness_nullAndDMVRatio_config)
 
-        results = []
-
         dmvs = run_fahes(data)
         self.logger.info(f"Detected DMVs:\n{dmvs}")
 
@@ -53,77 +51,90 @@ class completeness_nullAndDMVRatio(Metric):
                 val = dmv_row["DMV"]
                 marked_cells.loc[data[col] == val, col] = IS_DMV_MARKER
 
-        def counts(marks: pd.Series):
-            return (
-                (marks == IS_NULL_MARKER).sum(),
-                (marks == IS_DMV_MARKER).sum(),
-                len(marks),
+        completeness = (marked_cells == IS_VALID_MARKER).astype(int)
+        certainty = self.certainty(marked_cells)
+
+        if config.aggregation_axis is not None:
+            mean_completeness = completeness.mean(axis=config.aggregation_axis)
+            mean_certainty = certainty.mean(axis=config.aggregation_axis)
+
+            if config.aggregate_all:
+                table_completeness = mean_completeness.mean()
+                table_certainty = mean_certainty.mean()
+                return [
+                    DQResult(
+                        mesTime=pd.Timestamp.now(),
+                        DQvalue=table_completeness,
+                        DQdimension=DQDimension.COMPLETENESS,
+                        DQmetric=self.__class__.__name__,
+                        columnNames=data.columns.tolist(),
+                        DQexplanation={"certainty": float(table_certainty)},
+                        DQgranularity="table",
+                    )
+                ]
+
+            return self.create_aggregated_results(
+                mean_completeness,
+                mean_certainty,
+                config.aggregation_axis,
+                data.columns.tolist(),
             )
 
-        def completeness(marks: pd.Series):
-            null_count, dmv_count, total_count = counts(marks)
-            return (total_count - null_count - dmv_count) / total_count
+        return self.create_flat_results(completeness, certainty)
 
-        def certainty(marks: pd.Series):
-            null_count, dmv_count, total_count = counts(marks)
-            return self.certainty(null_count, dmv_count, total_count)
-
-        aggregated_marks = marked_cells.agg(
-            [completeness, certainty],
-            axis=config.aggregation_axis,
+    def certainty(self, marks: pd.DataFrame):
+        # .replace with a dict sometimes throws an IndexError during pandas memory cleanup. Reason not yet identified, but using chained .replace calls seems to mitigate the issue.
+        return (
+            marks.replace(IS_VALID_MARKER, FAHES_RECALL)
+            .replace(IS_NULL_MARKER, 1)
+            .replace(IS_DMV_MARKER, FAHES_PRECISION)
         )
 
-        if config.aggregation_axis == "index":
-            aggregated_marks = aggregated_marks.T
-
-        if config.aggregate_all:
-            table_completeness = aggregated_marks["completeness"].mean()
-            table_certainty = aggregated_marks["certainty"].mean()
-            result = DQResult(
-                mesTime=pd.Timestamp.now(),
-                DQvalue=table_completeness,
-                DQdimension=DQDimension.COMPLETENESS,
-                DQmetric=self.__class__.__name__,
-                columnNames=data.columns.tolist(),
-                DQexplanation={"certainty": float(table_certainty)},
-                DQgranularity="table",
-            )
-            results.append(result)
-            return results
-
-        for index, row in aggregated_marks.iterrows():
-            row_index = (
-                int(str(index)) if config.aggregation_axis == "columns" else None
-            )
-            col_names = (
-                data.columns.tolist()
-                if config.aggregation_axis == "columns"
-                else [str(index)]
-            )
+    def create_aggregated_results(
+        self,
+        mean_completeness: pd.Series,
+        mean_certainty: pd.Series,
+        aggregation_axis: Literal["index", "columns"],
+        columns: List[str],
+    ) -> List[DQResult]:
+        results = []
+        for (index, completeness), certainty in zip(
+            mean_completeness.items(), mean_certainty.values
+        ):
+            row_index = int(str(index)) if aggregation_axis == "columns" else None
+            col_names = columns if aggregation_axis == "columns" else [str(index)]
 
             result = DQResult(
                 mesTime=pd.Timestamp.now(),
-                DQvalue=row["completeness"],
+                DQvalue=completeness,
                 DQdimension=DQDimension.COMPLETENESS,
                 DQmetric=self.__class__.__name__,
                 columnNames=col_names,
                 rowIndex=row_index,
-                DQexplanation={"certainty": float(row["certainty"])},
-                DQgranularity=(
-                    "row" if config.aggregation_axis == "columns" else "column"
-                ),
+                DQexplanation={"certainty": float(certainty)},
+                DQgranularity=("row" if aggregation_axis == "columns" else "column"),
             )
             results.append(result)
 
         return results
 
-    def certainty(self, null_count: int, dmv_count: int, total_count: int):
-        minimum = (1 - FAHES_PRECISION) + (1 - FAHES_RECALL)
-        return (
-            1
-            - (
-                (1 - FAHES_PRECISION) * (dmv_count / total_count)
-                + (1 - FAHES_RECALL) * (null_count / total_count)
-            )
-            / minimum
-        )
+    def create_flat_results(
+        self, completeness: pd.DataFrame, certainty: pd.DataFrame
+    ) -> List[DQResult]:
+        results = []
+        for col in completeness.columns:
+            for (row_index, completeness_value), certainty_value in zip(
+                completeness[col].items(), certainty[col].values
+            ):
+                result = DQResult(
+                    mesTime=pd.Timestamp.now(),
+                    DQvalue=float(completeness_value),
+                    DQdimension=DQDimension.COMPLETENESS,
+                    DQmetric=self.__class__.__name__,
+                    columnNames=[col],
+                    rowIndex=int(str(row_index)),
+                    DQexplanation={"certainty": float(certainty_value)},
+                    DQgranularity="cell",
+                )
+                results.append(result)
+        return results

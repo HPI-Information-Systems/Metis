@@ -54,7 +54,7 @@ class consistency_ruleBasedPipino(Metric):
                 }
             )
 
-            dq_measurements = fulfilled_rules_mask.sum(axis=1) / len(tuple_rules)
+            dq_measurements = fulfilled_rules_mask.mean(axis=1)
             certainties = self.certainties(fulfilled_rules_mask)
             for (row_index, dq_value), certainty in zip(
                 dq_measurements.items(), certainties.values
