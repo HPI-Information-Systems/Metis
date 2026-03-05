@@ -4,7 +4,7 @@ import pandas as pd
 class DQResult:
     def __init__(
             self,
-            mesTime: pd.Timestamp,
+            timestamp: pd.Timestamp,
             DQdimension: str,
             DQmetric: str,
             DQgranularity: str,
@@ -21,7 +21,7 @@ class DQResult:
         """Create a data-quality result representing a single assessed value.
 
         Required arguments
-        - `mesTime: pd.Timestamp`: The time at which the result was assessed.
+        - `timestamp: pd.Timestamp`: The time at which the result was assessed.
         - `DQdimension: str`: Data quality dimension assessed (e.g. 'completeness', 'accuracy').
         - `DQmetric: str`: Name of the specific metric within the dimension.
         - `DQgranularity: str`: Granularity of the metric (e.g. 'column', 'table', 'cell').
@@ -52,7 +52,7 @@ class DQResult:
             need to encode non-numeric outcomes consider using `DQexplanation`
             to store auxiliary information while keeping `DQvalue` numeric.
         """
-        self._mesTime = mesTime
+        self._timestamp = timestamp
         self._DQdimension = DQdimension
         self._DQmetric = DQmetric
         self._DQgranularity = DQgranularity
@@ -67,12 +67,12 @@ class DQResult:
         self._configJson = configJson
 
     @property
-    def mesTime(self):
-        return self._mesTime
+    def timestamp(self):
+        return self._timestamp
 
-    @mesTime.setter
-    def mesTime(self, value):
-        self._mesTime = value
+    @timestamp.setter
+    def timestamp(self, value):
+        self._timestamp = value
 
     @property
     def DQdimension(self):
@@ -172,7 +172,7 @@ class DQResult:
 
     def as_json(self):
         return {
-            "mesTime": self._mesTime,
+            "timestamp": self._timestamp,
             "DQdimension": self._DQdimension,
             "DQmetric": self._DQmetric,
             "DQgranularity": self._DQgranularity,

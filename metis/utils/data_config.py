@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import metis.globals
 
@@ -29,5 +29,8 @@ class DataConfig:
         self.parse_dates: bool = config.get("parse_dates", False)
         self.decimals: str = config.get("decimals", ".")
         self.thousands: str | None = config.get("thousands")
-        self.decimals: str = config.get("decimals", ".")
-        self.thousands: str | None = config.get("thousands")
+
+        # Data profiling imports
+        self.data_profiles: Dict[str, Dict[str, Any]] | None = config.get(
+            "data_profiles"
+        )

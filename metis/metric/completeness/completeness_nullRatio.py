@@ -21,7 +21,7 @@ class completeness_nullRatio(Metric):
             completeness = (total_rows - int(null_count)) / total_rows
             
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
+                timestamp=pd.Timestamp.now(),
                 DQdimension="Completeness",
                 DQmetric="NullRatio",
                 DQgranularity="column",

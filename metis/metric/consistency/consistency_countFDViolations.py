@@ -40,7 +40,7 @@ class consistency_countFDViolations(Metric):
             consistency = 1 - (len(violations) / len(data[determinant]))
 
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
+                timestamp=pd.Timestamp.now(),
                 DQdimension="Consistency",
                 DQmetric="CountFDViolations",
                 DQgranularity="table",

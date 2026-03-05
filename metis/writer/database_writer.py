@@ -22,7 +22,7 @@ class DatabaseWriter(DQResultWriter):
         with Session(self.engine) as session:
             db_entities = [
                 self.DQResultModel(
-                    mes_time=result.mesTime.to_pydatetime(),
+                    timestamp=result.timestamp.to_pydatetime(),
                     dq_dimension=result.DQdimension,
                     dq_metric=result.DQmetric,
                     dq_granularity=result.DQgranularity,
