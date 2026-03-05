@@ -57,15 +57,20 @@ def cached(fn: Callable) -> Callable:
         # Build optional config dict from extra arguments (if any).
         task_config = _build_config(fn, args, kwargs) or None
 
-        # Cache lookup
-        cached_value = manager.lookup(column_names, fn.__name__, task_config)
-        if cached_value is not None:
-            return cached_value
+        # ignore_cache: never touch the DB
+        if manager.ignore_cache:
+            return fn(data, *args, **kwargs)
+
+        # overwrite_cache: skip lookup, always recompute and overwrite stored value
+        if not manager.overwrite_cache:
+            cached_value = manager.lookup(column_names, fn.__name__, task_config)
+            if cached_value is not None:
+                return cached_value
 
         # Compute
         result = fn(data, *args, **kwargs)
 
-        # Store
+        # Store (upsert — overwrites existing row if present)
         manager.store(
             column_names=column_names,
             dp_task_name=fn.__name__,

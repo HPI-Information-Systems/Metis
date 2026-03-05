@@ -109,3 +109,17 @@ You can import pre-computed data profiles (from external tools like HyFD, CFDFin
 
 For complete documentation of all supported import formats, see [Data Profile Import Formats](docs/DATA_PROFILE_IMPORT_FORMATS.md).
 
+### Cache Control Flags
+
+Three flags can be passed to `DataProfileManager.initialize()`:
+
+- **`ignore_cache`**: Never read from or write to the database. Pure passthrough on every call.
+- **`overwrite_cache`**: Skip cache lookup; always recompute and overwrite the stored value. Note: every call recomputes, not just the first. There is no within-run caching.
+- **`clear_cache`**: Delete all stored profiles at startup, then cache normally from there.
+
+```python
+DataProfileManager.initialize(engine, ignore_cache=True)    # passthrough, DB untouched
+DataProfileManager.initialize(engine, overwrite_cache=True) # always recompute and overwrite
+DataProfileManager.initialize(engine, clear_cache=True)     # wipe table at startup, then cache normally
+```
+

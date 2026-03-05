@@ -4,7 +4,7 @@ import json
 import threading
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import Engine, create_engine as sa_create_engine, select
+from sqlalchemy import Engine, create_engine as sa_create_engine, delete, select
 from sqlalchemy.orm import Session
 
 from metis.database_models import Base, DataProfile
@@ -29,15 +29,31 @@ class DataProfileManager:
     # Singleton access
     # ------------------------------------------------------------------ #
     @classmethod
-    def initialize(cls, engine_or_url: Engine | str) -> DataProfileManager:
-        """Create (or re-create) the singleton with the given engine."""
+    def initialize(
+        cls,
+        engine_or_url: Engine | str,
+        ignore_cache: bool = False,
+        overwrite_cache: bool = False,
+        clear_cache: bool = False,
+    ) -> DataProfileManager:
+        """Create (or re-create) the singleton with the given engine.
+
+        Args:
+            ignore_cache: Never read from or write to the DB — pure passthrough.
+            overwrite_cache: Skip cache lookup; always recompute and overwrite stored value.
+            clear_cache: Delete all stored profiles at startup, then cache normally.
+        """
         with cls._lock:
             if isinstance(engine_or_url, str):
                 engine = sa_create_engine(engine_or_url)
             else:
                 engine = engine_or_url
-            cls._instance = cls(engine)
             Base.metadata.create_all(engine)
+            if clear_cache:
+                with Session(engine) as session:
+                    session.execute(delete(DataProfile))
+                    session.commit()
+            cls._instance = cls(engine, ignore_cache=ignore_cache, overwrite_cache=overwrite_cache)
             return cls._instance
 
     @classmethod
@@ -62,12 +78,18 @@ class DataProfileManager:
                 cls._instance._engine.dispose()
                 cls._instance = None
 
-    def __init__(self, engine: Engine) -> None:
+    def __init__(
+        self,
+        engine: Engine,
+        ignore_cache: bool = False,
+        overwrite_cache: bool = False,
+    ) -> None:
         self._engine = engine
         self._dataset: Optional[str] = None
         self._table: Optional[str] = None
-        # In-memory cache for the current run to avoid repeated DB queries
         self._mem_cache: Dict[str, Any] = {}
+        self.ignore_cache = ignore_cache
+        self.overwrite_cache = overwrite_cache
 
     # ------------------------------------------------------------------ #
     # Context management  (called by DQOrchestrator)
