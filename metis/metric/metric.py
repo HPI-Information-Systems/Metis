@@ -96,7 +96,7 @@ class Metric(ABC):
                     with open(config, "r") as f:
                         config_dict = json.load(f)
                 else:
-                    config_dict = json.loads(config)
+                    config_dict = json.loads(config) if len(config) > 0 else {}
 
                 parsed_config = model(**config_dict)
             except Exception as e:
