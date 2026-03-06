@@ -11,6 +11,7 @@ from metis.metric.timeliness.timeliness_heinrich_config import (
 )
 from metis.utils.datetime.datetime_precision import determine_datetime_precision
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
@@ -102,7 +103,7 @@ class timeliness_heinrich(Metric):
                     DQexplanation={
                         "certainty": certainty_value,
                     },
-                    DQgranularity="cell",
+                    DQgranularity=DQGranularity.CELL,
                 )
                 results.append(result)
 

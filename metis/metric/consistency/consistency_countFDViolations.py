@@ -6,6 +6,7 @@ import pandas as pd
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
@@ -62,7 +63,7 @@ class consistency_countFDViolations(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQdimension=DQDimension.CONSISTENCY,
                     DQmetric=self.__class__.__name__,
-                    DQgranularity="table",
+                    DQgranularity=DQGranularity.TABLE,
                     DQvalue=consistency,
                     DQexplanation={f"{determinant}:{dependent}": violations},  # FD
                     columnNames=[determinant],

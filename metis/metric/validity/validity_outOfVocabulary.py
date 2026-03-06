@@ -8,6 +8,7 @@ from nltk.corpus import words as nltk_words
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
@@ -72,7 +73,7 @@ class validity_outOfVocabulary(Metric):
                 timestamp=pd.Timestamp.now(),
                 DQdimension=DQDimension.VALIDITY,
                 DQmetric=self.__class__.__name__,
-                DQgranularity="column",
+                DQgranularity=DQGranularity.COLUMN,
                 DQvalue=dq_value,
                 DQexplanation=annotations,
                 columnNames=[column],

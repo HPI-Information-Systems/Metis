@@ -8,6 +8,7 @@ from metis.metric.completeness.completeness_nullRatio_config import (
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
@@ -51,7 +52,7 @@ class completeness_nullRatio(Metric):
                         DQdimension=DQDimension.COMPLETENESS,
                         DQmetric=self.__class__.__name__,
                         columnNames=data.columns.tolist(),
-                        DQgranularity="table",
+                        DQgranularity=DQGranularity.TABLE,
                         DQexplanation={
                             "null_count": float(table_null_count),
                         },
@@ -89,7 +90,11 @@ class completeness_nullRatio(Metric):
                 columnNames=col_names,
                 rowIndex=row_index,
                 DQexplanation={"null_count": float(null_count)},
-                DQgranularity=("row" if aggregation_axis == "columns" else "column"),
+                DQgranularity=(
+                    DQGranularity.ROW
+                    if aggregation_axis == "columns"
+                    else DQGranularity.COLUMN
+                ),
             )
             results.append(result)
 
@@ -111,7 +116,7 @@ class completeness_nullRatio(Metric):
                     columnNames=[col],
                     rowIndex=int(str(row_index)),
                     DQexplanation={"null_count": float(null_count_value)},
-                    DQgranularity="cell",
+                    DQgranularity=DQGranularity.CELL,
                 )
                 results.append(result)
         return results

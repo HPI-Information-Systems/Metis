@@ -9,6 +9,7 @@ from metis.metric.consistency.consistency_ruleBasedHinrichs_config import (
 )
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
@@ -66,7 +67,7 @@ class consistency_ruleBasedHinrichs(Metric):
                         DQexplanation={
                             "certainty": self.certainty(dq_value, min_quality)
                         },
-                        DQgranularity="row",
+                        DQgranularity=DQGranularity.ROW,
                     )
                 )
 
@@ -101,7 +102,7 @@ class consistency_ruleBasedHinrichs(Metric):
                         DQexplanation={
                             "certainty": self.certainty(dq_value, min_quality)
                         },
-                        DQgranularity="cell",
+                        DQgranularity=DQGranularity.CELL,
                     )
                 )
 

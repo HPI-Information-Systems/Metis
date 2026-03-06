@@ -8,6 +8,7 @@ from metis.metric.consistency.consistency_ruleBasedPipino_config import (
 )
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
@@ -123,5 +124,5 @@ class consistency_ruleBasedPipino(Metric):
             DQexplanation={
                 "certainty": certainty,
             },
-            DQgranularity="cell" if col_name else "row",
+            DQgranularity=DQGranularity.CELL if col_name else DQGranularity.ROW,
         )

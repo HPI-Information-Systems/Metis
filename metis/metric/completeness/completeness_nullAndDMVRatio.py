@@ -13,6 +13,7 @@ from metis.utils.disguised_missing_values.fahes.fahes import (
     run_fahes,
 )
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 IS_VALID_MARKER = 0
@@ -69,7 +70,7 @@ class completeness_nullAndDMVRatio(Metric):
                         DQmetric=self.__class__.__name__,
                         columnNames=data.columns.tolist(),
                         DQexplanation={"certainty": float(table_certainty)},
-                        DQgranularity="table",
+                        DQgranularity=DQGranularity.TABLE,
                     )
                 ]
 
@@ -112,7 +113,11 @@ class completeness_nullAndDMVRatio(Metric):
                 columnNames=col_names,
                 rowIndex=row_index,
                 DQexplanation={"certainty": float(certainty)},
-                DQgranularity=("row" if aggregation_axis == "columns" else "column"),
+                DQgranularity=(
+                    DQGranularity.ROW
+                    if aggregation_axis == "columns"
+                    else DQGranularity.COLUMN
+                ),
             )
             results.append(result)
 
@@ -134,7 +139,7 @@ class completeness_nullAndDMVRatio(Metric):
                     columnNames=[col],
                     rowIndex=int(str(row_index)),
                     DQexplanation={"certainty": float(certainty_value)},
-                    DQgranularity="cell",
+                    DQgranularity=DQGranularity.CELL,
                 )
                 results.append(result)
         return results

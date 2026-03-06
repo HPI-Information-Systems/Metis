@@ -47,7 +47,7 @@ class Database:
         raise ValueError(f"Unsupported database type: {db_type}")
 
     def create_sqlite_engine(self, db_config: Dict):
-        required_keys = "db_name"
+        required_keys = ("db_name",)
         if not all(k in db_config for k in required_keys):
             raise ValueError(
                 f"SQLite database config must include the following fields: {required_keys}."

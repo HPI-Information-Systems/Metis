@@ -5,6 +5,7 @@ import pandas as pd
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.numbers import clamp
 from metis.utils.result import DQResult
 from metis.utils.similarity_measures.levenshtein_distance import levenshtein_distance
@@ -47,7 +48,7 @@ class correctness_heinrich(Metric):
                     DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
                     rowIndex=row_index,
-                    DQgranularity="cell",
+                    DQgranularity=DQGranularity.CELL,
                 )
                 results.append(result)
 
