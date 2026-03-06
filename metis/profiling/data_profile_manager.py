@@ -4,10 +4,10 @@ import json
 import threading
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import Engine, create_engine as sa_create_engine, delete, select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from metis.database_models import Base, DataProfile
+from metis.database import Database
 
 
 class DataProfileManager:
@@ -31,7 +31,7 @@ class DataProfileManager:
     @classmethod
     def initialize(
         cls,
-        engine_or_url: Engine | str,
+        database: Database,
         ignore_cache: bool = False,
         overwrite_cache: bool = False,
         clear_cache: bool = False,
@@ -44,21 +44,20 @@ class DataProfileManager:
             clear_cache: Delete all stored profiles at startup, then cache normally.
         """
         with cls._lock:
-            if isinstance(engine_or_url, str):
-                engine = sa_create_engine(engine_or_url)
-            else:
-                engine = engine_or_url
-            Base.metadata.create_all(engine)
             if clear_cache:
-                with Session(engine) as session:
-                    session.execute(delete(DataProfile))
+                with Session(database.engine) as session:
+                    session.execute(delete(database.DataProfile))
                     session.commit()
-            cls._instance = cls(engine, ignore_cache=ignore_cache, overwrite_cache=overwrite_cache)
+            cls._instance = cls(
+                database=database,
+                ignore_cache=ignore_cache,
+                overwrite_cache=overwrite_cache,
+            )
             return cls._instance
 
     @classmethod
     def get_instance(cls) -> DataProfileManager:
-        """Return the current singleton.  Raises if not initialized."""
+        """Return the current singleton. Raises if not initialized."""
         if cls._instance is None:
             raise RuntimeError(
                 "DataProfileManager has not been initialized. "
@@ -75,16 +74,16 @@ class DataProfileManager:
         """Shutdown the singleton and dispose the engine."""
         with cls._lock:
             if cls._instance is not None:
-                cls._instance._engine.dispose()
+                cls._instance._database.engine.dispose()
                 cls._instance = None
 
     def __init__(
         self,
-        engine: Engine,
+        database: Database,
         ignore_cache: bool = False,
         overwrite_cache: bool = False,
     ) -> None:
-        self._engine = engine
+        self._database = database
         self._dataset: Optional[str] = None
         self._table: Optional[str] = None
         self._mem_cache: Dict[str, Any] = {}
@@ -141,12 +140,12 @@ class DataProfileManager:
             return self._mem_cache[key]
 
         # slow path: DB
-        with Session(self._engine) as session:
+        with Session(self._database.engine) as session:
             stmt = (
-                select(DataProfile)
-                .where(DataProfile.dataset == self._dataset)
-                .where(DataProfile.table_name == self._table)
-                .where(DataProfile.dp_task_name == dp_task_name)
+                select(self._database.DataProfile)
+                .where(self._database.DataProfile.dataset == self._dataset)
+                .where(self._database.DataProfile.table_name == self._table)
+                .where(self._database.DataProfile.dp_task_name == dp_task_name)
             )
             for row in session.execute(stmt).scalars():
                 if sorted(row.column_names) == sorted(column_names):
@@ -181,13 +180,13 @@ class DataProfileManager:
 
         serialized, result_type = self._serialize(value)
 
-        with Session(self._engine) as session:
+        with Session(self._database.engine) as session:
             # Find existing row with same logical key
             stmt = (
-                select(DataProfile)
-                .where(DataProfile.dataset == ds)
-                .where(DataProfile.table_name == tbl)
-                .where(DataProfile.dp_task_name == dp_task_name)
+                select(self._database.DataProfile)
+                .where(self._database.DataProfile.dataset == ds)
+                .where(self._database.DataProfile.table_name == tbl)
+                .where(self._database.DataProfile.dp_task_name == dp_task_name)
             )
             existing = None
             for row in session.execute(stmt).scalars():
@@ -203,17 +202,19 @@ class DataProfileManager:
                 existing.profile_type = profile_type
                 existing.source = source
             else:
-                session.add(DataProfile(
-                    dataset=ds,
-                    table_name=tbl,
-                    column_names=column_names,
-                    dp_task_name=dp_task_name,
-                    task_config=task_config,
-                    profile_type=profile_type,
-                    dp_result_value=serialized,
-                    result_type=result_type,
-                    source=source,
-                ))
+                session.add(
+                    self._database.DataProfile(
+                        dataset=ds,
+                        table_name=tbl,
+                        column_names=column_names,
+                        dp_task_name=dp_task_name,
+                        task_config=task_config,
+                        profile_type=profile_type,
+                        dp_result_value=serialized,
+                        result_type=result_type,
+                        source=source,
+                    )
+                )
             session.commit()
 
         # update in-memory cache
@@ -316,12 +317,12 @@ class DataProfileManager:
         tbl = table or self._table
         if ds is None or tbl is None:
             return []
-        with Session(self._engine) as session:
+        with Session(self._database.engine) as session:
             stmt = (
-                select(DataProfile)
-                .where(DataProfile.dataset == ds)
-                .where(DataProfile.table_name == tbl)
-                .where(DataProfile.dp_task_name == dp_task_name)
+                select(self._database.DataProfile)
+                .where(self._database.DataProfile.dataset == ds)
+                .where(self._database.DataProfile.table_name == tbl)
+                .where(self._database.DataProfile.dp_task_name == dp_task_name)
             )
             return [
                 self._deserialize(row.dp_result_value, row.result_type)
@@ -363,7 +364,11 @@ class DataProfileManager:
                 }
             }, "minhash"
 
-        if isinstance(value, dict) and value and isinstance(next(iter(value.values())), _MinHash):
+        if (
+            isinstance(value, dict)
+            and value
+            and isinstance(next(iter(value.values())), _MinHash)
+        ):
             return {
                 "v": {
                     k: {
@@ -392,16 +397,18 @@ class DataProfileManager:
         if result_type == "series":
             return pd.Series(raw)
         if result_type == "minhash":
-            from datasketch import MinHash as _MinHash
             import numpy as np
+            from datasketch import MinHash as _MinHash
+
             return _MinHash(
                 num_perm=raw["num_perm"],
                 seed=raw["seed"],
                 hashvalues=np.array(raw["hashvalues"], dtype=np.uint64),
             )
         if result_type == "minhash_dict":
-            from datasketch import MinHash as _MinHash
             import numpy as np
+            from datasketch import MinHash as _MinHash
+
             return {
                 k: _MinHash(
                     num_perm=v["num_perm"],

@@ -7,6 +7,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 def register_models(results_table_name: str):
     """Register the SQLAlchemy models for the database tables based on initial configuration. Every call creates a new SQLAlchemy base, which is not bound to any engine yet. Use the Database singleton for stable references to the models and engine."""
+
     class Base(DeclarativeBase):
         pass
 

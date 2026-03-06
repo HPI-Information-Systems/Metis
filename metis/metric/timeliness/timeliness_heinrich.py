@@ -11,16 +11,11 @@ from metis.metric.timeliness.timeliness_heinrich_config import (
 )
 from metis.utils.datetime.datetime_precision import determine_datetime_precision
 from metis.utils.dq_dimension import DQDimension
-from metis.utils.logging import logger as main_logger
 from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
 
 class timeliness_heinrich(Metric):
-    def __init__(self) -> None:
-        super().__init__()
-        self.logger = main_logger.getChild(self.__class__.__name__)
-
     def assess(
         self,
         data: pd.DataFrame,
@@ -98,7 +93,7 @@ class timeliness_heinrich(Metric):
                 timeliness.items(), certainty.items()
             ):
                 result = DQResult(
-                    mesTime=pd.Timestamp.now(),
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=timeliness_value,
                     DQdimension=DQDimension.TIMELINESS,
                     DQmetric=self.__class__.__name__,

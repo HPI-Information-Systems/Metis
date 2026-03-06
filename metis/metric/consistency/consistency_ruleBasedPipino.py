@@ -114,7 +114,7 @@ class consistency_ruleBasedPipino(Metric):
         self, dq_value: float, col_name: str | None, row_index: int, certainty: float
     ) -> DQResult:
         return DQResult(
-            mesTime=pd.Timestamp.now(),
+            timestamp=pd.Timestamp.now(),
             DQvalue=dq_value,
             DQdimension=DQDimension.CONSISTENCY,
             DQmetric=self.__class__.__name__,

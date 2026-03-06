@@ -63,7 +63,7 @@ class completeness_nullAndDMVRatio(Metric):
                 table_certainty = mean_certainty.mean()
                 return [
                     DQResult(
-                        mesTime=pd.Timestamp.now(),
+                        timestamp=pd.Timestamp.now(),
                         DQvalue=table_completeness,
                         DQdimension=DQDimension.COMPLETENESS,
                         DQmetric=self.__class__.__name__,
@@ -105,7 +105,7 @@ class completeness_nullAndDMVRatio(Metric):
             col_names = columns if aggregation_axis == "columns" else [str(index)]
 
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
+                timestamp=pd.Timestamp.now(),
                 DQvalue=completeness,
                 DQdimension=DQDimension.COMPLETENESS,
                 DQmetric=self.__class__.__name__,
@@ -127,7 +127,7 @@ class completeness_nullAndDMVRatio(Metric):
                 completeness[col].items(), certainty[col].values
             ):
                 result = DQResult(
-                    mesTime=pd.Timestamp.now(),
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=float(completeness_value),
                     DQdimension=DQDimension.COMPLETENESS,
                     DQmetric=self.__class__.__name__,

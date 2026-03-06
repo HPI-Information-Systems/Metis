@@ -56,18 +56,18 @@ class consistency_countFDViolations(Metric):
                 # for the same determinant (FD violation)
                 violations = grouped[grouped > 1].index.tolist()
 
-            consistency = 1 - (len(violations) / len(data[determinant]))
+                consistency = 1 - (len(violations) / len(data[determinant]))
 
-            result = DQResult(
-                timestamp=pd.Timestamp.now(),
-                DQdimension=DQDimension.CONSISTENCY,
-                DQmetric="CountFDViolations",
-                DQgranularity="table",
-                DQvalue=consistency,
-                DQexplanation={f"{determinant}:{dependent}": violations},  # FD
-                columnNames=[determinant],
-                configJson=metric_conf,
-            )
-            results.append(result)
+                result = DQResult(
+                    timestamp=pd.Timestamp.now(),
+                    DQdimension=DQDimension.CONSISTENCY,
+                    DQmetric=self.__class__.__name__,
+                    DQgranularity="table",
+                    DQvalue=consistency,
+                    DQexplanation={f"{determinant}:{dependent}": violations},  # FD
+                    columnNames=[determinant],
+                    configJson=metric_conf,
+                )
+                results.append(result)
 
         return results

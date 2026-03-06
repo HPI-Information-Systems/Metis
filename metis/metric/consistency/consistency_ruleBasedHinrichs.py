@@ -57,7 +57,7 @@ class consistency_ruleBasedHinrichs(Metric):
             for row_index, dq_value in dq_measurements.items():
                 results.append(
                     DQResult(
-                        mesTime=pd.Timestamp.now(),
+                        timestamp=pd.Timestamp.now(),
                         DQvalue=dq_value,
                         DQdimension=DQDimension.CONSISTENCY,
                         DQmetric=self.__class__.__name__,
@@ -92,7 +92,7 @@ class consistency_ruleBasedHinrichs(Metric):
             for row_index, dq_value in dq_measurements.items():
                 results.append(
                     DQResult(
-                        mesTime=pd.Timestamp.now(),
+                        timestamp=pd.Timestamp.now(),
                         DQvalue=dq_value,
                         DQdimension=DQDimension.CONSISTENCY,
                         DQmetric=self.__class__.__name__,

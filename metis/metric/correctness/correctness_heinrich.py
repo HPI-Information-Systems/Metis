@@ -41,7 +41,7 @@ class correctness_heinrich(Metric):
                 )
 
                 result = DQResult(
-                    mesTime=pd.Timestamp.now(),
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=measurement,
                     DQdimension=DQDimension.CORRECTNESS,
                     DQmetric=self.__class__.__name__,
