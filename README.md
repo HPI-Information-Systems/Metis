@@ -47,7 +47,7 @@ The file name and class name of each metric should be equal. If a metric has a s
 class DQResult:
     def __init__(
         self,
-        mesTime: pd.Timestamp,
+        timestamp: pd.Timestamp,
         DQdimension: DQDimension,
         DQmetric: str,
         DQgranularity: str,
@@ -64,7 +64,7 @@ class DQResult:
 ````
 
 To create a new instance of DQResult, one needs to provide at least the following arguments:
-- **mesTime: pd.Timestamp**: The time at which a result was assessed.
+- **timestamp: pd.Timestamp**: The time at which a result was assessed.
 - **DQdimension: DQDimension**: Data quality dimension assessed (e.g. `DQDimension.COMPLETENESS`, `DQDimension.ACCURACY`).
 - **DQmetric: str**: Name of the specific metric within the dimension.
 - **DQgranularity: str**: Granularity of the metric (e.g. 'column', 'table', 'cell', 'row').
@@ -78,5 +78,59 @@ Furthermore, there are more optional arguments that might need to be set dependi
 - **experimentTag: Optional[str]**: Tag to identify a specific run.
 - **configJson: Optional[dict]**: Configuration used for the metric as a JSON object.
 
+## Data Profiling
 
+Metis includes a data profiling system that caches computed statistics and supports importing pre-computed profiles.
+
+### Cached Profiling Functions
+
+Use cached profiling functions from `metis.profiling` for automatic caching:
+
+```python
+from metis.profiling import null_count, distinct_count, data_type
+
+# These are automatically cached when DataProfileManager is initialized
+nulls = null_count(df["column"])
+```
+
+### Importing Pre-computed Profiles
+
+You can import pre-computed data profiles (from external tools like HyFD, CFDFinder, etc.) via the data loader config:
+
+```json
+{
+  "loader": "CSV",
+  "name": "Adult",
+  "file_name": "adult.csv",
+  "data_profiles": {
+    "fd": {
+      "source": "hyfd",
+      "file": "outputs/adult_hyfd.txt"
+    },
+    "null_count": {
+      "source": "manual",
+      "values": [
+        {"column": "age", "value": 0},
+        {"column": "workclass", "value": 1836}
+      ]
+    }
+  }
+}
+```
+
+For complete documentation of all supported import formats, see [Data Profile Import Formats](docs/DATA_PROFILE_IMPORT_FORMATS.md).
+
+### Cache Control Flags
+
+Three flags can be passed to `DataProfileManager.initialize()`:
+
+- **`ignore_cache`**: Never read from or write to the database. Pure passthrough on every call.
+- **`overwrite_cache`**: Skip cache lookup; always recompute and overwrite the stored value. Note: every call recomputes, not just the first. There is no within-run caching.
+- **`clear_cache`**: Delete all stored profiles at startup, then cache normally from there.
+
+```python
+DataProfileManager.initialize(engine, ignore_cache=True)    # passthrough, DB untouched
+DataProfileManager.initialize(engine, overwrite_cache=True) # always recompute and overwrite
+DataProfileManager.initialize(engine, clear_cache=True)     # wipe table at startup, then cache normally
+```
 

@@ -46,7 +46,7 @@ class completeness_nullRatio(Metric):
 
                 return [
                     DQResult(
-                        mesTime=pd.Timestamp.now(),
+                        timestamp=pd.Timestamp.now(),
                         DQvalue=table_completeness,
                         DQdimension=DQDimension.COMPLETENESS,
                         DQmetric=self.__class__.__name__,
@@ -82,7 +82,7 @@ class completeness_nullRatio(Metric):
             col_names = columns if aggregation_axis == "columns" else [str(index)]
 
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
+                timestamp=pd.Timestamp.now(),
                 DQvalue=completeness,
                 DQdimension=DQDimension.COMPLETENESS,
                 DQmetric=self.__class__.__name__,
@@ -104,7 +104,7 @@ class completeness_nullRatio(Metric):
                 completeness[col].items(), null_count[col].values
             ):
                 result = DQResult(
-                    mesTime=pd.Timestamp.now(),
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=float(completeness_value),
                     DQdimension=DQDimension.COMPLETENESS,
                     DQmetric=self.__class__.__name__,

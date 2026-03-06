@@ -10,7 +10,12 @@ from metis.utils.result import DQResult
 
 
 class consistency_countFDViolations(Metric):
-    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, None] = None, metric_config: Union[MetricConfig, str, None] = None) -> List[DQResult]:
+    def assess(
+        self,
+        data: pd.DataFrame,
+        reference: Union[pd.DataFrame, None] = None,
+        metric_config: Union[MetricConfig, str, None] = None,
+    ) -> List[DQResult]:
         """
         Assess the consistency of a dataset by checking the compliance of a functional dependency specified in the metric_config.
 
@@ -54,14 +59,14 @@ class consistency_countFDViolations(Metric):
             consistency = 1 - (len(violations) / len(data[determinant]))
 
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
+                timestamp=pd.Timestamp.now(),
                 DQdimension=DQDimension.CONSISTENCY,
                 DQmetric="CountFDViolations",
                 DQgranularity="table",
                 DQvalue=consistency,
                 DQexplanation={f"{determinant}:{dependent}": violations},  # FD
                 columnNames=[determinant],
-                configJson=metric_conf
+                configJson=metric_conf,
             )
             results.append(result)
 

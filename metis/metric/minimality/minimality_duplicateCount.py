@@ -29,7 +29,7 @@ class minimality_duplicateCount(Metric):
                 annotations = {"CandidateKey": "CandidateKey"}
 
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
+                timestamp=pd.Timestamp.now(),
                 DQdimension=DQDimension.MINIMALITY,
                 DQmetric="DuplicateCount",
                 DQgranularity="column",
