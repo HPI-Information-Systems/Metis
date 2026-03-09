@@ -38,49 +38,45 @@ class timeliness_heinrich(Metric):
             )
 
         config = self.load_config(metric_config, timeliness_heinrich_config)
-
-        ingestion_date_column = config.ingestion_date_column
-        assessment_date = pd.to_datetime(
-            config.simulated_assessment_date or pd.Timestamp.now()
-        )
-
         results = []
-
-        if not ingestion_date_column or ingestion_date_column not in data.columns:
-            self.logger.warning(
-                f"Ingestion date column '{ingestion_date_column}' is not present in the data."
-            )
-            return results
-
         warn_unconfigured_columns(
             self.logger,
             set(data.columns),
-            set(config.decline_rate_per_column.keys()),
-            "decline rates",
+            set(config.timeliness_config_per_column.keys()),
+            "timeliness configuration",
         )
 
-        ingestion_dates = pd.to_datetime(
-            data[ingestion_date_column], **(config.to_datetime_kwargs or {})
-        )
-        ages_in_days = (
-            (assessment_date - ingestion_dates).dt.total_seconds() / 60 / 60 / 24
-        )
-        precision_of_dates = (
-            pd.Series(
-                [config.simulated_timestamp_precision] * len(data), index=data.index
+        for col_name, col_config in config.timeliness_config_per_column.items():
+            ingestion_date_column = col_config.ingestion_date_column
+            assessment_date = pd.to_datetime(
+                col_config.simulated_assessment_date or pd.Timestamp.now()
             )
-            if config.simulated_timestamp_precision
-            else data[ingestion_date_column].apply(determine_datetime_precision)
-        )
-        age_and_precision = pd.DataFrame(
-            {"age": ages_in_days, "precision": precision_of_dates}
-        )
 
-        for col_name in data.columns:
-            decline_rate = config.decline_rate_per_column.get(col_name)
-            if decline_rate is None:
-                continue
+            if not ingestion_date_column or ingestion_date_column not in data.columns:
+                self.logger.warning(
+                    f"Ingestion date column '{ingestion_date_column}' is not present in the data. Skipping assessment for column '{col_name}'."
+                )
+                return results
 
+            ingestion_dates = pd.to_datetime(
+                data[ingestion_date_column], **(col_config.to_datetime_kwargs or {})
+            )
+            ages_in_days = (
+                (assessment_date - ingestion_dates).dt.total_seconds() / 60 / 60 / 24
+            )
+            precision_of_dates = (
+                pd.Series(
+                    [col_config.simulated_timestamp_precision] * len(data),
+                    index=data.index,
+                )
+                if col_config.simulated_timestamp_precision
+                else data[ingestion_date_column].apply(determine_datetime_precision)
+            )
+            age_and_precision = pd.DataFrame(
+                {"age": ages_in_days, "precision": precision_of_dates}
+            )
+
+            decline_rate = col_config.decline_rate
             timeliness = pd.Series(np.exp(-decline_rate * ages_in_days))
             certainty = age_and_precision.apply(
                 lambda row: self.certainty(
