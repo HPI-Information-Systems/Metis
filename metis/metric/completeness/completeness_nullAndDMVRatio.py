@@ -128,8 +128,8 @@ class completeness_nullAndDMVRatio(Metric):
     ) -> List[DQResult]:
         results = []
         for col in completeness.columns:
-            for (row_index, completeness_value), certainty_value in zip(
-                completeness[col].items(), certainty[col].values
+            for row_index, (completeness_value, certainty_value) in enumerate(
+                zip(completeness[col].values, certainty[col].values)
             ):
                 result = DQResult(
                     timestamp=pd.Timestamp.now(),
@@ -137,7 +137,7 @@ class completeness_nullAndDMVRatio(Metric):
                     DQdimension=DQDimension.COMPLETENESS,
                     DQmetric=self.__class__.__name__,
                     columnNames=[col],
-                    rowIndex=int(str(row_index)),
+                    rowIndex=row_index,
                     DQexplanation={"certainty": float(certainty_value)},
                     DQgranularity=DQGranularity.CELL,
                 )

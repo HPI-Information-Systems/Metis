@@ -57,14 +57,14 @@ class consistency_ruleBasedPipino(Metric):
 
             dq_measurements = fulfilled_rules_mask.mean(axis=1)
             certainties = self.certainties(fulfilled_rules_mask)
-            for (row_index, dq_value), certainty in zip(
-                dq_measurements.items(), certainties.values
+            for row_index, (dq_value, certainty) in enumerate(
+                zip(dq_measurements.values, certainties.values)
             ):
                 results.append(
                     self.create_result(
                         dq_value,
-                        None,
-                        int(str(row_index)),
+                        data.columns.tolist(),
+                        row_index,
                         float(certainty),
                     )
                 )
@@ -91,14 +91,14 @@ class consistency_ruleBasedPipino(Metric):
             dq_measurements = fulfilled_rules_mask.mean(axis=1)
             certainties = self.certainties(fulfilled_rules_mask)
 
-            for (row_index, dq_value), certainty in zip(
-                dq_measurements.items(), certainties.values
+            for row_index, (dq_value, certainty) in enumerate(
+                zip(dq_measurements.values, certainties.values)
             ):
                 results.append(
                     self.create_result(
                         dq_value,
-                        col_name,
-                        int(str(row_index)),
+                        [col_name],
+                        row_index,
                         float(certainty),
                     )
                 )
@@ -112,17 +112,23 @@ class consistency_ruleBasedPipino(Metric):
         )
 
     def create_result(
-        self, dq_value: float, col_name: str | None, row_index: int, certainty: float
+        self,
+        dq_value: float,
+        col_names: List[str],
+        row_index: int,
+        certainty: float,
     ) -> DQResult:
         return DQResult(
             timestamp=pd.Timestamp.now(),
             DQvalue=dq_value,
             DQdimension=DQDimension.CONSISTENCY,
             DQmetric=self.__class__.__name__,
-            columnNames=[col_name] if col_name else [],
+            columnNames=col_names,
             rowIndex=row_index,
             DQexplanation={
                 "certainty": certainty,
             },
-            DQgranularity=DQGranularity.CELL if col_name else DQGranularity.ROW,
+            DQgranularity=(
+                DQGranularity.CELL if len(col_names) == 1 else DQGranularity.ROW
+            ),
         )

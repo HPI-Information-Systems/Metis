@@ -55,15 +55,15 @@ class consistency_ruleBasedHinrichs(Metric):
 
             dq_measurements = 1 / (1 + degree_of_violation)
             min_quality = dq_measurements.min()
-            for row_index, dq_value in dq_measurements.items():
+            for row_index, dq_value in enumerate(dq_measurements.values):
                 results.append(
                     DQResult(
                         timestamp=pd.Timestamp.now(),
                         DQvalue=dq_value,
                         DQdimension=DQDimension.CONSISTENCY,
                         DQmetric=self.__class__.__name__,
-                        columnNames=[],
-                        rowIndex=int(str(row_index)),
+                        columnNames=data.columns.tolist(),
+                        rowIndex=row_index,
                         DQexplanation={
                             "certainty": self.certainty(dq_value, min_quality)
                         },
@@ -90,7 +90,7 @@ class consistency_ruleBasedHinrichs(Metric):
             dq_measurements = 1 / (1 + degree_of_violation)
             min_quality = dq_measurements.min()
 
-            for row_index, dq_value in dq_measurements.items():
+            for row_index, dq_value in enumerate(dq_measurements.values):
                 results.append(
                     DQResult(
                         timestamp=pd.Timestamp.now(),
@@ -98,7 +98,7 @@ class consistency_ruleBasedHinrichs(Metric):
                         DQdimension=DQDimension.CONSISTENCY,
                         DQmetric=self.__class__.__name__,
                         columnNames=[col_name],
-                        rowIndex=int(str(row_index)),
+                        rowIndex=row_index,
                         DQexplanation={
                             "certainty": self.certainty(dq_value, min_quality)
                         },

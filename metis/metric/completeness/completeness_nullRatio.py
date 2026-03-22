@@ -105,8 +105,8 @@ class completeness_nullRatio(Metric):
     ) -> List[DQResult]:
         results = []
         for col in completeness.columns:
-            for (row_index, completeness_value), null_count_value in zip(
-                completeness[col].items(), null_count[col].values
+            for row_index, (completeness_value, null_count_value) in enumerate(
+                zip(completeness[col].values, null_count[col].values)
             ):
                 result = DQResult(
                     timestamp=pd.Timestamp.now(),
@@ -114,7 +114,7 @@ class completeness_nullRatio(Metric):
                     DQdimension=DQDimension.COMPLETENESS,
                     DQmetric=self.__class__.__name__,
                     columnNames=[col],
-                    rowIndex=int(str(row_index)),
+                    rowIndex=row_index,
                     DQexplanation={"null_count": float(null_count_value)},
                     DQgranularity=DQGranularity.CELL,
                 )
