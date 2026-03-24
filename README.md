@@ -9,6 +9,21 @@ Metis is a framework to automatically assess the quality of tabular data across 
 python -m demo.getting_started
 ```
 
+## Full demo (all metrics)
+
+To run every registered metric against the full TripAdvisor European Restaurants dataset, use the extended demo. **Note: this will take some time.**
+
+```
+python -m demo.run_demo
+```
+
+The demo uses `data/restaurants.csv`, the full
+[TripAdvisor European Restaurants dataset from Kaggle](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants)
+(~1.08 M rows). The CSV includes 42 original columns (ratings, cuisines,
+location, price level, …) plus two synthetic timestamp columns
+(`first_review_date` and `last_review_date`) with ~10 % intentional nulls
+to surface interesting completeness findings.
+
 ## How to implement new metrics
 
 To extend the Metis framework and add new data quality metrics, please check our interface for easy integration. 
