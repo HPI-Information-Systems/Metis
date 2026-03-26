@@ -1,13 +1,16 @@
 from typing import List, Union
 import pandas as pd
 
+from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
+
 class DQResult:
     def __init__(
             self,
             timestamp: pd.Timestamp,
-            DQdimension: str,
+            DQdimension: DQDimension,
             DQmetric: str,
-            DQgranularity: str,
+            DQgranularity: DQGranularity,
             DQvalue: float,
             DQexplanation: Union[dict, None] = None,
             runtime: Union[float, None] = None,
@@ -22,9 +25,9 @@ class DQResult:
 
         Required arguments
         - `timestamp: pd.Timestamp`: The time at which the result was assessed.
-        - `DQdimension: str`: Data quality dimension assessed (e.g. 'completeness', 'accuracy').
+        - `DQdimension: DQDimension`: Data quality dimension assessed (e.g. DQDimension.COMPLETENESS, DQDimension.ACCURACY).
         - `DQmetric: str`: Name of the specific metric within the dimension.
-        - `DQgranularity: str`: Granularity of the metric (e.g. 'column', 'table', 'cell').
+        - `DQgranularity: DQGranularity`: Granularity of the metric (e.g. DQGranularity.COLUMN, DQGranularity.TABLE, DQGranularity.CELL, DQGranularity.ROW).
         - `DQvalue: float`: Numeric outcome of the assessment (quantitative only).
 
         Optional arguments
@@ -161,7 +164,7 @@ class DQResult:
     @dataset.setter
     def dataset(self, value):
         self._dataset = value
-    
+
     @property
     def configJson(self):
         return self._configJson

@@ -3,7 +3,7 @@ from typing import List, Dict
 from metis.utils.result import DQResult
 
 class ConsoleWriter:
-    def __init__(self, writer_config: Dict = None) -> None:
+    def __init__(self, writer_config: Dict | None = None) -> None:
         pass
 
     def write(self, results: List[DQResult]) -> None:
