@@ -1,8 +1,11 @@
-from typing import Union, Dict
+from typing import Dict, Union
+
 import pandas as pd
 
 
-def quartiles(data: Union[pd.Series, pd.DataFrame]) -> Union[Dict[str, float], Dict[str, Dict[str, float]]]:
+def quartiles(
+    data: Union[pd.Series, pd.DataFrame],
+) -> Union[Dict[str, float | None], Dict[str, Dict[str, float | None]]]:
     """
     Calculate quartiles (Q1, Q2/median, Q3) that divide numeric values into
     four equal groups.
@@ -45,7 +48,9 @@ def quartiles(data: Union[pd.Series, pd.DataFrame]) -> Union[Dict[str, float], D
         return result
 
 
-def interquartile_range(data: Union[pd.Series, pd.DataFrame]) -> Union[float, pd.Series]:
+def interquartile_range(
+    data: Union[pd.Series, pd.DataFrame],
+) -> Union[float, pd.Series, None]:
     """
     Calculate the interquartile range (IQR = Q3 - Q1).
 

@@ -4,6 +4,9 @@ import json
 import threading
 from typing import Any, Dict, List, Optional
 
+import numpy as np
+import pandas as pd
+from datasketch import MinHash as _MinHash
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -332,8 +335,6 @@ class DataProfileManager:
     @staticmethod
     def _serialize(value: Any) -> tuple[dict, str]:
         """Wrap *value* into a JSON-safe dict and return (payload, type_tag)."""
-        import numpy as np
-        import pandas as pd
 
         def to_json_safe(v: Any) -> Any:
             """Convert numpy types to native Python types."""
@@ -353,8 +354,6 @@ class DataProfileManager:
             return {"v": to_json_safe(value.to_dict())}, "series"
 
         # MinHash support (for minhash_signature results)
-        from datasketch import MinHash as _MinHash
-
         if isinstance(value, _MinHash):
             return {
                 "v": {
@@ -399,26 +398,19 @@ class DataProfileManager:
 
     @staticmethod
     def _deserialize(payload: Optional[dict], result_type: str) -> Any:
-        if payload is None:
+        raw = (payload or {}).get("v")
+        if raw is None:
             return None
-        import pandas as pd
 
-        raw = payload.get("v")
         if result_type == "series":
             return pd.Series(raw)
         if result_type == "minhash":
-            import numpy as np
-            from datasketch import MinHash as _MinHash
-
             return _MinHash(
                 num_perm=raw["num_perm"],
                 seed=raw["seed"],
                 hashvalues=np.array(raw["hashvalues"], dtype=np.uint64),
             )
         if result_type == "minhash_dict":
-            import numpy as np
-            from datasketch import MinHash as _MinHash
-
             return {
                 k: _MinHash(
                     num_perm=v["num_perm"],

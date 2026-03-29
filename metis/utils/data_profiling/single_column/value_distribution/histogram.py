@@ -74,7 +74,7 @@ def equi_depth_histogram(
             return {"bin_edges": [], "frequencies": []}
 
         quantiles = np.linspace(0, 1, bins + 1)
-        bin_edges = clean_data.quantile(quantiles).values
+        bin_edges = clean_data.quantile(quantiles).to_numpy()
         bin_edges = np.unique(bin_edges)
 
         if len(bin_edges) <= 1:
@@ -97,7 +97,7 @@ def equi_depth_histogram(
                 continue
 
             quantiles = np.linspace(0, 1, bins + 1)
-            bin_edges = clean_data.quantile(quantiles).values
+            bin_edges = clean_data.quantile(quantiles).to_numpy()
             bin_edges = np.unique(bin_edges)
 
             if len(bin_edges) <= 1:
