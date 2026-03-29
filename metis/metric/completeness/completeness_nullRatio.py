@@ -26,21 +26,20 @@ class completeness_nullRatio(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the completeness of the data by calculating the ratio and count of null values on different granularities. The ratio of non-null values is stored as the completeness quality measurement, while the count of null values is stored in the explanation for better interpretability. The metric can be configured using `completeness_nullRatio_config` to calculate the completeness on column, row level, or table-level granularity.
 
         :param data: DataFrame to assess.
-        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing completeness results.
         """
 
-        config = self.load_config(metric_config, completeness_nullRatio_config)
-
-        results = []
+        if metric_config is None:
+            config = completeness_nullRatio_config()
+        else:
+            config = self.load_config(metric_config, completeness_nullRatio_config)
 
         na_mask = data.isna()
 

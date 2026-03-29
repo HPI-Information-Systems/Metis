@@ -23,7 +23,6 @@ class consistency_countFDViolations(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
         metric_config: Union[MetricConfig, str, None] = None,
     ) -> List[DQResult]:
         """
@@ -62,12 +61,12 @@ class consistency_countFDViolations(Metric):
                 # group by determinant and count unique dependent values
                 grouped = data.groupby(determinant)[dependent].nunique()
 
-                # determinant values that violate FD 
+                # determinant values that violate FD
                 determinant_violating = grouped[grouped > 1].index
 
                 # tuples that have a determinant that violates FD
                 violating_tuples = data[data[determinant].isin(determinant_violating)]
-                
+
                 num_violating_tuples = violating_tuples.shape[0]
                 total_rows = len(data[determinant])
 
@@ -81,7 +80,7 @@ class consistency_countFDViolations(Metric):
                     DQmetric=self.__class__.__name__,
                     DQgranularity=DQGranularity.TABLE,
                     DQvalue=consistency,
-                    DQexplanation={f"{determinant}:{dependent}": violations}, 
+                    DQexplanation={f"{determinant}:{dependent}": violations},
                     columnNames=[determinant], # TODO: add determinant, dependent
                     configJson=metric_conf,
                 )

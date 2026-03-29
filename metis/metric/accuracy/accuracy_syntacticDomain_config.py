@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List, Literal
 
 from metis.metric.accuracy._strategies.domain_membership import available_strategies
@@ -19,6 +20,7 @@ class accuracy_syntacticDomain_config(MetricConfig):
         (e.g. ``{"case_insensitive": True}``).
     """
 
+    reference_file_path: str | Path | None = None
     method: Literal["exact_match", "wordnet"] = "exact_match"
     domains: Dict[str, List[str]] | None = None
     method_params: Dict[str, Any] | None = None

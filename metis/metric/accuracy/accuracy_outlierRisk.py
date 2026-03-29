@@ -43,7 +43,6 @@ class accuracy_outlierRisk(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         config = self.load_config(metric_config or "", accuracy_outlierRisk_config)

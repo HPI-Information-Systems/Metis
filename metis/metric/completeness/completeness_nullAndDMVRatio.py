@@ -36,14 +36,12 @@ class completeness_nullAndDMVRatio(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the completeness of the data by checking for null values and disguised missing values. To detect disguised missing values, the FAHES algorithm by Qahtan et al. is applied to the data (paper: https://doi.org/10.1145/3219819.3220109). The completeness quality measurement is calculated as the ratio of valid values (non-null and non-disguised missing) to the total number of values. The metric can be configured using `completeness_nullAndDMVRatio_config` to calculate the completeness on column, row level, or table-level granularity.
 
         :param data: DataFrame to assess.
-        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing completeness results.
         """

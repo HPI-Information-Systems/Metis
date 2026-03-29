@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from pathlib import Path
+
+import pandas as pd
 
 from metis.metric.config import MetricConfig
 
@@ -13,6 +16,7 @@ class accuracy_semanticReference_config(MetricConfig):
         same length.
     """
 
+    reference_file_path: str | Path
     key_column: str | None = None
 
     def to_json(self):

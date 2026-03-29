@@ -3,6 +3,9 @@ from typing import List
 import pandas as pd
 
 from metis.metric.config import MetricConfig
+from metis.metric.correctness.correctness_heinrich_config import (
+    correctness_heinrich_config,
+)
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
@@ -26,7 +29,6 @@ class correctness_heinrich(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
@@ -36,14 +38,12 @@ class correctness_heinrich(Metric):
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing correctness results.
         """
-        if reference is None:
-            raise ValueError(
-                "Reference DataFrame is required for correctness assessment."
-            )
+        config = self.load_config(metric_config, correctness_heinrich_config)
+        reference_data = pd.read_csv(config.reference_file_path)
 
-        if data.shape != reference.shape:
+        if data.shape != reference_data.shape:
             raise ValueError(
-                f"Data and reference must have the same shape for correctness assessment. Got data shape {data.shape} and reference shape {reference.shape}."
+                f"Data and reference must have the same shape for correctness assessment. Got data shape {data.shape} and reference shape {reference_data.shape}."
             )
 
         results = []
@@ -53,7 +53,7 @@ class correctness_heinrich(Metric):
             for row_index in range(total_rows):
                 measurement = self.measure_correctness(
                     data[col_name].iat[row_index],
-                    reference_value=reference[col_name].iat[row_index],
+                    reference_value=reference_data[col_name].iat[row_index],
                     dtype=data[col_name].dtype,
                 )
 

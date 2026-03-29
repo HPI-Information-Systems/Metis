@@ -18,7 +18,7 @@ class accuracy_semanticReference(Metric):
     Comparison is exact (``==``); NaN matches NaN. Use ``correctness_heinrich``
     for fuzzy / numeric-tolerance comparison. Reference is required.
 
-    A gold standard is rarely available for the full table. 
+    A gold standard is rarely available for the full table.
     If ``reference`` covers a sample, invoke this metric on ``data.loc[reference.index]``
     (or align via ``key_column``) so denominators reflect the sample, not the full table.
     """
@@ -36,15 +36,10 @@ class accuracy_semanticReference(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
-        if reference is None:
-            raise ValueError(
-                "accuracy_semanticReference requires a reference DataFrame."
-            )
-
         config = self.load_config(metric_config or "", accuracy_semanticReference_config)
+        reference = pd.read_csv(config.reference_file_path)
 
         if config.key_column is not None:
             if config.key_column not in data.columns:
