@@ -46,6 +46,9 @@ class timeliness_heinrich(Metric):
         )
 
         for col_name, col_config in config.timeliness_config_per_column.items():
+            if col_name not in data.columns:
+                continue
+
             ingestion_date_column = col_config.ingestion_date_column
             assessment_date = pd.to_datetime(
                 col_config.simulated_assessment_date or pd.Timestamp.now()
@@ -96,7 +99,7 @@ class timeliness_heinrich(Metric):
                     columnNames=[col_name],
                     rowIndex=row_index,
                     DQexplanation={
-                        "certainty": certainty_value,
+                        "certainty": float(certainty_value),
                     },
                     DQgranularity=DQGranularity.CELL,
                 )
