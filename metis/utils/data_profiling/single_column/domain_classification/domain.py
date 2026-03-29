@@ -8,7 +8,7 @@ DOMAIN_PATTERNS: Dict[str, str] = {
     "ssn": r'^(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}$',
     "date_iso": r'^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$',
     "time": r'^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$',
-    "ip_address": r'^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$', 
+    "ip_address": r'^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$',
     "zip_code": r'^\d{5}(-\d{4})?$',
     "credit_card": r'^(?:\d[ -]*){13,19}$',
     "phone": r'^(\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}|\(\d{3}\)[-.\s]?\d{3}[-.\s]?\d{4}|\d{3}[-.\s]\d{3}[-.\s]\d{4})$',
@@ -36,7 +36,7 @@ def _detect_domain_by_pattern(series: pd.Series, threshold: float = 0.8) -> Opti
     :return: Domain name if detected, None otherwise.
     """
     clean_data = series.dropna()
-    
+
     if len(clean_data) == 0:
         return None
 
@@ -110,7 +110,7 @@ def domain(data: Union[pd.Series, pd.DataFrame]) -> Union[str, pd.Series]:
              DataFrame input.
     """
     if isinstance(data, pd.Series):
-        column_name = data.name if hasattr(data, 'name') else None
+        column_name = str(data.name) if hasattr(data, 'name') else None
         return _classify_domain(data, column_name)
     else:
         result = {}
