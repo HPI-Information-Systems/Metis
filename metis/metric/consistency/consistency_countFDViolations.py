@@ -14,7 +14,6 @@ class consistency_countFDViolations(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
         metric_config: Union[MetricConfig, str, None] = None,
     ) -> List[DQResult]:
         """

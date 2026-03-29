@@ -30,7 +30,6 @@ class Metric(ABC):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """Assess data using this metric and return the results.
@@ -39,13 +38,6 @@ class Metric(ABC):
         - data: pd.DataFrame
                 The DataFrame that should be assessed by this metric. This is
                 the primary dataset under inspection.
-
-        - reference: Optional[pd.DataFrame]
-                An optional, cleaned reference DataFrame that can act as a
-                clean version of the dataset. Metrics that need a canonical or
-                expected version of the data (for example correctness against a
-                known-good source) should accept and use this DataFrame. If not
-                needed by a metric, `None` is allowed.
 
         - metric_config: Optional[str]
                 Optional path or JSON string containing metric-specific

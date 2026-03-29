@@ -18,7 +18,6 @@ class consistency_ruleBasedHinrichs(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
         metric_config: str | None | MetricConfig = None,
     ) -> List[DQResult]:
         """

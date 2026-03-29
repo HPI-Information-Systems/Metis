@@ -24,7 +24,6 @@ FALLBACK_RESULTS_FILE = "dq_results_fallback.csv"
 class DQOrchestrator:
     def __init__(self, writer_config_path: str | None = None) -> None:
         self.dataframes: Dict[str, pd.DataFrame] = {}
-        self.reference_dataframes: Dict[str, pd.DataFrame] = {}
         self.data_paths: Dict[str, str] = {}
         self.results: Dict[str, DQResult] = (
             {}
@@ -61,12 +60,6 @@ class DQOrchestrator:
                     self.dataframes[config.name] = dataframe
                     self.data_paths[config.name] = config_path
 
-                    if config.reference_file_name:
-                        reference_config = DataConfig(config_data)
-                        reference_config.file_name = config.reference_file_name
-                        reference_dataframe = loader.load(reference_config)
-                        self.reference_dataframes[config.name] = reference_dataframe
-
                     # Import pre-computed data profiles
                     if config.data_profiles:
                         self._import_data_profiles(
@@ -98,7 +91,6 @@ class DQOrchestrator:
                     start = time.perf_counter()
                     incomplete_metric_results = metric_instance.assess(
                         data=df,
-                        reference=self.reference_dataframes.get(df_name),
                         metric_config=metric_config,
                     )
                     elapsed = time.perf_counter() - start
@@ -107,7 +99,6 @@ class DQOrchestrator:
                 else:
                     incomplete_metric_results = metric_instance.assess(
                         data=df,
-                        reference=self.reference_dataframes.get(df_name),
                         metric_config=metric_config,
                     )
                 for result in incomplete_metric_results:
