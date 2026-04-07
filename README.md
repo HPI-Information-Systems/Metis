@@ -17,10 +17,11 @@ To run every registered metric against the full TripAdvisor European Restaurants
 python -m demo.run_demo
 ```
 
-The demo uses `data/restaurants.csv`, the full
+The demo uses `data/restaurants.csv`, a reduced version of the
 [TripAdvisor European Restaurants dataset from Kaggle](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants)
-(~1.08 M rows). The CSV includes 42 original columns (ratings, cuisines,
-location, price level, …) plus two synthetic timestamp columns
+(~135 K rows, down from the original ~1.08 M; every 8th row was kept to stay
+under 100 MB without Git LFS). The CSV includes 42 original columns (ratings,
+cuisines, location, price level, …) plus two synthetic timestamp columns
 (`first_review_date` and `last_review_date`) with ~10 % intentional nulls
 to surface interesting completeness findings.
 
