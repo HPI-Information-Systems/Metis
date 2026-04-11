@@ -1,8 +1,10 @@
-from openai import AsyncOpenAI, OpenAI
-from typing import List, Dict
 import asyncio
-import numpy as np
 from collections import OrderedDict
+from typing import Dict, List
+
+import numpy as np
+from openai import AsyncOpenAI, OpenAI
+
 
 class LRUCache(OrderedDict):
     def __init__(self, capacity: int = 10000):
@@ -28,10 +30,10 @@ class LRUCache(OrderedDict):
             del self[oldest_key]  # Remove it without triggering __getitem__
 
 class OpenAILLM():
-    def __init__(self, model_name: str, port: int = 8000):
+    def __init__(self, model_name: str, base_url: str, api_key: str):
         self.client = AsyncOpenAI(
-            api_key="token-abc123",
-            base_url=f"http://localhost:11434/v1/"  # e.g. "http://localhost:11434/v1"
+            api_key=api_key,
+            base_url=base_url
         )
         self.model_name = model_name
 
@@ -65,12 +67,13 @@ class OpenAILLM():
                 return asyncio.run(self.generate_async(chats))
             except Exception as e:
                 print(f"Error during OpenAI API call: {e}. Retrying...")
+        raise RuntimeError("Failed to get response from OpenAI API after multiple attempts.")
 
 class OpenAIEmbedding():
-    def __init__(self, model_name: str, port: int = 8000):
+    def __init__(self, model_name: str, base_url: str, api_key: str):
         self.client = OpenAI(
-            api_key="token-abc123",
-            base_url=f"http://localhost:11434/v1/"  # e.g. "http://localhost:11434/v1"
+            api_key=api_key,
+            base_url=base_url
         )
         self.model_name = model_name
         self.embeddings_map = {"default": LRUCache(capacity=10000)}
@@ -81,7 +84,7 @@ class OpenAIEmbedding():
         norms[norms == 0] = 1.0  # avoid division by zero
         return vectors / norms
 
-    def embed(self, texts: List[str], column_name: str | None = "default") -> List[float]:
+    def embed(self, texts: List[str], column_name: str = "default"):
         texts = [str(text) for text in texts]
         if column_name not in self.embeddings_map or len(self.embeddings_map[column_name]) < len(texts):
             self.embeddings_map[column_name] = LRUCache(capacity=max(10000, len(texts) + 100))

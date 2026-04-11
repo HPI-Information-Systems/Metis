@@ -1,25 +1,38 @@
-from vllm import LLM
 import argparse
-import os
 import json
-import pandas as pd
-import glob
+from pathlib import Path
+from typing import List
 
-"data/polluted/*/*"
-def main(model_name, datasets):
-    model = LLM(model=model_name, task="embed")
-    trunc=512
+import pandas as pd
+
+from metis.dismis.preparation.openai_LLM import OpenAIEmbedding
+
+
+def precompute_value_embeddings(
+    model_name: str, datasets: str | List[str], llm_base_url: str, llm_api_key: str
+):
+    trunc = 512
+    model = OpenAIEmbedding(
+        model_name=model_name, base_url=llm_base_url, api_key=llm_api_key
+    )
 
     if isinstance(datasets, str):
         datasets = [datasets]
 
-    datasets = [dir for dir in datasets if os.path.isdir(dir)]
-
     for dataset in datasets:
-        dataset_name = dataset.split("/")[-1]
+        dataset_file = Path(dataset)
 
-        print("Dataset:", dataset)
-        with open(dataset+f"/{dataset_name}_types.json", 'r') as f:
+        if dataset_file.suffix != ".csv":
+            raise ValueError(
+                f"Expected CSV file, got {dataset_file.suffix} for {dataset_file}"
+            )
+        types_file = dataset_file.parent / f"{dataset_file.stem}_types.json"
+
+        if not types_file.exists():
+            raise FileNotFoundError(
+                f"Types file not found. Expected column types at {types_file}."
+            )
+        with open(types_file, "r") as f:
             types = json.load(f)
 
         text_columns = [col for col in types if types[col] in ["text", "categorical"]]
@@ -29,9 +42,11 @@ def main(model_name, datasets):
         print("Text columns:", text_columns)
         unique_values = {col: set() for col in text_columns}
 
-        df = pd.read_csv(dataset + f"/{dataset_name}.csv", keep_default_na=False, na_values=[""])
+        df = pd.read_csv(dataset_file, keep_default_na=False, na_values=[""])
         for col in text_columns:
-            unique_column_values = [str(val) for val in df[col].dropna().unique().tolist()]
+            unique_column_values = [
+                str(val) for val in df[col].dropna().unique().tolist()
+            ]
 
             unique_values[col].update(unique_column_values)
 
@@ -41,17 +56,48 @@ def main(model_name, datasets):
         embeddings = {col: {} for col in text_columns}
         for col in unique_values:
             outputs = model.embed(list(unique_values[col]))
-            embeddings[col] = {val: o.outputs.embedding[:trunc] for val, o in zip(unique_values[col], outputs)}
+            embeddings[col] = {
+                val: o[:trunc] for val, o in zip(unique_values[col], outputs)
+            }
 
-        with open(dataset+f"/{dataset_name}_value_embeddings.json", 'w') as f:
+        with open(
+            dataset_file.parent / f"{dataset_file.stem}_value_embeddings.json", "w"
+        ) as f:
             json.dump(embeddings, f, indent=4)
-            print(f"Saved embeddings to {dataset+f'/{dataset_name}_value_embeddings.json'}")
+            print(
+                f"Saved embeddings to {dataset_file.parent / f'{dataset_file.stem}_value_embeddings.json'}"
+            )
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Precompute embeddings for example DMVs")
-    parser.add_argument("--model", type=str, default="Qwen/Qwen3-Embedding-8B",
-                            help="Model name for embedding")
-    parser.add_argument("--datasets", type=str, nargs="+", required=True)
+    parser = argparse.ArgumentParser(
+        description="Precompute embeddings for example DMVs"
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="Qwen/Qwen3-Embedding-8B",
+        help="Model name for embedding",
+    )
+    parser.add_argument(
+        "--llm_base_url",
+        type=str,
+        default="http://localhost:11434/v1/",
+        help="Base URL for the LLM API",
+    )
+    parser.add_argument(
+        "--llm_api_key",
+        type=str,
+        default="placeholder",
+        help="API key for the LLM (if required)",
+    )
+    parser.add_argument(
+        "--datasets",
+        type=str,
+        nargs="+",
+        required=True,
+        help="List of dataset csv files to process",
+    )
     args = parser.parse_args()
 
-    main(args.model, args.datasets)
+    precompute_value_embeddings(args.model, args.datasets, args.llm_base_url, args.llm_api_key)

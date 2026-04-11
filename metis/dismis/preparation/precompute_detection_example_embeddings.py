@@ -1,11 +1,18 @@
-
-import json
-from vllm import LLM
 import argparse
+import json
+from pathlib import Path
+from typing import List
 
-def main(model_name, json_files):
-    model = LLM(model=model_name, task="embed")
+from metis.dismis.preparation.openai_LLM import OpenAIEmbedding
+
+
+def precompute_detection_example_embeddings(
+    model_name: str, llm_base_url: str, llm_api_key: str, json_files: str | List[str]
+):
     trunc = 512
+    model = OpenAIEmbedding(
+        model_name=model_name, base_url=llm_base_url, api_key=llm_api_key
+    )
 
     if isinstance(json_files, str):
         json_files = [json_files]
@@ -15,8 +22,8 @@ def main(model_name, json_files):
         all_texts = set()
         with open(file, "r") as f:
             data = json.load(f)
-            for col, lists in data.items():
-                for key, values in lists.items():
+            for lists in data.values():
+                for values in lists.values():
                     all_texts.update([str(v) for v in values])
 
         all_texts = sorted(all_texts)
@@ -26,19 +33,39 @@ def main(model_name, json_files):
         embeddings = {}
         outputs = model.embed(all_texts)
         for text, output in zip(all_texts, outputs):
-            embeddings[text] = output.outputs.embedding[:trunc]
+            embeddings[text] = output[:trunc]
 
         # Save as precomputed_example_embeddings.json
-        with open(file.replace("example_dmvs_detection.json", f"precomputed_example_embeddings.json"), "w") as f:
+        output_path = Path(file).parent / "precomputed_example_embeddings.json"
+        with open(output_path, "w") as f:
             json.dump(embeddings, f, indent=2)
 
-        print(f"Saved embeddings for {len(embeddings)} texts to {file.replace('example_dmvs_detection.json', f'precomputed_example_embeddings.json')}")
+        print(f"Saved embeddings for {len(embeddings)} texts to {output_path}")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Precompute embeddings for example DMVs")
-    parser.add_argument("--model", type=str, default="Qwen/Qwen3-Embedding-8B",
-                            help="Model name for embedding")
+    parser = argparse.ArgumentParser(
+        description="Precompute embeddings for example DMVs"
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="Qwen/Qwen3-Embedding-8B",
+        help="Model name for embedding",
+    )
+    parser.add_argument(
+        "--llm_base_url",
+        type=str,
+        default="http://localhost:11434/v1/",
+        help="Base URL for the LLM API",
+    )
+    parser.add_argument(
+        "--llm_api_key",
+        type=str,
+        default="placeholder",
+        help="API key for the LLM (if required)",
+    )
     parser.add_argument("--json_files", type=str, nargs="+", required=True)
     args = parser.parse_args()
 
-    main(args.model, args.json_files)
+    precompute_detection_example_embeddings(args.model, args.llm_base_url, args.llm_api_key, args.json_files)
