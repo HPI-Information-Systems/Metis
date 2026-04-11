@@ -12,7 +12,7 @@ from metis.utils.result import DQResult
 
 from metis.utils.similarity_measures import row_similarity
 
-defaultConfig = {
+DEFAULT_CONFIG = {
     "use_semhash": False,
     "similarity_threshold": 0.85,
 }
@@ -34,7 +34,7 @@ class minimality_clustering(Metric):
     ) -> List[DQResult]:
 
         config = self.load_metric_config(metric_config)
-        config = {**defaultConfig, **config}
+        config = {**DEFAULT_CONFIG, **config}
 
         n_rows = len(data)
 
@@ -56,7 +56,7 @@ class minimality_clustering(Metric):
         result = DQResult(
             mesTime=pd.Timestamp.now(),
             DQdimension="Minimality",
-            DQmetric="clustering",
+            DQmetric="Clustering",
             DQgranularity="table",
             DQvalue=float(minimality),
             DQexplanation={
@@ -80,7 +80,7 @@ class minimality_clustering(Metric):
         text_df = data.select_dtypes(include=["object"]).copy()
 
         if text_df.empty:
-            return len(data)  # fallback: keine Textdaten → jeder Datensatz eigener Cluster
+            return len(data)  # fallback: no text data → every data set own cluster
 
         records = text_df.astype(str).to_dict(orient="records")
 
