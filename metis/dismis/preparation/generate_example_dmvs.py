@@ -5,13 +5,17 @@ import random
 from pathlib import Path
 
 import pandas as pd
-from openai_LLM import OpenAILLM as LLM
-from pollution.errors.LLMplaceholder import (
+
+from metis.dismis.preparation.openai_LLM import OpenAILLM
+from metis.dismis.preparation.pollution.errors.LLMplaceholder import (
     LLMCommentDMV2,
     LLMPlaceholderDMV2,
     LLMUnsureDMV2,
     LLMValidDMV2,
 )
+from metis.utils.logging import logger as main_logger
+
+logger = main_logger.getChild(__name__)
 
 
 def generate_example_dmvs(
@@ -21,7 +25,7 @@ def generate_example_dmvs(
     llm_api_key: str,
     output_file_name: str,
 ):
-    llm = LLM(model_name=llm_name, base_url=llm_base_url, api_key=llm_api_key)
+    llm = OpenAILLM(model_name=llm_name, base_url=llm_base_url, api_key=llm_api_key)
 
     dataset_name = dataset_file.stem
     DMV_types = {
@@ -55,7 +59,8 @@ def generate_example_dmvs(
         example_values[col] = selected_values
     generated_dmvs = {col: {} for col in unique_columns}
 
-    for dmv_type, dmv_generator in DMV_types.items():
+    for dmv_idx, (dmv_type, dmv_generator) in enumerate(DMV_types.items(), 1):
+        logger.info(f"Generating {dmv_type} DMVs ({dmv_idx}/{len(DMV_types)})")
         all_placeholders, _, _ = dmv_generator.get_column_placeholders(
             unique_columns, example_values=example_values
         )

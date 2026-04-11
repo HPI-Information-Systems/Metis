@@ -1,11 +1,16 @@
+import json
+import logging
+import random
+import re
 from typing import List
+
 import numpy as np
 import pandas as pd
-import random
-import json
-import re
 
 from .error import DMV
+
+logger = logging.getLogger("metis").getChild(__name__)
+
 
 class LLMPlaceholderDMV2(DMV):
     prompt = """Your task is to act as a data quality analyst to find Disguised Missing Values (DMVs).
@@ -56,7 +61,12 @@ Column name: "{column_name}"
 
     last_line = "# Your Response:\n"
 
-    def __init__(self, LLM, table_name: str, repeating: bool = True, ):
+    def __init__(
+        self,
+        LLM,
+        table_name: str,
+        repeating: bool = True,
+    ):
         """
         Initialize the PlaceholderDMV with optional placeholder values.
         Args:
@@ -70,7 +80,9 @@ Column name: "{column_name}"
         self.table_name = table_name
         self.LLM = LLM
 
-    def get_column_placeholders(self, column_names: List[str], example_values: dict) -> tuple[dict, dict, dict]:
+    def get_column_placeholders(
+        self, column_names: List[str], example_values: dict
+    ) -> tuple[dict, dict, dict]:
         """
         Get column placeholders and judged example values.
 
@@ -80,12 +92,17 @@ Column name: "{column_name}"
                 - valid_values: dict mapping column names to lists of example values judged as valid
                 - invalid_values: dict mapping column names to lists of example values judged as invalid/placeholders
         """
-        col_placeholders = {col: [] for col in column_names}
-        valid_values = {col: [] for col in column_names}
-        invalid_values = {col: [] for col in column_names}
+        col_placeholders = {col: set() for col in column_names}
+        valid_values = {col: set() for col in column_names}
+        invalid_values = {col: set() for col in column_names}
 
         while any(len(placeholders) < 10 for placeholders in col_placeholders.values()):
-            remaining_cols = [col for col in column_names if len(col_placeholders[col]) < 10]
+            logger.info(
+                f"Processing columns with less than 10 placeholders: {[f"{col}: {len(col_placeholders[col])}" for col in column_names if len(col_placeholders[col]) < 10]}."
+            )
+            remaining_cols = [
+                col for col in column_names if len(col_placeholders[col]) < 10
+            ]
             all_messages = []
             for col in remaining_cols:
                 prompt = self.prompt.format(column_name=col, table_name=self.table_name)
@@ -94,19 +111,15 @@ Column name: "{column_name}"
 
                 prompt += self.last_line
                 messages = [
-                    {"role": "system", "content": "You are a data engineer working on quality control of tabular data."},
+                    {
+                        "role": "system",
+                        "content": "You are a data engineer working on quality control of tabular data.",
+                    },
                     {"role": "user", "content": prompt},
                 ]
                 all_messages.append(messages)
 
-
             responses = self.LLM.generate(all_messages)
-            # for messages, response in zip(all_messages, responses):
-            #     print("---- Prompt ----")
-            #     print(messages[-1]['content'])
-            #     print("---- Response ----")
-            #     print(response)
-            #     print("---- End Response ----")
             # Extract the list of placeholder values from the response
             for col, response in zip(remaining_cols, responses):
                 # Extract values here
@@ -115,61 +128,68 @@ Column name: "{column_name}"
 
                 try:
                     # Find all JSON-like objects in the response
-                    json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
+                    json_pattern = r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}"
                     json_matches = re.findall(json_pattern, response, re.DOTALL)
 
-                    if len(json_matches) >= 2:
-                        # First JSON: Analysis summary with Valid and Placeholders
-                        analysis_json = json.loads(json_matches[0])
-                        valid = analysis_json.get("Valid", [])
-                        invalid = analysis_json.get("Placeholders", [])
+                    if not len(json_matches) >= 2:
+                        continue
 
-                        # Store the judged values
-                        for val in valid:
-                            if val not in valid_values[col]:
-                                valid_values[col].append(val)
-                        for val in invalid:
-                            if val not in invalid_values[col]:
-                                invalid_values[col].append(val)
+                    # First JSON: Analysis summary with Valid and Placeholders
+                    analysis_json = json.loads(json_matches[0])
+                    valid = analysis_json.get("Valid", [])
+                    invalid = analysis_json.get("Placeholders", [])
 
-                        # Second JSON: Placeholder values with Generic and Context-Specific
-                        placeholder_json = json.loads(json_matches[1])
+                    # Store the judged values
+                    valid_values[col].update([val for val in valid if val])
+                    invalid_values[col].update([val for val in invalid if val])
 
-                        # Extract Generic and Context-Specific placeholder values
-                        generic = placeholder_json.get("Generic", [])
-                        context_specific = placeholder_json.get("Context-Specific", [])
+                    # Second JSON: Placeholder values with Generic and Context-Specific
+                    placeholder_json = json.loads(json_matches[1])
 
-                        if not isinstance(generic, list):
-                            print("Warning: 'Generic' placeholders is not a list.", generic)
-                            generic = []
+                    # Extract Generic and Context-Specific placeholder values
+                    generic = placeholder_json.get("Generic", [])
+                    context_specific = placeholder_json.get("Context-Specific", [])
 
-                        if not isinstance(context_specific, list):
-                            print("Warning: 'Context-Specific' placeholders is not a list.", context_specific)
-                            context_specific = []
+                    if not isinstance(generic, list):
+                        logger.warning(
+                            "Warning: 'Generic' placeholders is not a list.",
+                            generic,
+                        )
+                        generic = []
 
-                        # Combine both categories
-                        new_placeholders = generic + context_specific
+                    if not isinstance(context_specific, list):
+                        logger.warning(
+                            "Warning: 'Context-Specific' placeholders is not a list.",
+                            context_specific,
+                        )
+                        context_specific = []
 
-                        for placeholder in new_placeholders:
-                            if placeholder and placeholder not in col_placeholders[col]:# and placeholder not in valid_values[col]:
-                                col_placeholders[col].append(placeholder)
+                    # Combine both categories
+                    new_placeholders = generic + context_specific
+                    col_placeholders[col].update(
+                        [val for val in new_placeholders if val]
+                    )
 
                 except (json.JSONDecodeError, IndexError, KeyError) as e:
                     # If JSON parsing fails, try to extract manually
                     # Look for lines that might contain placeholder values after "Generic" or "Context-Specific"
                     if '"Generic"' in response or '"Context-Specific"' in response:
                         # Try to extract array values from the JSON
-                        array_pattern = r'\[(.*?)\]'
+                        array_pattern = r"\[(.*?)\]"
                         arrays = re.findall(array_pattern, response, re.DOTALL)
                         if len(arrays) == 4:
                             for array_str in arrays[2:]:
                                 # Extract quoted strings from the array
                                 values = re.findall(r'"([^"]*)"', array_str)
-                                for value in values:
-                                    if value and value not in col_placeholders[col]:
-                                        col_placeholders[col].append(value)
+                                col_placeholders[col].update(
+                                    [val for val in values if val]
+                                )
 
-        return col_placeholders, valid_values, invalid_values
+        return (
+            {col: list(placeholders) for col, placeholders in col_placeholders.items()},
+            {col: list(values) for col, values in valid_values.items()},
+            {col: list(values) for col, values in invalid_values.items()},
+        )
 
     def __call__(self, dataset: pd.DataFrame, positions: np.ndarray) -> pd.DataFrame:
         """
@@ -184,9 +204,19 @@ Column name: "{column_name}"
         """
 
         columns = dataset.columns.to_list()
-        example_values = {col: list(set(random.sample(dataset[col][:10000].dropna().astype(str).tolist(), 20)))[:5]
-                  for col in columns}
-        column_placeholder_values, valid_values, invalid_values = self.get_column_placeholders(columns, example_values)
+        example_values = {
+            col: list(
+                set(
+                    random.sample(
+                        dataset[col][:10000].dropna().astype(str).tolist(), 20
+                    )
+                )
+            )[:5]
+            for col in columns
+        }
+        column_placeholder_values, valid_values, invalid_values = (
+            self.get_column_placeholders(columns, example_values)
+        )
 
         # Store the judged values as instance attributes for later access
         self.valid_values = valid_values
@@ -212,6 +242,7 @@ Column name: "{column_name}"
                         dataset.iloc[rows, column_idx] = placeholder
 
         return dataset
+
 
 class LLMNonsenseDMV2(LLMPlaceholderDMV2):
     prompt = """Your task is to act as a data quality analyst to find Nonsense Placeholder Values (NPVs).
@@ -260,6 +291,7 @@ Column name: "{column_name}"
 ## Example values to analyze:
 """
 
+
 class LLMCommentDMV2(LLMPlaceholderDMV2):
     prompt = """Your task is to act as a data quality analyst to find comment values in the dataset.
 
@@ -307,6 +339,7 @@ Column name: "{column_name}"
 ## Example values to analyze:
 """
 
+
 class LLMUnsureDMV2(LLMPlaceholderDMV2):
     prompt = """Your task is to act as a data quality analyst to find values in the dataset marked as unsure.
 
@@ -353,6 +386,7 @@ Table name: "{table_name}"
 Column name: "{column_name}"
 ## Example values to analyze:
 """
+
 
 class LLMValidDMV2(LLMPlaceholderDMV2):
     prompt = """Your task is to act as a data quality analyst to find valid values in a dataset.

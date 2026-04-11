@@ -1,32 +1,41 @@
 import argparse
 import json
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 
 from metis.dismis.preparation.openai_LLM import OpenAIEmbedding
+from metis.utils.logging import logger as main_logger
+
+logger = main_logger.getChild(__name__)
 
 
 def precompute_value_embeddings(
-    model_name: str, datasets: str | List[str], llm_base_url: str, llm_api_key: str
+    model_name: str,
+    llm_base_url: str,
+    llm_api_key: str,
+    datasets_and_types: Tuple[str, str] | List[Tuple[str, str]],
 ):
     trunc = 512
     model = OpenAIEmbedding(
         model_name=model_name, base_url=llm_base_url, api_key=llm_api_key
     )
 
-    if isinstance(datasets, str):
-        datasets = [datasets]
+    if isinstance(datasets_and_types, tuple):
+        datasets_and_types = [datasets_and_types]
 
-    for dataset in datasets:
+    for dataset_idx, (dataset, types) in enumerate(datasets_and_types, 1):
+        logger.info(
+            f"Processing dataset {dataset_idx}/{len(datasets_and_types)}: {dataset}"
+        )
         dataset_file = Path(dataset)
+        types_file = Path(types)
 
         if dataset_file.suffix != ".csv":
             raise ValueError(
                 f"Expected CSV file, got {dataset_file.suffix} for {dataset_file}"
             )
-        types_file = dataset_file.parent / f"{dataset_file.stem}_types.json"
 
         if not types_file.exists():
             raise FileNotFoundError(
@@ -37,9 +46,10 @@ def precompute_value_embeddings(
 
         text_columns = [col for col in types if types[col] in ["text", "categorical"]]
         if len(text_columns) == 0:
+            logger.debug(f"No text or categorical columns found in {dataset}")
             continue
 
-        print("Text columns:", text_columns)
+        logger.info(f"Text columns: {text_columns}")
         unique_values = {col: set() for col in text_columns}
 
         df = pd.read_csv(dataset_file, keep_default_na=False, na_values=[""])
@@ -51,7 +61,7 @@ def precompute_value_embeddings(
             unique_values[col].update(unique_column_values)
 
         for col in unique_values.keys():
-            print(f"Column '{col}' has {len(unique_values[col])} unique values.")
+            logger.debug(f"Column '{col}' has {len(unique_values[col])} unique values.")
 
         embeddings = {col: {} for col in text_columns}
         for col in unique_values:
@@ -64,7 +74,7 @@ def precompute_value_embeddings(
             dataset_file.parent / f"{dataset_file.stem}_value_embeddings.json", "w"
         ) as f:
             json.dump(embeddings, f, indent=4)
-            print(
+            logger.info(
                 f"Saved embeddings to {dataset_file.parent / f'{dataset_file.stem}_value_embeddings.json'}"
             )
 
@@ -100,4 +110,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    precompute_value_embeddings(args.model, args.datasets, args.llm_base_url, args.llm_api_key)
+    precompute_value_embeddings(
+        args.model,
+        args.llm_base_url,
+        args.llm_api_key,
+        [
+            (dataset, str(Path(dataset).parent / f"{Path(dataset).stem}_types.json"))
+            for dataset in args.datasets
+        ],
+    )

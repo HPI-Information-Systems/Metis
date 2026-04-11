@@ -4,6 +4,9 @@ from pathlib import Path
 from typing import List
 
 from metis.dismis.preparation.openai_LLM import OpenAIEmbedding
+from metis.utils.logging import logger as main_logger
+
+logger = main_logger.getChild(__name__)
 
 
 def precompute_detection_example_embeddings(
@@ -18,7 +21,8 @@ def precompute_detection_example_embeddings(
         json_files = [json_files]
 
     # Collect all unique texts from all lists in all files
-    for file in json_files:
+    for file_idx, file in enumerate(json_files, 1):
+        logger.info(f"Processing file {file_idx}/{len(json_files)}: {file}")
         all_texts = set()
         with open(file, "r") as f:
             data = json.load(f)
@@ -27,7 +31,7 @@ def precompute_detection_example_embeddings(
                     all_texts.update([str(v) for v in values])
 
         all_texts = sorted(all_texts)
-        print(f"Total unique texts to embed: {len(all_texts)}")
+        logger.info(f"Total unique texts to embed: {len(all_texts)}")
 
         # Compute embeddings in batches (if needed)
         embeddings = {}
@@ -40,7 +44,7 @@ def precompute_detection_example_embeddings(
         with open(output_path, "w") as f:
             json.dump(embeddings, f, indent=2)
 
-        print(f"Saved embeddings for {len(embeddings)} texts to {output_path}")
+        logger.info(f"Saved embeddings for {len(embeddings)} texts to {output_path}")
 
 
 if __name__ == "__main__":
@@ -68,4 +72,6 @@ if __name__ == "__main__":
     parser.add_argument("--json_files", type=str, nargs="+", required=True)
     args = parser.parse_args()
 
-    precompute_detection_example_embeddings(args.model, args.llm_base_url, args.llm_api_key, args.json_files)
+    precompute_detection_example_embeddings(
+        args.model, args.llm_base_url, args.llm_api_key, args.json_files
+    )
