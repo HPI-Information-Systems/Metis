@@ -1,6 +1,6 @@
 import inspect
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 
 import pandas as pd
 
@@ -19,7 +19,7 @@ class consistency_ruleBasedPipino_config(MetricConfig):
 
     attribute_rules: Dict[str, List[Callable[[Any], bool]]] | None = None
 
-    tuple_rules: List[Callable[[pd.Series], bool]] | None = None
+    tuple_rules: List[Tuple[List[str], Callable[[pd.Series], bool]]] | None = None
 
     def to_json(self):
         return {
@@ -33,7 +33,10 @@ class consistency_ruleBasedPipino_config(MetricConfig):
                 else {}
             ),
             "tuple_rules": (
-                [inspect.getsource(rule).strip() for rule in self.tuple_rules]
+                [
+                    (required_columns, inspect.getsource(rule).strip())
+                    for required_columns, rule in self.tuple_rules
+                ]
                 if self.tuple_rules
                 else []
             ),
