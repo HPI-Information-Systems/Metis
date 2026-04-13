@@ -1,21 +1,23 @@
+import time
+from typing import Dict, List, Tuple
+
 import numpy as np
 import pandas as pd
-import time
-from typing import Tuple, Dict, List
-from scipy.stats import norm, skewnorm, uniform, expon, kstest
+from scipy.stats import expon, kstest, norm, skewnorm, uniform
 
-from metis.dismis.detection.detectors.utils import force_numeric
 from metis.dismis.detection.detectors.detector import DMVDetector
+from metis.dismis.detection.detectors.utils import force_numeric
 from metis.dismis.utils.datetime import datetime_to_numeric
+
 
 class BucketPDFGoF(DMVDetector):
     def __init__(
         self,
         num_buckets: int = 100,
-        method: str = "auto",          # "auto", "norm", "skewnorm", "uniform", "expon"
+        method: str = "auto",  # "auto", "norm", "skewnorm", "uniform", "expon"
         z_threshold: float = 3.0,
         min_expected: float = 1e-6,
-        target_types: List[str] = ["numeric", "date"]
+        target_types: List[str] = ["numeric", "date"],
     ):
         """
         Histogram-vs-PDF goodness-of-fit outlier detector.
@@ -87,9 +89,14 @@ class BucketPDFGoF(DMVDetector):
         values = column.to_numpy(dtype=float)
         return values
 
-    def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        times = {"preprocessing": 0.0, "fitting": 0.0,
-                 "bucketing": 0.0, "scoring": 0.0}
+    def __call__(
+        self,
+        dataset: pd.DataFrame,
+        types: Dict[str, str],
+        target_columns: List[str] = None,
+        embeddings: Dict[str, pd.DataFrame] = {},
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+        times = {"preprocessing": 0.0, "fitting": 0.0, "bucketing": 0.0, "scoring": 0.0}
         total_start = time.time()
         assessed = []
 
@@ -117,7 +124,7 @@ class BucketPDFGoF(DMVDetector):
             mask = ~np.isnan(x_full)
             x = x_full[mask]
             idx = series.index[mask]
-            #print(x.shape)
+            # print(x.shape)
             n = x.size
             times["preprocessing"] += time.time() - t0
             if n == 0:
@@ -126,9 +133,10 @@ class BucketPDFGoF(DMVDetector):
             # --- fit distribution ---
             t1 = time.time()
             if self.method == "auto":
-                method, params = self._choose_best_fit(x,
-                                    {k: dists[k] for k in ["skewnorm", "uniform", "expon"]})
-                #print(method, col)
+                method, params = self._choose_best_fit(
+                    x, {k: dists[k] for k in ["skewnorm", "uniform", "expon"]}
+                )
+                # print(method, col)
                 if method is None:  # fallback
                     method, params = "norm", (np.mean(x), np.std(x, ddof=0) or 1.0)
             else:
@@ -148,40 +156,43 @@ class BucketPDFGoF(DMVDetector):
                 df_predict.loc[idx, col] = 0
                 continue
 
-            num_buckets = min(self.num_buckets, len(np.unique(x)) // 2)  # at least 2 samples per bucket
+            num_buckets = min(
+                self.num_buckets, len(np.unique(x)) // 2
+            )  # at least 2 samples per bucket
 
             edges = np.linspace(xmin, xmax, num_buckets + 1)
-            bin_ids = np.clip(np.digitize(x, edges, right=False) - 1,
-                              0, num_buckets - 1)
+            bin_ids = np.clip(
+                np.digitize(x, edges, right=False) - 1, 0, num_buckets - 1
+            )
 
             obs = np.bincount(bin_ids, minlength=num_buckets)
             cdf_edges = cdf(edges)
-            #print(f"[DEBUG] cdf_edges: {cdf_edges}")
-            #print(f"[DEBUG] Any cdf_edges nan? {np.any(np.isnan(cdf_edges))}")
-            #print(f"[DEBUG] edges: {edges}")
-            #print(f"[DEBUG] params: {params}")
+            # print(f"[DEBUG] cdf_edges: {cdf_edges}")
+            # print(f"[DEBUG] Any cdf_edges nan? {np.any(np.isnan(cdf_edges))}")
+            # print(f"[DEBUG] edges: {edges}")
+            # print(f"[DEBUG] params: {params}")
             probs = np.maximum(cdf_edges[1:] - cdf_edges[:-1], 0.0)
             exp = np.maximum(n * probs, self.min_expected)
 
-            #print(f"[DEBUG] obs: {obs}")
-            #print(f"[DEBUG] exp: {exp}")
-            #print(f"[DEBUG] Any exp==0? {np.any(exp==0)}")
-            #print(f"[DEBUG] resid before abs: {(obs - exp) / np.sqrt(exp)}")
+            # print(f"[DEBUG] obs: {obs}")
+            # print(f"[DEBUG] exp: {exp}")
+            # print(f"[DEBUG] Any exp==0? {np.any(exp==0)}")
+            # print(f"[DEBUG] resid before abs: {(obs - exp) / np.sqrt(exp)}")
             resid = (obs - exp) / np.sqrt(exp)
-            #print(f"[DEBUG] resid: {resid}")
-            #print(f"[DEBUG] Any resid nan? {np.any(np.isnan(resid))}")
+            # print(f"[DEBUG] resid: {resid}")
+            # print(f"[DEBUG] Any resid nan? {np.any(np.isnan(resid))}")
             times["bucketing"] += time.time() - t2
 
             # --- score & predict ---
             t3 = time.time()
             sample_scores = np.abs(resid[bin_ids])
-            #print(f"[DEBUG] sample_scores: {sample_scores}")
-            #print(f"[DEBUG] Any sample_scores nan? {np.any(np.isnan(sample_scores))}")
+            # print(f"[DEBUG] sample_scores: {sample_scores}")
+            # print(f"[DEBUG] Any sample_scores nan? {np.any(np.isnan(sample_scores))}")
             anomalous_bins = np.where(np.abs(resid) >= self.z_threshold)[0]
             labels = np.isin(bin_ids, anomalous_bins).astype(int)
 
-            #print(f"Number of null values in sample_scores for column '{col}': {np.isnan(sample_scores).sum()}")
-            #df_score.loc[:, col] = sample_scores.max() + 3
+            # print(f"Number of null values in sample_scores for column '{col}': {np.isnan(sample_scores).sum()}")
+            # df_score.loc[:, col] = sample_scores.max() + 3
             df_score.loc[idx, col] = sample_scores
             assessed.append(col)
             df_predict.loc[idx, col] = labels
@@ -191,8 +202,14 @@ class BucketPDFGoF(DMVDetector):
 
         return df_score, df_predict.astype(int), times, assessed
 
+
 class DistributionFitDetector(DMVDetector):
-    def __init__(self, method: str = "skewnorm", density_quantile: float = 0.01, target_types: List[str] = ["numeric", "date"]):
+    def __init__(
+        self,
+        method: str = "skewnorm",
+        density_quantile: float = 0.01,
+        target_types: List[str] = ["numeric", "date"],
+    ):
         """
         Fit a distribution to values and flag points with low probability density.
 
@@ -219,18 +236,24 @@ class DistributionFitDetector(DMVDetector):
         values = column.to_numpy(dtype=float)
         return values
 
-    def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    def __call__(
+        self,
+        dataset: pd.DataFrame,
+        types: Dict[str, str],
+        target_columns: List[str] = None,
+        embeddings: Dict[str, pd.DataFrame] = {},
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
 
         times = {
-            'preprocessing': 0,
-            'fitting': 0,
-            'scoring': 0,
+            "preprocessing": 0,
+            "fitting": 0,
+            "scoring": 0,
         }
         total_starttime = time.time()
         assessed = []
 
         df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
-        df_score.loc[:, :] = 0 #1.0
+        df_score.loc[:, :] = 0  # 1.0
         df_predict.loc[:, :] = 0
 
         if target_columns is None:
@@ -241,7 +264,9 @@ class DistributionFitDetector(DMVDetector):
                 continue
 
             preprocessing_starttime = time.time()
-            values = self._extract_features(df_detect[target_column].dropna(), types[target_column])
+            values = self._extract_features(
+                df_detect[target_column].dropna(), types[target_column]
+            )
             if len(values) == 0:
                 continue
             if len(np.unique(values)) == 1:
@@ -250,8 +275,8 @@ class DistributionFitDetector(DMVDetector):
             target_idx = df_detect[target_column].dropna().index
             target_idx = np.array(list(range(len(values))))[np.isnan(values) == False]
             values = values[np.isnan(values) == False]
-            #print(target_idx)
-            times['preprocessing'] += time.time() - preprocessing_starttime
+            # print(target_idx)
+            times["preprocessing"] += time.time() - preprocessing_starttime
 
             # --- Fit distribution ---
             fitting_start = time.time()
@@ -262,18 +287,19 @@ class DistributionFitDetector(DMVDetector):
             else:  # default: normal
                 mu, sigma = np.mean(values), np.std(values)
                 from scipy.stats import norm
+
                 pdf_values = norm.pdf(values, loc=mu, scale=sigma)
-            times['fitting'] += time.time() - fitting_start
+            times["fitting"] += time.time() - fitting_start
 
             # --- Scoring ---
             scoring_start = time.time()
-            #print(pdf_values)
+            # print(pdf_values)
 
             # Convert PDF to outlier score using sigmoid on negative log-likelihood
             # Maps unbounded scores to [0,1] with smooth transition
             # Lower PDF → higher negative log → higher outlier score
             scores = -np.log(pdf_values + 1e-12)
-            #scores = 1 / (1 + np.exp(-scores + 5))  # sigmoid with center at 5
+            # scores = 1 / (1 + np.exp(-scores + 5))  # sigmoid with center at 5
 
             threshold = np.nanquantile(scores, 1 - self.density_quantile)
             labels = (scores >= threshold).astype(int)
@@ -281,8 +307,8 @@ class DistributionFitDetector(DMVDetector):
             df_score.loc[target_idx, target_column] = scores
             assessed.append(target_column)
             df_predict.loc[target_idx, target_column] = labels
-            times['scoring'] += time.time() - scoring_start
+            times["scoring"] += time.time() - scoring_start
 
-        times['total'] = time.time() - total_starttime
+        times["total"] = time.time() - total_starttime
 
         return df_score, df_predict.astype(int), times, assessed

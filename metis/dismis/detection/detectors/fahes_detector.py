@@ -1,16 +1,20 @@
-import pandas as pd
+import os
 import subprocess
 import tempfile
-import os
 import time
 from pathlib import Path
-from typing import Tuple, Dict, List
+from typing import Dict, List, Tuple
+
+import pandas as pd
 
 from metis.dismis.detection.detectors.detector import DMVDetector
 
 
 class FAHESDetector(DMVDetector):
-    def __init__(self, fahes_executable: str = "/sc/home/philipp.hildebrandt/DMV/FAHES_Code/src/FAHES"):
+    def __init__(
+        self,
+        fahes_executable: str = "/sc/home/philipp.hildebrandt/DMV/FAHES_Code/src/FAHES",
+    ):
         """
         Initialize the SimilarSamplesDetector with a specific detector.
 
@@ -19,7 +23,13 @@ class FAHESDetector(DMVDetector):
         """
         self.executable = fahes_executable
 
-    def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    def __call__(
+        self,
+        dataset: pd.DataFrame,
+        types: Dict[str, str],
+        target_columns: List[str] = None,
+        embeddings: Dict[str, pd.DataFrame] = {},
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
         times = {}
         total_starttime = time.time()
 
@@ -41,44 +51,54 @@ class FAHESDetector(DMVDetector):
             fahes_starttime = time.time()
 
             try:
-                subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess.run(
+                    cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
 
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"FAHES failed: {e.stderr.decode()}")
-            times['fahes'] = time.time() - fahes_starttime
-
+            times["fahes"] = time.time() - fahes_starttime
 
             # Look for result file
             result_files = list(Path(output_dir).glob("*.csv"))
 
             # Load FAHES output
             try:
-                result_df = pd.read_csv(result_files[0], keep_default_na=False, na_values=[""])
-                result_df.columns = ["Table Name", "Column Name", "DMV", "Frequency", "Tool ID"]
+                result_df = pd.read_csv(
+                    result_files[0], keep_default_na=False, na_values=[""]
+                )
+                result_df.columns = [
+                    "Table Name",
+                    "Column Name",
+                    "DMV",
+                    "Frequency",
+                    "Tool ID",
+                ]
 
                 # Normalize DMV values to string (to match df values)
                 dmvs_by_column = (
-                    result_df.groupby("Column Name")["DMV"]
-                    .apply(set)
-                    .to_dict()
+                    result_df.groupby("Column Name")["DMV"].apply(set).to_dict()
                 )
 
                 for col in df_detect.columns:
                     if col in dmvs_by_column:
-                        df_predict[col] = df_detect[col].astype(str).isin(dmvs_by_column[col]).astype(int)
+                        df_predict[col] = (
+                            df_detect[col]
+                            .astype(str)
+                            .isin(dmvs_by_column[col])
+                            .astype(int)
+                        )
                     assessed.append(col)
             except:
                 print("No DMVs found or when processing the FAHES result file.")
 
         df_score = df_predict.copy().astype(float)
-        times['total'] = time.time() - total_starttime
+        times["total"] = time.time() - total_starttime
 
         return df_score, df_predict, times, assessed
 
 
 if __name__ == "__main__":
-    score, predict, times, assessed = FAHESDetector()(pd.read_csv("/sc/home/philipp.hildebrandt/DMV/raha/datasets/flights/dirty.csv"))
-
-
-
-
+    score, predict, times, assessed = FAHESDetector()(
+        pd.read_csv("/sc/home/philipp.hildebrandt/DMV/raha/datasets/flights/dirty.csv")
+    )

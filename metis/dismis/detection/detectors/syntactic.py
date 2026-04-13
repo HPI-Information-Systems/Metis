@@ -1,15 +1,18 @@
+import time
 from collections.abc import Sequence
-from typing import Iterable, List, Tuple, Dict
-import pandas as pd
-import numpy as np
 from functools import lru_cache
 from itertools import chain, combinations
+from typing import Dict, Iterable, List, Tuple
+
+import numpy as np
+import pandas as pd
+
 from metis.dismis.detection.detectors.detector import DMVDetector
-import time
 
 # The algorithm for this detector is taken from https://github.com/HPI-Information-Systems/SURAGH
 
-#---------Abstractions for single characters---------#
+# ---------Abstractions for single characters---------#
+
 
 class SingleCharAbstraction:
     """Base class for abstractions that replace single characters with a symbol."""
@@ -109,7 +112,9 @@ class FulltextAbstraction:
     def __call__(self, data: Sequence[str]) -> List[str]:
         return [self.symbol]
 
-#---------Abstractions for multiple characters---------#
+
+# ---------Abstractions for multiple characters---------#
+
 
 class TokenRunAbstraction:
     """Aggregate runs of a specific token into a higher-level abstraction."""
@@ -230,11 +235,22 @@ class DateAbstraction:
         return output
 
 
-#---------Third Level Abstractions---------#
+# ---------Third Level Abstractions---------#
 
 _LETTER_TOKENS = {"<UL>", "<SEQU>", "<LL>", "<SEQLL>"}
 
-_TEXT_BODY_SYMBOLS = _LETTER_TOKENS | {"<S>", "<WS>", "-", "_", "'", '"', "/", ".", "|", "&"}
+_TEXT_BODY_SYMBOLS = _LETTER_TOKENS | {
+    "<S>",
+    "<WS>",
+    "-",
+    "_",
+    "'",
+    '"',
+    "/",
+    ".",
+    "|",
+    "&",
+}
 
 _WHITESPACE_TOKENS = {"<S>", "<WS>"}
 
@@ -417,7 +433,8 @@ class MissingValueAbstraction:
             break
         return 0
 
-#---------Manage Abstraction Dependencies---------#
+
+# ---------Manage Abstraction Dependencies---------#
 
 _ABSTRACTION_DEPENDENCIES = {
     DateAbstraction.name: {DigitAbstraction.name, ArithmeticAbstraction.name},
@@ -426,9 +443,16 @@ _ABSTRACTION_DEPENDENCIES = {
     LowerCaseSequenceAbstraction.name: {LowerCaseLetterAbstraction.name},
     WhitespaceSequenceAbstraction.name: {SpaceAbstraction.name},
     NumberAbstraction.name: {DigitSequenceAbstraction.name},
-    TextAbstraction.name: {UpperCaseSequenceAbstraction.name, LowerCaseSequenceAbstraction.name},
-    MissingValueAbstraction.name: {EmptyValueAbstraction.name, WhitespaceSequenceAbstraction.name},
+    TextAbstraction.name: {
+        UpperCaseSequenceAbstraction.name,
+        LowerCaseSequenceAbstraction.name,
+    },
+    MissingValueAbstraction.name: {
+        EmptyValueAbstraction.name,
+        WhitespaceSequenceAbstraction.name,
+    },
 }
+
 
 @lru_cache(maxsize=None)
 def _all_dependencies(name: str) -> frozenset[str]:
@@ -436,6 +460,7 @@ def _all_dependencies(name: str) -> frozenset[str]:
     for dep in list(deps):
         deps.update(_all_dependencies(dep))
     return frozenset(deps)
+
 
 def is_valid_abstraction_sequence(sequence: Sequence[type]) -> bool:
     """
@@ -463,10 +488,12 @@ def is_valid_abstraction_sequence(sequence: Sequence[type]) -> bool:
 
     return True
 
+
 def powerset(iterable):
     "powerset([1,2,3]) --> (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
-    return chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1))
+    return chain.from_iterable(combinations(s, r) for r in range(1, len(s) + 1))
+
 
 _STAGE_ONE_CLASSES = [
     EmptyValueAbstraction,
@@ -480,7 +507,7 @@ _STAGE_ONE_CLASSES = [
     BracketAbstraction,
     SymbolAbstraction,
     LineBreakAbstraction,
- ]
+]
 
 _STAGE_TWO_CLASSES = [
     DateAbstraction,
@@ -488,22 +515,24 @@ _STAGE_TWO_CLASSES = [
     LowerCaseSequenceAbstraction,
     DigitSequenceAbstraction,
     WhitespaceSequenceAbstraction,
- ]
+]
 
 _STAGE_THREE_CLASSES = [
     NumberAbstraction,
     TextAbstraction,
     MissingValueAbstraction,
- ]
+]
 
-_STAGE_FOUR_CLASSES = [
-    FulltextAbstraction
- ]
+_STAGE_FOUR_CLASSES = [FulltextAbstraction]
 
 _ALL_TRANSFORMS = {
     cls.name: cls()
-    for cls in _STAGE_ONE_CLASSES + _STAGE_TWO_CLASSES + _STAGE_THREE_CLASSES + _STAGE_FOUR_CLASSES
+    for cls in _STAGE_ONE_CLASSES
+    + _STAGE_TWO_CLASSES
+    + _STAGE_THREE_CLASSES
+    + _STAGE_FOUR_CLASSES
 }
+
 
 @lru_cache(maxsize=1024)
 def applicable_abstractions(value: str) -> list[object]:
@@ -566,18 +595,37 @@ def applicable_abstractions(value: str) -> list[object]:
             new_tokens = transform(tokens)
             if new_tokens != tokens:
                 record(cls)
-                break # Found it's applicable, no need to check other lists for this class
+                break  # Found it's applicable, no need to check other lists for this class
 
     return [cls for cls in applicable]
 
-#---------Pattern generation---------#
+
+# ---------Pattern generation---------#
 
 weight_1 = ["<FTXT>"]
 weight_2 = ["<NUM>", "<TXT>", "<MV>"]
 weight_3 = ["<DT>", "<SEQD>", "<SEQU>", "<SEQLL>", "<WS>"]
-weight_4 = ["<ARITH>", "<D>", "<SYM>", "<DEL>", "<QUOTE>", "<BRKT>", "<S>", "<LB>", "<EV>", "<UL>", "<LL>"]
+weight_4 = [
+    "<ARITH>",
+    "<D>",
+    "<SYM>",
+    "<DEL>",
+    "<QUOTE>",
+    "<BRKT>",
+    "<S>",
+    "<LB>",
+    "<EV>",
+    "<UL>",
+    "<LL>",
+]
 
-_WEIGHT_GROUPS = [(1, set(weight_1)), (2, set(weight_2)), (3, set(weight_3)), (4, set(weight_4))]
+_WEIGHT_GROUPS = [
+    (1, set(weight_1)),
+    (2, set(weight_2)),
+    (3, set(weight_3)),
+    (4, set(weight_4)),
+]
+
 
 def _average_weight(tokens: Tuple[str, ...]) -> float:
     if not tokens:
@@ -594,6 +642,7 @@ def _average_weight(tokens: Tuple[str, ...]) -> float:
             symbol_weights.append(5)
     return sum(symbol_weights) / len(symbol_weights)
 
+
 def _record_pattern(
     tokens: Iterable[str],
     transform_sequence: Tuple[type, ...],
@@ -605,7 +654,7 @@ def _record_pattern(
     value_pattern_sets: dict[str, set[Tuple[str, ...]]],
     value: str,
     value_count: int,
- ) -> None:
+) -> None:
     tokens_tuple = tuple(tokens)
     sequence_tuple = tuple(transform_sequence)
     if tokens_tuple not in patterns_seen:
@@ -622,16 +671,15 @@ def _record_pattern(
 
     value_pattern_sets.setdefault(value, set()).add(tokens_tuple)
 
-def generate_syntactic_value_patterns(
-    column: List[str]
- ) -> Tuple[
+
+def generate_syntactic_value_patterns(column: List[str]) -> Tuple[
     List[Tuple[str, ...]],
     dict[Tuple[str, ...], int],
     dict[Tuple[str, ...], float],
     dict[Tuple[str, ...], set[frozenset[type]]],
     dict[Tuple[str, ...], set[Tuple[type, ...]]],
     dict[str, List[Tuple[str, ...]]],
- ]:
+]:
     """Generate syntactic patterns for all values in a column.
 
     Returns
@@ -712,18 +760,22 @@ def generate_syntactic_value_patterns(
         value_pattern_sets,
     )
 
-def _apply_transform_sequence(tokens: Tuple[str, ...], sequence: Tuple[type, ...]) -> Tuple[str, ...]:
+
+def _apply_transform_sequence(
+    tokens: Tuple[str, ...], sequence: Tuple[type, ...]
+) -> Tuple[str, ...]:
     result = list(tokens)
     for abstraction_cls in sequence:
         transform = _ALL_TRANSFORMS[abstraction_cls.name]
         result = transform(result)
     return tuple(result)
 
+
 def _is_generalized_version(
     base_pattern: Tuple[str, ...],
     candidate_pattern: Tuple[str, ...],
     pattern_sequences: dict[Tuple[str, ...], set[Tuple[type, ...]]],
- ) -> bool:
+) -> bool:
     if base_pattern == candidate_pattern:
         return False
     candidate_sequences = pattern_sequences.get(candidate_pattern)
@@ -737,10 +789,11 @@ def _is_generalized_version(
             return True
     return False
 
+
 def prune_generalized_patterns(
     sorted_patterns: List[Tuple[str, ...]],
     pattern_sequences: dict[Tuple[str, ...], set[Tuple[type, ...]]],
- ) -> List[Tuple[str, ...]]:
+) -> List[Tuple[str, ...]]:
     """Remove generalized patterns that appear after more specific ones in the sorted sequence."""
     kept: list[Tuple[str, ...]] = []
     removed: set[Tuple[str, ...]] = set()
@@ -755,18 +808,30 @@ def prune_generalized_patterns(
                 removed.add(subsequent)
     return kept
 
-#---------DisMis Detector Class---------#
+
+# ---------DisMis Detector Class---------#
+
 
 class SyntacticDetector(DMVDetector):
-    def __init__(self, target_types: List[str] = ["numeric", "categorical", "date", "text"], coverage_threshold: float = 0.2):
+    def __init__(
+        self,
+        target_types: List[str] = ["numeric", "categorical", "date", "text"],
+        coverage_threshold: float = 0.2,
+    ):
         self.target_types = target_types
         self.coverage_threshold = coverage_threshold
 
-    def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    def __call__(
+        self,
+        dataset: pd.DataFrame,
+        types: Dict[str, str],
+        target_columns: List[str] = None,
+        embeddings: Dict[str, pd.DataFrame] = {},
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
 
         times = {
-            'pattern_generation': 0,
-            'scoring': 0,
+            "pattern_generation": 0,
+            "scoring": 0,
         }
 
         total_starttime = time.time()
@@ -774,7 +839,6 @@ class SyntacticDetector(DMVDetector):
         df_predict = dataset.copy()
         df_predict.loc[:, :] = 0
         assessed = []
-
 
         for idx, column in enumerate(dataset.columns):
             if target_columns is not None and column not in target_columns:
@@ -795,10 +859,22 @@ class SyntacticDetector(DMVDetector):
             times["pattern_generation"] += time.time() - pattern_generation_starttime
 
             scoring_starttime = time.time()
-            sorted_patterns = sorted(patterns, key=lambda p: weighs[p] * occurences[p], reverse=True)
-            selected_patterns = [p for p in sorted_patterns if occurences[p] / len(values) > 0.2]
-            pruned_patterns = prune_generalized_patterns(selected_patterns, pattern_sequences)
-            not_represented = [not any(pattern in value_patterns.get(value, []) for pattern in pruned_patterns) for value in values]
+            sorted_patterns = sorted(
+                patterns, key=lambda p: weighs[p] * occurences[p], reverse=True
+            )
+            selected_patterns = [
+                p for p in sorted_patterns if occurences[p] / len(values) > 0.2
+            ]
+            pruned_patterns = prune_generalized_patterns(
+                selected_patterns, pattern_sequences
+            )
+            not_represented = [
+                not any(
+                    pattern in value_patterns.get(value, [])
+                    for pattern in pruned_patterns
+                )
+                for value in values
+            ]
             df_predict.iloc[:, idx] = np.array(not_represented).astype(int)
             times["scoring"] += time.time() - scoring_starttime
 

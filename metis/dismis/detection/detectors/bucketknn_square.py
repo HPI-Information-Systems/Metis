@@ -4,15 +4,17 @@ BucketKNN Square Detector - Optimized with Numba
 Requires Numba for optimal performance:
     pip install numba
 """
-import pandas as pd
-import numpy as np
+
 import time
-from typing import Tuple, Dict, List
+from typing import Dict, List, Tuple
+
+import numpy as np
+import pandas as pd
 from numba import jit, prange
 
-from metis.dismis.utils.datetime import datetime_to_numeric
 from metis.dismis.detection.detectors.detector import DMVDetector
 from metis.dismis.detection.detectors.utils import force_numeric
+from metis.dismis.utils.datetime import datetime_to_numeric
 
 
 @jit(nopython=True, parallel=True, cache=True)
@@ -79,14 +81,18 @@ def compute_knn_scores_numba(sorted_vals, sorted_buckets, sorted_idx, k):
             # First bucket - use next bucket's first k items
             next_start = bucket_ranges[bucket_idx + 1, 0]
             for j in range(min(k, bucket_ranges[bucket_idx + 1, 1] - next_start + 1)):
-                neighbors[neighbor_count] = abs(sorted_vals[next_start + j] - current_value)
+                neighbors[neighbor_count] = abs(
+                    sorted_vals[next_start + j] - current_value
+                )
                 neighbor_count += 1
 
         elif has_prev and not has_next:
             # Last bucket - use previous bucket's last k items
             prev_end = bucket_ranges[bucket_idx - 1, 1]
             for j in range(min(k, prev_end - bucket_ranges[bucket_idx - 1, 0] + 1)):
-                neighbors[neighbor_count] = abs(sorted_vals[prev_end - j] - current_value)
+                neighbors[neighbor_count] = abs(
+                    sorted_vals[prev_end - j] - current_value
+                )
                 neighbor_count += 1
 
         elif has_prev and has_next:
@@ -97,14 +103,20 @@ def compute_knn_scores_numba(sorted_vals, sorted_buckets, sorted_idx, k):
                 # Close to start - use previous bucket's last k items
                 prev_end = bucket_ranges[bucket_idx - 1, 1]
                 for j in range(min(k, prev_end - bucket_ranges[bucket_idx - 1, 0] + 1)):
-                    neighbors[neighbor_count] = abs(sorted_vals[prev_end - j] - current_value)
+                    neighbors[neighbor_count] = abs(
+                        sorted_vals[prev_end - j] - current_value
+                    )
                     neighbor_count += 1
 
             elif position_in_bucket > midpoint + k:
                 # Close to end - use next bucket's first k items
                 next_start = bucket_ranges[bucket_idx + 1, 0]
-                for j in range(min(k, bucket_ranges[bucket_idx + 1, 1] - next_start + 1)):
-                    neighbors[neighbor_count] = abs(sorted_vals[next_start + j] - current_value)
+                for j in range(
+                    min(k, bucket_ranges[bucket_idx + 1, 1] - next_start + 1)
+                ):
+                    neighbors[neighbor_count] = abs(
+                        sorted_vals[next_start + j] - current_value
+                    )
                     neighbor_count += 1
 
             else:
@@ -113,14 +125,20 @@ def compute_knn_scores_numba(sorted_vals, sorted_buckets, sorted_idx, k):
                 prev_end = bucket_ranges[bucket_idx - 1, 1]
                 prev_available = min(k, prev_end - bucket_ranges[bucket_idx - 1, 0] + 1)
                 for j in range(prev_available):
-                    neighbors[neighbor_count] = abs(sorted_vals[prev_end - j] - current_value)
+                    neighbors[neighbor_count] = abs(
+                        sorted_vals[prev_end - j] - current_value
+                    )
                     neighbor_count += 1
 
                 # Get from next bucket (first k items)
                 next_start = bucket_ranges[bucket_idx + 1, 0]
-                next_available = min(k, bucket_ranges[bucket_idx + 1, 1] - next_start + 1)
+                next_available = min(
+                    k, bucket_ranges[bucket_idx + 1, 1] - next_start + 1
+                )
                 for j in range(next_available):
-                    neighbors[neighbor_count] = abs(sorted_vals[next_start + j] - current_value)
+                    neighbors[neighbor_count] = abs(
+                        sorted_vals[next_start + j] - current_value
+                    )
                     neighbor_count += 1
 
         # Fallback: if we don't have enough neighbors, expand search radius
@@ -138,7 +156,9 @@ def compute_knn_scores_numba(sorted_vals, sorted_buckets, sorted_idx, k):
 
                     items_to_take = min(k, prev_size, k - neighbor_count)
                     for j in range(items_to_take):
-                        neighbors[neighbor_count] = abs(sorted_vals[prev_end - j] - current_value)
+                        neighbors[neighbor_count] = abs(
+                            sorted_vals[prev_end - j] - current_value
+                        )
                         neighbor_count += 1
                         if neighbor_count >= k:
                             break
@@ -156,7 +176,9 @@ def compute_knn_scores_numba(sorted_vals, sorted_buckets, sorted_idx, k):
 
                     items_to_take = min(k, next_size, k - neighbor_count)
                     for j in range(items_to_take):
-                        neighbors[neighbor_count] = abs(sorted_vals[next_start + j] - current_value)
+                        neighbors[neighbor_count] = abs(
+                            sorted_vals[next_start + j] - current_value
+                        )
                         neighbor_count += 1
                         if neighbor_count >= k:
                             break
@@ -183,7 +205,12 @@ def compute_knn_scores_numba(sorted_vals, sorted_buckets, sorted_idx, k):
 
 
 class BucketKNN(DMVDetector):
-    def __init__(self, num_buckets: int = 100, k: int = 5, target_types: List[str] = ["numeric", "date"]):
+    def __init__(
+        self,
+        num_buckets: int = 100,
+        k: int = 5,
+        target_types: List[str] = ["numeric", "date"],
+    ):
         """
         KNN-based outlier detector for 1D numeric data with bucket exclusion.
 
@@ -201,20 +228,22 @@ class BucketKNN(DMVDetector):
         dataset: pd.DataFrame,
         types: Dict[str, str],
         target_columns: List[str] = None,
-        embeddings: Dict[str, pd.DataFrame] = {}
+        embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
 
         times = {
-            'preprocessing': 0,
-            'valuelist_building': 0,
-            'scoring': 0,
+            "preprocessing": 0,
+            "valuelist_building": 0,
+            "scoring": 0,
         }
         total_starttime = time.time()
         assessed = []
 
         # More efficient DataFrame initialization - avoid full copies
         df_score = pd.DataFrame(1.0, index=dataset.index, columns=dataset.columns)
-        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns, dtype=int)
+        df_predict = pd.DataFrame(
+            0, index=dataset.index, columns=dataset.columns, dtype=int
+        )
 
         # Work directly with the original dataset for detection
         df_detect = dataset
@@ -257,23 +286,24 @@ class BucketKNN(DMVDetector):
 
             # Bucket assignment - vectorized
             bucket_ids = np.clip(
-                np.floor(values * num_buckets).astype(int),
-                0, num_buckets - 1
+                np.floor(values * num_buckets).astype(int), 0, num_buckets - 1
             )
-            times['preprocessing'] += time.time() - preprocessing_starttime
+            times["preprocessing"] += time.time() - preprocessing_starttime
 
             valuelist_building_starttime = time.time()
             # sort values for efficient neighbor search
             sorted_idx = np.argsort(values)
             sorted_vals = values[sorted_idx]
             sorted_buckets = bucket_ids[sorted_idx]
-            times['valuelist_building'] += time.time() - valuelist_building_starttime
+            times["valuelist_building"] += time.time() - valuelist_building_starttime
 
             scoring_starttime = time.time()
 
             # Use Numba-optimized sorted search
             print(f"Using Numba-optimized sorted search (n={n})")
-            scores = compute_knn_scores_numba(sorted_vals, sorted_buckets, sorted_idx, self.k)
+            scores = compute_knn_scores_numba(
+                sorted_vals, sorted_buckets, sorted_idx, self.k
+            )
 
             # --- gap-based outlier detection (optimized) ---
             # Use argpartition instead of full sort for better performance
@@ -313,8 +343,14 @@ class BucketKNN(DMVDetector):
             assessed.append(target_column)
             df_predict.loc[target_idx, target_column] = labels
 
-            times['scoring'] += time.time() - scoring_starttime
-            print("Scoring time for column", target_column, ":", time.time() - scoring_starttime, "seconds")
+            times["scoring"] += time.time() - scoring_starttime
+            print(
+                "Scoring time for column",
+                target_column,
+                ":",
+                time.time() - scoring_starttime,
+                "seconds",
+            )
 
-        times['total'] = time.time() - total_starttime
+        times["total"] = time.time() - total_starttime
         return df_score, df_predict, times, assessed

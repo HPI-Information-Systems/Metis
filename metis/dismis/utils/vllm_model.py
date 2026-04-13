@@ -1,12 +1,17 @@
 from functools import lru_cache
+
 import torch
 from vllm import LLM
 
+
 class VLLMModel:
-    def __init__(self, model_name: str = "/sc/home/philipp.hildebrandt/models/Qwen/Qwen3-Embedding-0.6B"):
+    def __init__(
+        self,
+        model_name: str = "/sc/home/philipp.hildebrandt/models/Qwen/Qwen3-Embedding-0.6B",
+    ):
         """
         Initialize the VLLMModel with a specific model name.
-        
+
         Args:
             model_name (str): The name of the model to use.
         """
@@ -16,10 +21,10 @@ class VLLMModel:
     def embed(self, texts: tuple) -> torch.Tensor:
         """
         Embed a list of texts using the VLLM model.
-        
+
         Args:
             texts (list): List of texts to embed.
-        
+
         Returns:
             torch.Tensor: The embeddings of the input texts.
         """

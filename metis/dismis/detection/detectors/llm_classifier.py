@@ -1,11 +1,12 @@
-import pandas as pd
-import numpy as np
-from typing import List, Tuple, Dict
 import time
+from typing import Dict, List, Tuple
 
-from metis.dismis.preparation.openai_LLM import OpenAILLM
-from metis.dismis.detection.detectors.utils import force_numeric
+import numpy as np
+import pandas as pd
+
 from metis.dismis.detection.detectors.detector import DMVDetector
+from metis.dismis.detection.detectors.utils import force_numeric
+from metis.dismis.preparation.openai_LLM import OpenAILLM
 
 
 class LLMClassifierDetector(DMVDetector):
@@ -14,7 +15,12 @@ class LLMClassifierDetector(DMVDetector):
     or a valid value. Returns binary predictions (1 for DMV, 0 for valid).
     """
 
-    def __init__(self, LLM, target_types: List[str] = ["numeric", "text", "categorical", "date"], batch_size: int = 25):
+    def __init__(
+        self,
+        LLM,
+        target_types: List[str] = ["numeric", "text", "categorical", "date"],
+        batch_size: int = 25,
+    ):
         """
         Initialize the LLMClassifierDetector.
 
@@ -27,7 +33,9 @@ class LLMClassifierDetector(DMVDetector):
         self.target_types = target_types
         self.batch_size = batch_size
 
-    def _create_classification_prompt_text(self, column_name: str, values: List[str], frequencies: List[int]) -> List[Dict[str, str]]:
+    def _create_classification_prompt_text(
+        self, column_name: str, values: List[str], frequencies: List[int]
+    ) -> List[Dict[str, str]]:
         """
         Create a prompt for the LLM to classify values as DMV or valid.
 
@@ -39,7 +47,12 @@ class LLMClassifierDetector(DMVDetector):
         Returns:
             List[Dict[str, str]]: Chat messages for the LLM.
         """
-        values_list = "\n".join([f"{i+1}. {val} (Occurs {frequencies[i]} times)" for i, val in enumerate(values)])
+        values_list = "\n".join(
+            [
+                f"{i+1}. {val} (Occurs {frequencies[i]} times)"
+                for i, val in enumerate(values)
+            ]
+        )
 
         prompt = f"""You are a data quality analyst tasked with identifying Disguised Missing Values (DMVs) in a dataset.
 
@@ -63,11 +76,25 @@ Use only "DMV" or "VALID" for each value. Do not include any other text or expla
 Example response format: VALID, DMV, VALID, VALID, DMV"""
 
         return [
-            {"role": "system", "content": "You are a data quality analyst specializing in identifying disguised missing values in datasets."},
-            {"role": "user", "content": prompt}
+            {
+                "role": "system",
+                "content": "You are a data quality analyst specializing in identifying disguised missing values in datasets.",
+            },
+            {"role": "user", "content": prompt},
         ]
 
-    def _create_classification_prompt_numeric(self, column_name: str, values: List[str], frequencies: List[int], min_value: float, max_value: float, mean: float, median: float, p5: float, p95: float) -> List[Dict[str, str]]:
+    def _create_classification_prompt_numeric(
+        self,
+        column_name: str,
+        values: List[str],
+        frequencies: List[int],
+        min_value: float,
+        max_value: float,
+        mean: float,
+        median: float,
+        p5: float,
+        p95: float,
+    ) -> List[Dict[str, str]]:
         """
         Create a prompt for the LLM to classify values as DMV or valid.
 
@@ -79,7 +106,12 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
         Returns:
             List[Dict[str, str]]: Chat messages for the LLM.
         """
-        values_list = "\n".join([f"{i+1}. {val} (Occurs {frequencies[i]} times)" for i, val in enumerate(values)])
+        values_list = "\n".join(
+            [
+                f"{i+1}. {val} (Occurs {frequencies[i]} times)"
+                for i, val in enumerate(values)
+            ]
+        )
         prompt = f"""You are a data quality analyst tasked with identifying Disguised Missing Values (DMVs) in a dataset.
 
 DMVs are placeholder values that represent missing, unknown, or invalid data. Examples include:
@@ -110,8 +142,11 @@ Use only "DMV" or "VALID" for each value. Do not include any other text or expla
 Example response format: VALID, DMV, VALID, VALID, DMV"""
 
         return [
-            {"role": "system", "content": "You are a data quality analyst specializing in identifying disguised missing values in datasets."},
-            {"role": "user", "content": prompt}
+            {
+                "role": "system",
+                "content": "You are a data quality analyst specializing in identifying disguised missing values in datasets.",
+            },
+            {"role": "user", "content": prompt},
         ]
 
     def _parse_llm_response(self, response: str, num_values: int) -> np.ndarray:
@@ -125,16 +160,24 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
         Returns:
             np.ndarray: Binary array (1 for DMV, 0 for valid).
         """
-        classifications = [c.strip() for c in response.strip().upper().split(',')[:num_values]]
+        classifications = [
+            c.strip() for c in response.strip().upper().split(",")[:num_values]
+        ]
 
-        predictions = np.array([1 if 'DMV' in c else 0 for c in classifications], dtype=np.int8)
+        predictions = np.array(
+            [1 if "DMV" in c else 0 for c in classifications], dtype=np.int8
+        )
 
         if len(predictions) < num_values:
-            predictions = np.pad(predictions, (0, num_values - len(predictions)), constant_values=0)
+            predictions = np.pad(
+                predictions, (0, num_values - len(predictions)), constant_values=0
+            )
 
         return predictions
 
-    def _classify_column(self, column: pd.Series, column_name: str, type: str) -> np.ndarray:
+    def _classify_column(
+        self, column: pd.Series, column_name: str, type: str
+    ) -> np.ndarray:
         """
         Classify all values in a column using the LLM.
         Only processes unique values to avoid redundancy, then maps results back to original positions.
@@ -152,21 +195,23 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
         unique_values = value_counts.index.tolist()
         frequencies = value_counts.values.tolist()
 
-        print(f"  Processing {len(unique_values)} unique values out of {len(all_values)} total values")
+        print(
+            f"  Processing {len(unique_values)} unique values out of {len(all_values)} total values"
+        )
 
         all_messages = []
         batch_info = []
 
         numeric_stats = None
-        if type in ['numeric']:
+        if type in ["numeric"]:
             numeric_col = force_numeric(column).dropna()
             numeric_stats = {
-                'min_value': numeric_col.min(),
-                'max_value': numeric_col.max(),
-                'mean': numeric_col.mean(),
-                'median': numeric_col.median(),
-                'p5': numeric_col.quantile(0.05),
-                'p95': numeric_col.quantile(0.95)
+                "min_value": numeric_col.min(),
+                "max_value": numeric_col.max(),
+                "mean": numeric_col.mean(),
+                "median": numeric_col.median(),
+                "p5": numeric_col.quantile(0.05),
+                "p95": numeric_col.quantile(0.95),
             }
 
         for start_idx in range(0, len(unique_values), self.batch_size):
@@ -176,17 +221,15 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
 
             if numeric_stats is not None:
                 messages = self._create_classification_prompt_numeric(
-                    column_name, batch_values, batch_frequencies,
-                    **numeric_stats
+                    column_name, batch_values, batch_frequencies, **numeric_stats
                 )
             else:
-                messages = self._create_classification_prompt_text(column_name, batch_values, batch_frequencies)
+                messages = self._create_classification_prompt_text(
+                    column_name, batch_values, batch_frequencies
+                )
 
             all_messages.append(messages)
-            batch_info.append({
-                'values': batch_values,
-                'num_values': len(batch_values)
-            })
+            batch_info.append({"values": batch_values, "num_values": len(batch_values)})
 
         print(f"  Sending {len(all_messages)} batched requests to LLM")
 
@@ -198,18 +241,22 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
                 batch_end = min(i + max_concurrent_requests, len(all_messages))
                 message_batch = all_messages[i:batch_end]
 
-                print(f"  Sending batch {i//max_concurrent_requests + 1}/{(len(all_messages) + max_concurrent_requests - 1)//max_concurrent_requests} ({len(message_batch)} requests)")
+                print(
+                    f"  Sending batch {i//max_concurrent_requests + 1}/{(len(all_messages) + max_concurrent_requests - 1)//max_concurrent_requests} ({len(message_batch)} requests)"
+                )
                 batch_responses = self.LLM.generate(message_batch)
                 all_responses.extend(batch_responses)
 
             parsing_starttime = time.time()
-            all_predictions = [self._parse_llm_response(response, info['num_values'])
-                             for response, info in zip(all_responses, batch_info)]
+            all_predictions = [
+                self._parse_llm_response(response, info["num_values"])
+                for response, info in zip(all_responses, batch_info)
+            ]
 
             pred_values = []
             pred_labels = []
             for preds, info in zip(all_predictions, batch_info):
-                pred_values.extend(info['values'])
+                pred_values.extend(info["values"])
                 pred_labels.extend(preds)
 
             mapper = pd.Series(pred_labels, index=pred_values, dtype=np.int8)
@@ -223,7 +270,13 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
 
         return predictions
 
-    def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+    def __call__(
+        self,
+        dataset: pd.DataFrame,
+        types: Dict[str, str],
+        target_columns: List[str] = None,
+        embeddings: Dict[str, pd.DataFrame] = {},
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
         """
         Run LLM-based classification on the dataset.
 
@@ -242,8 +295,8 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
         """
 
         times = {
-            'classification': 0,
-            'total': 0,
+            "classification": 0,
+            "total": 0,
         }
 
         total_starttime = time.time()
@@ -276,8 +329,8 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
             df_predict[column] = predictions
             df_score[column] = predictions.astype(float)
 
-            times['classification'] += time.time() - classification_starttime
+            times["classification"] += time.time() - classification_starttime
 
-        times['total'] = time.time() - total_starttime
+        times["total"] = time.time() - total_starttime
 
         return df_score, df_predict, times, assessed

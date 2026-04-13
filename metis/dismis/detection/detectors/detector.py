@@ -1,8 +1,16 @@
+from typing import Dict, List, Tuple
+
 import pandas as pd
-from typing import Tuple, Dict, List
+
 
 class DMVDetector:
-    def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+    def __call__(
+        self,
+        dataset: pd.DataFrame,
+        types: Dict[str, str],
+        target_columns: List[str] = None,
+        embeddings: Dict[str, pd.DataFrame] = {},
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
         """
         Detects disguised missing values (DMVs) in the dataset.
         Args:
@@ -15,4 +23,3 @@ class DMVDetector:
             List[str]: A List of columns that were analyzed.
         """
         pass  # Placeholder for actual detection logic
-
