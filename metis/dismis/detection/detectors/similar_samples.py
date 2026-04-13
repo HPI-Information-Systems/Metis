@@ -9,6 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from metis.dismis.detection.detectors.detector import DMVDetector
 from metis.dismis.detection.detectors.utils import encode_dataset
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 class SimilarSamplesDetector(DMVDetector):
@@ -24,7 +25,7 @@ class SimilarSamplesDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -49,13 +50,13 @@ class SimilarSamplesDetector(DMVDetector):
             if df_detect[column].dtype == "object":
                 try:
                     df_detect[column] = scaler.fit_transform(
-                        df_detect[column].astype(float).values.reshape(-1, 1)
+                        df_detect[column].astype(float).to_numpy().reshape(-1, 1)
                     )
                 except (ValueError, TypeError):
                     df_detect[column] = df_detect[column].astype("category").cat.codes
             else:
                 df_detect[column] = scaler.fit_transform(
-                    df_detect[column].values.reshape(-1, 1)
+                    df_detect[column].to_numpy().reshape(-1, 1)
                 )
         times["preprocessing"] = time.time() - preprocessing_starttime
 
@@ -130,7 +131,7 @@ class FAISSSimilarSamplesDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -153,7 +154,7 @@ class FAISSSimilarSamplesDetector(DMVDetector):
         preprocessing_starttime = time.time()
         df_detect = encode_dataset(
             dataset,  # Don't copy - encode_dataset handles it internally
-            types,
+            column_types,
             embeddings,
             text_embedding_dim=self.text_embedding_dim,
             ohe_max_categories=self.ohe_max_categories,
@@ -172,7 +173,7 @@ class FAISSSimilarSamplesDetector(DMVDetector):
             else target_columns
         )
         for target_column in columns:
-            if types[target_column] not in self.target_types:
+            if column_types[target_column] not in self.target_types:
                 continue
             # print(target_column)
             encoded_target_columns = [
@@ -337,7 +338,7 @@ class FAISSNoDubSimilarSamplesDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -360,7 +361,7 @@ class FAISSNoDubSimilarSamplesDetector(DMVDetector):
         preprocessing_starttime = time.time()
         df_detect = encode_dataset(
             dataset,  # Don't copy - encode_dataset handles it internally
-            types,
+            column_types,
             embeddings,
             text_embedding_dim=self.text_embedding_dim,
             ohe_max_categories=self.ohe_max_categories,
@@ -376,7 +377,7 @@ class FAISSNoDubSimilarSamplesDetector(DMVDetector):
         )
 
         for target_column in columns:
-            if types[target_column] not in self.target_types:
+            if column_types[target_column] not in self.target_types:
                 continue
             encoded_target_columns = [
                 col
@@ -408,7 +409,7 @@ class FAISSNoDubSimilarSamplesDetector(DMVDetector):
             querying_starttime = time.time()
             fetch_k = (
                 self.num_neighbors * self.fetch_multiplier
-                if types[target_column] != "text"
+                if column_types[target_column] != "text"
                 else self.num_neighbors * 2
             )
             distances, ind = index.search(
@@ -518,10 +519,10 @@ class MultiSimilarSamplesDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+    ) -> Dict[str, Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]]:
 
         total_starttime = time.time()
 
@@ -529,7 +530,7 @@ class MultiSimilarSamplesDetector(DMVDetector):
         preprocessing_starttime = time.time()
         df_detect = encode_dataset(
             dataset.copy(),
-            types,
+            column_types,
             embeddings,
             text_embedding_dim=self.text_embedding_dim,
             ohe_max_categories=self.ohe_max_categories,
@@ -566,7 +567,7 @@ class MultiSimilarSamplesDetector(DMVDetector):
         scoring_time = 0
 
         for target_column in columns:
-            if types[target_column] not in self.target_types:
+            if column_types[target_column] not in self.target_types:
                 continue
 
             encoded_target_columns = [
@@ -651,7 +652,7 @@ class MultiSimilarSamplesDetector(DMVDetector):
                 # No-duplicate queries (need more neighbors)
                 fetch_k = (
                     k * self.fetch_multiplier
-                    if types[target_column] != "text"
+                    if column_types[target_column] != "text"
                     else k * 2
                 )
                 distances, ind = index_all.search(X_all, fetch_k + 1)

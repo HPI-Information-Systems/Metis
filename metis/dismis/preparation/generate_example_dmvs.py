@@ -3,19 +3,24 @@ import json
 import os
 import random
 from pathlib import Path
+from typing import Dict, Literal
 
 import pandas as pd
 
 from metis.dismis.preparation.openai_LLM import OpenAILLM
+from metis.dismis.preparation.pollution.errors.error import DMV
 from metis.dismis.preparation.pollution.errors.LLMplaceholder import (
     LLMCommentDMV2,
     LLMPlaceholderDMV2,
     LLMUnsureDMV2,
     LLMValidDMV2,
 )
+from metis.dismis.utils.pathutils import require_exists
 from metis.utils.logging import logger as main_logger
 
 logger = main_logger.getChild(__name__)
+
+EXAMPLE_DMV_CATEGORIES = Literal["placeholder", "comments", "unsure", "valid"]
 
 
 def generate_example_dmvs(
@@ -28,7 +33,7 @@ def generate_example_dmvs(
     llm = OpenAILLM(model_name=llm_name, base_url=llm_base_url, api_key=llm_api_key)
 
     dataset_name = dataset_file.stem
-    DMV_types = {
+    DMV_types: Dict[EXAMPLE_DMV_CATEGORIES, DMV] = {
         "placeholder": LLMPlaceholderDMV2(llm, table_name=dataset_name),
         "comments": LLMCommentDMV2(llm, table_name=dataset_name),
         "unsure": LLMUnsureDMV2(llm, table_name=dataset_name),
@@ -37,11 +42,7 @@ def generate_example_dmvs(
 
     types_file = dataset_file.parent / f"{dataset_name}_types.json"
 
-    if not types_file.exists():
-        raise FileNotFoundError(
-            f"Types file not found. Expected column types at {types_file}."
-        )
-    with open(types_file, "r") as f:
+    with require_exists(types_file, "Column types").open("r") as f:
         types = json.load(f)
 
     unique_columns = [

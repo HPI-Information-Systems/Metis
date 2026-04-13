@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
 from metis.dismis.utils.datetime import datetime_to_numeric
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 def force_numeric(series: pd.Series) -> pd.Series:
@@ -50,20 +51,20 @@ def split_datetime_column(col: pd.Series, colname: str) -> pd.DataFrame:
 
 def encode_dataset(
     df_detect: pd.DataFrame,
-    types: Dict[str, str],
+    column_types: Dict[str, COLUMN_TYPES],
     embeddings: Dict[str, pd.DataFrame],
     normalize=True,
     text_embedding_dim: int | None = None,
     ohe_max_categories: int | None = None,
     ohe_min_frequency: int | None = None,
-    ohe_dtype: np.dtype = np.float32,
+    ohe_dtype=np.float32,
 ) -> pd.DataFrame:
     # Make a copy to avoid modifying the original DataFrame
     df_detect = df_detect.copy()
     scaler = MinMaxScaler()
-    for column in types.keys():
-        if types[column] == "categorical":
-            encoder_kwargs = {
+    for column in column_types.keys():
+        if column_types[column] == "categorical":
+            encoder_kwargs: Dict = {
                 "handle_unknown": "infrequent_if_exist",
             }
             if ohe_max_categories is not None:
@@ -80,13 +81,13 @@ def encode_dataset(
             if normalize:
                 encoded = encoded * (1 / (2**0.5))
             ohe_features = pd.DataFrame(
-                encoded.toarray().astype(ohe_dtype), columns=feature_names
+                encoded.astype(ohe_dtype), columns=feature_names
             )
             df_detect = pd.concat(
                 [df_detect.drop(columns=[column]), ohe_features], axis=1
             )
-        elif types[column] in ["numeric", "date"]:
-            if types[column] == "date":
+        elif column_types[column] in ["numeric", "date"]:
+            if column_types[column] == "date":
                 numeric_features = split_datetime_column(df_detect[column], column)
             else:
                 numeric_features = split_mixed_column(df_detect[column], column)
@@ -100,7 +101,7 @@ def encode_dataset(
             df_detect = pd.concat(
                 [df_detect.drop(columns=[column]), numeric_features], axis=1
             )
-        elif types[column] == "text":
+        elif column_types[column] == "text":
             if column in embeddings:
                 emb = embeddings[column]
                 if text_embedding_dim is not None and emb.shape[1] > text_embedding_dim:
@@ -119,5 +120,7 @@ def encode_dataset(
             else:
                 raise ValueError(f"No embeddings provided for text column {column}.")
         else:
-            raise ValueError(f"Unsupported type for column {column}: {types[column]}")
+            raise ValueError(
+                f"Unsupported type for column {column}: {column_types[column]}"
+            )
     return df_detect.astype(np.float32)

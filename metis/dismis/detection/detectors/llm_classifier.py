@@ -7,6 +7,7 @@ import pandas as pd
 from metis.dismis.detection.detectors.detector import DMVDetector
 from metis.dismis.detection.detectors.utils import force_numeric
 from metis.dismis.preparation.openai_LLM import OpenAILLM
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 class LLMClassifierDetector(DMVDetector):
@@ -17,7 +18,7 @@ class LLMClassifierDetector(DMVDetector):
 
     def __init__(
         self,
-        LLM,
+        LLM: OpenAILLM,
         target_types: List[str] = ["numeric", "text", "categorical", "date"],
         batch_size: int = 25,
     ):
@@ -29,7 +30,7 @@ class LLMClassifierDetector(DMVDetector):
             target_types (List[str]): List of column types to target for detection.
             batch_size (int): Number of values to classify in each batch.
         """
-        self.LLM = OpenAILLM(model_name="meta-llama/Llama-4-Scout-17B-16E-Instruct")
+        self.LLM = LLM
         self.target_types = target_types
         self.batch_size = batch_size
 
@@ -193,7 +194,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
 
         value_counts = all_values.value_counts()
         unique_values = value_counts.index.tolist()
-        frequencies: List[int] = value_counts.values.tolist()
+        frequencies: List[int] = value_counts.values.astype(int).tolist()
 
         print(
             f"  Processing {len(unique_values)} unique values out of {len(all_values)} total values"
@@ -260,7 +261,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
                 pred_labels.extend(preds)
 
             mapper = pd.Series(pred_labels, index=pred_values, dtype=np.int8)
-            predictions = all_values.map(mapper).fillna(0).astype(np.int8).values
+            predictions = all_values.map(mapper).fillna(0).astype(np.int8).to_numpy()
             parsing_endtime = time.time() - parsing_starttime
             print(f"  Parsed LLM responses in {parsing_endtime:.2f} seconds")
 
@@ -273,7 +274,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -282,7 +283,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
 
         Args:
             dataset (pd.DataFrame): The dataset to analyze.
-            types (Dict[str, str]): Dictionary mapping column names to their types.
+            column_types (Dict[str, COLUMN_TYPES]): Dictionary mapping column names to their types.
             target_columns (List[str], optional): Specific columns to analyze. If None, analyzes all columns.
             embeddings (Dict[str, pd.DataFrame], optional): Not used by this detector.
 
@@ -308,7 +309,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
         columns = dataset.columns if target_columns is None else target_columns
 
         for column in columns:
-            if types[column] not in self.target_types:
+            if column_types[column] not in self.target_types:
                 continue
 
             if len(dataset[column].dropna()) == 0:
@@ -319,7 +320,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
 
             classification_starttime = time.time()
 
-            predictions = self._classify_column(dataset[column], column, types[column])
+            predictions = self._classify_column(dataset[column], column, column_types[column])
 
             df_predict[column] = predictions
             df_score[column] = predictions.astype(float)

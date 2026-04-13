@@ -18,7 +18,6 @@ from pyod.models.loda import LODA
 from pyod.models.lof import LOF
 from pyod.models.mad import MAD
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from utils.datetime import datetime_to_numeric
 
 from metis.dismis.detection.detectors.detector import DMVDetector
 from metis.dismis.detection.detectors.distribution import DistributionFitDetector
@@ -26,6 +25,8 @@ from metis.dismis.detection.detectors.utils import (
     split_datetime_column,
     split_mixed_column,
 )
+from metis.dismis.utils.datetime import datetime_to_numeric
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 def series_hash(s: pd.Series) -> str:
@@ -72,8 +73,8 @@ class ScikitPosthocsESDDetector:
         )
 
         # result is a DataFrame with 'value', 'R', 'lambda', 'outlier'
-        self.labels_ = result["outlier"].astype(int).values
-        self.decision_scores_ = result["R"].values
+        self.labels_ = result["outlier"].astype(int)
+        self.decision_scores_ = result["R"]
 
 
 class RobustZScoreDetector:
@@ -158,8 +159,8 @@ class PyODDetector(DMVDetector):
         scaler = MinMaxScaler()
         if type == "categorical":
             encoder = OneHotEncoder()
-            encoded = encoder.fit_transform(column.values.reshape(-1, 1))
-            return encoded.toarray()
+            encoded = encoder.fit_transform(column.to_numpy().reshape(-1, 1))
+            return encoded
         elif type in ["numeric", "date"]:
             if type == "date":
                 # numeric_features, _, _ = datetime_to_numeric(column) #split_datetime_column(column, column.name)
@@ -184,14 +185,14 @@ class PyODDetector(DMVDetector):
             # numeric_features = scaler.fit_transform(numeric_features.values.reshape(-1, 1))
             # return numeric_features#.values
         elif type == "text":
-            return embeddings[str(column.name)]
+            return embeddings[str(column.name)].to_numpy()
         else:
             raise ValueError(f"Unsupported type for column {column.name}: {type}")
 
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -204,16 +205,14 @@ class PyODDetector(DMVDetector):
         total_starttime = time.time()
         assessed = []
 
-        df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
-        df_score.loc[:, :] = 0
-        df_score = df_score.astype(float)
-        df_predict.loc[:, :] = 0
-        df_predict = df_predict.astype(int)
+        df_detect = dataset.copy()
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         columns = dataset.columns if target_columns is None else target_columns
 
         for column in columns:
-            if types[column] not in self.target_types:
+            if column_types[column] not in self.target_types:
                 continue
             extraction_starttime = time.time()
             target = (
@@ -223,7 +222,9 @@ class PyODDetector(DMVDetector):
             )
             if len(target.dropna()) == 0:
                 continue
-            target_values = self._extract_features(target, types[column], embeddings)
+            target_values = self._extract_features(
+                target, column_types[column], embeddings
+            )
 
             if self.detector_name == "MAD":
                 target_values = (
@@ -246,14 +247,11 @@ class PyODDetector(DMVDetector):
             # scores = self.detector.predict_proba(target_values)[:, 1]
             # scores[np.isnan(target_values[:, 0])] = 1.0  # assign 1 score to rows with NaN values
             if not np.all(scores == scores[0]):
-                col_idx = df_score.columns.get_loc(column)
-                # print(len(target_idx), len(scores), col_idx, column)
-                df_score.iloc[target_idx, col_idx] = scores
+                df_score.loc[target_idx, column] = scores
 
             predictions = self.detector.labels_
-            col_idx = df_predict.columns.get_loc(column)
             assessed.append(column)
-            df_predict.iloc[target_idx, col_idx] = predictions
+            df_predict.loc[target_idx, column] = predictions
             times["scoring"] += time.time() - scoring_starttime
 
         times["total"] = time.time() - total_starttime
@@ -325,8 +323,8 @@ class PyODDetector2(DMVDetector):
         scaler = MinMaxScaler()
         if type == "categorical":
             encoder = OneHotEncoder()
-            encoded = encoder.fit_transform(column.values.reshape(-1, 1))
-            return encoded.toarray()
+            encoded = encoder.fit_transform(column.to_numpy().reshape(-1, 1))
+            return encoded
         elif type in ["numeric", "date"]:
             if type == "date":
                 numeric_features, _, _ = datetime_to_numeric(
@@ -346,18 +344,18 @@ class PyODDetector2(DMVDetector):
             # numeric_features[f"{column.name}_num"] = scaler.fit_transform(numeric_features[[f"{column.name}_num"]])
             # return numeric_features.values
             numeric_features = scaler.fit_transform(
-                numeric_features.values.reshape(-1, 1)
+                numeric_features.to_numpy().reshape(-1, 1)
             )
             return numeric_features  # .values
         elif type == "text":
-            return embeddings[column.name]
+            return embeddings[str(column.name)].to_numpy()
         else:
             raise ValueError(f"Unsupported type for column {column.name}: {type}")
 
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -370,16 +368,14 @@ class PyODDetector2(DMVDetector):
         total_starttime = time.time()
         assessed = []
 
-        df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
-        df_score.loc[:, :] = self.nanvalue
-        df_score = df_score.astype(float)
-        df_predict.loc[:, :] = 0
-        df_predict = df_predict.astype(int)
+        df_detect = dataset.copy()
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         columns = dataset.columns if target_columns is None else target_columns
 
         for column in columns:
-            if types[column] not in self.target_types:
+            if column_types[column] not in self.target_types:
                 continue
             extraction_starttime = time.time()
             target = (
@@ -389,7 +385,9 @@ class PyODDetector2(DMVDetector):
             )
             if len(target.dropna()) == 0:
                 continue
-            target_values = self._extract_features(target, types[column], embeddings)
+            target_values = self._extract_features(
+                target, column_types[column], embeddings
+            )
 
             if self.detector_name == "MAD":
                 target_values = (
@@ -412,14 +410,11 @@ class PyODDetector2(DMVDetector):
             scores = self.detector.predict_proba(target_values)[:, 1]
             # scores[np.isnan(target_values[:, 0])] = 1.0  # assign 1 score to rows with NaN values
             if not np.all(scores == scores[0]):
-                col_idx = df_score.columns.get_loc(column)
-                # print(len(target_idx), len(scores), col_idx, column)
-                df_score.iloc[target_idx, col_idx] = scores
+                df_score.loc[target_idx, column] = scores
 
             predictions = self.detector.labels_
-            col_idx = df_predict.columns.get_loc(column)
             assessed.append(column)
-            df_predict.iloc[target_idx, col_idx] = predictions
+            df_predict.loc[target_idx, column] = predictions
             times["scoring"] += time.time() - scoring_starttime
 
         times["total"] = time.time() - total_starttime
@@ -452,10 +447,10 @@ class FeatureDetector(DMVDetector):
         scaler = MinMaxScaler()
         if type == "categorical":
             encoder = OneHotEncoder()
-            encoded = encoder.fit_transform(column.values.reshape(-1, 1))
-            return encoded.toarray()
+            encoded = encoder.fit_transform(column.to_numpy().reshape(-1, 1))
+            return encoded
         elif type == "numeric":
-            numeric_features = split_mixed_column(column, column.name)
+            numeric_features = split_mixed_column(column, str(column.name))
             if numeric_features[f"{column.name}_null"].sum() == 0:
                 numeric_features.drop(columns=[f"{column.name}_null"], inplace=True)
             if numeric_features[f"{column.name}_str"].sum() == 0:
@@ -470,7 +465,7 @@ class FeatureDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -484,20 +479,18 @@ class FeatureDetector(DMVDetector):
         total_starttime = time.time()
         assessed = []
 
-        df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
-        df_score.loc[:, :] = 0
-        df_score = df_score.astype(float)
-        df_predict.loc[:, :] = 0
-        df_predict = df_predict.astype(int)
+        df_detect = dataset.copy()
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         columns = dataset.columns if target_columns is None else target_columns
 
         for column in columns:
-            if types[column] not in self.target_types:
+            if column_types[column] not in self.target_types:
                 continue
             extraction_starttime = time.time()
             target_values = self._extract_features(
-                df_detect[column], types[column], embeddings
+                df_detect[column], column_types[column], embeddings
             )
             times["extraction"] += time.time() - extraction_starttime
 
@@ -506,16 +499,11 @@ class FeatureDetector(DMVDetector):
 
             scoring_starttime = time.time()
 
-            col_idx = df_score.columns.get_loc(column)
-            # print(target_values)
-            df_score.iloc[target_idx, col_idx] = target_values
+            df_score.loc[target_idx, column] = target_values
 
-            col_idx = df_predict.columns.get_loc(column)
             threshold = np.quantile(target_values, 0.9)
             assessed.append(column)
-            df_predict.iloc[target_idx, col_idx] = (target_values > threshold).astype(
-                int
-            )
+            df_predict.loc[target_idx, column] = (target_values > threshold).astype(int)
             times["scoring"] += time.time() - scoring_starttime
 
         times["total"] = time.time() - total_starttime
@@ -540,13 +528,13 @@ class TypeOutlierDetector2(FeatureDetector):
         features = np.zeros(len(column), dtype=int)
         if type == "numeric":
             values = pd.to_numeric(column, errors="coerce")
-            return values.isna().astype(int)
+            return values.isna().astype(int).to_numpy()
         elif type == "date":
             values, _, _ = datetime_to_numeric(column)
-            return values.isna().astype(int)
+            return values.isna().astype(int).to_numpy()
         else:
             values = pd.to_numeric(column, errors="coerce")
-            return values.notna().astype(int)
+            return values.notna().astype(int).to_numpy()
 
 
 class TypeOutlierDetector(FeatureDetector):
@@ -1409,10 +1397,10 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+    ) -> Dict[str, Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]]:
         """
         Returns a dictionary mapping detector names to (df_score, df_predict, times, assessed).
         """
@@ -1423,13 +1411,8 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
         # Initialize results dict for each configuration
         all_results = {}
         for num_neighbors in self.num_neighbors_list:
-            df_score = dataset.copy()
-            df_score.loc[:, :] = 0
-            df_score = df_score.astype(float)
-
-            df_predict = dataset.copy()
-            df_predict.loc[:, :] = 0
-            df_predict = df_predict.astype(int)
+            df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+            df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
             all_results[num_neighbors] = {
                 "df_score": df_score,
@@ -1439,7 +1422,7 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
 
         # Process each column once for all configurations
         for column in columns:
-            if types[column] not in self.target_types:
+            if column_types[column] not in self.target_types:
                 continue
 
             if len(dataset[column].dropna()) == 0:
@@ -1447,7 +1430,7 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
 
             # Get scores for all num_neighbors settings at once
             scores_dict = self._extract_features_multi(
-                dataset[column], types[column], embeddings
+                dataset[column], column_types[column], embeddings
             )
 
             # Distribute scores to respective dataframes

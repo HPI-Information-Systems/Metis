@@ -1,6 +1,9 @@
+import dataclasses
 from dataclasses import dataclass
-from typing import Literal
+from typing import Dict, List, Literal
 
+from metis.dismis.detection.detection import DETECTORS_LITERAL
+from metis.dismis.utils.types import COLUMN_TYPES
 from metis.metric.config import MetricConfig
 
 VALID_AGGREGATION_AXES = ["index", "columns", None]
@@ -13,16 +16,42 @@ class completeness_nullAndDMVRatio_config(MetricConfig):
 
     :param aggregation_axis: Axis along which to aggregate completeness ('index': aggregate each column; 'columns': aggregate each row, None (default): no aggregation).
     :param aggregate_all: Whether to aggregate all completeness results into a single value for the whole input data.
+    :param dismis_config: Configuration for the DISMIS detector to use for DMV detection. If None, FAHES will be used for detection.
     """
 
     aggregation_axis: Literal["index", "columns", None] = None
     aggregate_all: bool = False
+    dismis_config_per_dataset: (
+        Dict[str, completeness_nullAndDMVRatio_config_dismis] | None
+    ) = None
+
+    @classmethod
+    def from_dict(cls, config_dict: Dict):
+        dismis_config_per_dataset = config_dict.get("dismis_config_per_dataset")
+        if dismis_config_per_dataset is not None:
+            dismis_config_per_dataset = {
+                name: completeness_nullAndDMVRatio_config_dismis.from_dict(config)
+                for name, config in dismis_config_per_dataset.items()
+            }
+        return cls(
+            aggregation_axis=config_dict.get("aggregation_axis", None),
+            aggregate_all=config_dict.get("aggregate_all", False),
+            dismis_config_per_dataset=dismis_config_per_dataset,
+        )
 
     def to_json(self):
         return {
             "name": self.__class__.__name__,
             "aggregation_axis": self.aggregation_axis,
             "aggregate_all": self.aggregate_all,
+            "dismis_config": (
+                {
+                    name: dataclasses.asdict(config)
+                    for name, config in self.dismis_config_per_dataset.items()
+                }
+                if self.dismis_config_per_dataset
+                else None
+            ),
         }
 
     def validate(self):
@@ -34,3 +63,42 @@ class completeness_nullAndDMVRatio_config(MetricConfig):
             raise ValueError(
                 f"aggregate_all must be a boolean value but was {type(self.aggregate_all)}"
             )
+
+
+@dataclass
+class completeness_nullAndDMVRatio_config_dismis(MetricConfig):
+    value_embeddings_path: str
+    example_dmvs_path: str
+    example_embeddings_path: str
+    column_types: Dict[str, COLUMN_TYPES]
+    embedding_dim: int = 128
+    detectors: List[DETECTORS_LITERAL] = dataclasses.field(
+        default_factory=lambda: [
+            "frequent_values_1",
+            "frequent_values_10",
+            "length_outlier_distribution",
+            "type_feature",
+            "type_feature_2",
+            "sign_outlier_feature",
+            "key_distance_outlier_distribution",
+            "capital_letter_outlier_distribution",
+            "non_alphanumerical_outlier_distribution",
+            "repeated_substring1_outlier_distribution",
+            "repeated_substring2_outlier_distribution",
+            "repeated_substring3_outlier_distribution",
+            "nan_outlier",
+            "frequency_outlier",
+            "bucket_knn_square",
+            "BucketPDFGoF",
+            "pyod_mad",
+            "multi_similar_samples",
+            "multi_semantic_outlier_new_dub",
+            "quantile",
+            "syntactic_outlier",
+            "semantic_comments",
+            "semantic_placeholder",
+            "semantic_unsure",
+            "semantic_valid",
+        ]
+    )
+    model_path: str = "metis/dismis/dismis.pkl"

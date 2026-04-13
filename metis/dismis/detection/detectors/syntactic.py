@@ -2,12 +2,13 @@ import time
 from collections.abc import Sequence
 from functools import lru_cache
 from itertools import chain, combinations
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Set, Tuple
 
 import numpy as np
 import pandas as pd
 
 from metis.dismis.detection.detectors.detector import DMVDetector
+from metis.dismis.utils.types import COLUMN_TYPES
 
 # The algorithm for this detector is taken from https://github.com/HPI-Information-Systems/SURAGH
 
@@ -673,12 +674,11 @@ def _record_pattern(
 
 
 def generate_syntactic_value_patterns(column: List[str]) -> Tuple[
-    List[Tuple[str, ...]],
-    dict[Tuple[str, ...], int],
-    dict[Tuple[str, ...], float],
-    dict[Tuple[str, ...], set[frozenset[type]]],
-    dict[Tuple[str, ...], set[Tuple[type, ...]]],
-    dict[str, List[Tuple[str, ...]]],
+    Set[Tuple[str, ...]],
+    Dict[Tuple[str, ...], int],
+    Dict[Tuple[str, ...], float],
+    Dict[Tuple[str, ...], Set[Tuple[type, ...]]],
+    Dict[str, Set[Tuple[str, ...]]],
 ]:
     """Generate syntactic patterns for all values in a column.
 
@@ -695,12 +695,12 @@ def generate_syntactic_value_patterns(column: List[str]) -> Tuple[
     value_patterns:
         For each distinct input value, set of patterns that the value can yield.
     """
-    patterns_seen: set[Tuple[str, ...]] = set()
-    weights: dict[Tuple[str, ...], float] = {}
-    occurences: dict[Tuple[str, ...], int] = {}
-    pattern_sequences: dict[Tuple[str, ...], set[Tuple[type, ...]]] = {}
-    pattern_values: dict[Tuple[str, ...], set[str]] = {}
-    value_pattern_sets: dict[str, set[Tuple[str, ...]]] = {}
+    patterns_seen: Set[Tuple[str, ...]] = set()
+    weights: Dict[Tuple[str, ...], float] = {}
+    occurences: Dict[Tuple[str, ...], int] = {}
+    pattern_sequences: Dict[Tuple[str, ...], Set[Tuple[type, ...]]] = {}
+    pattern_values: Dict[Tuple[str, ...], Set[str]] = {}
+    value_pattern_sets: Dict[str, Set[Tuple[str, ...]]] = {}
 
     values, counts = np.unique(column, return_counts=True)
 
@@ -824,7 +824,7 @@ class SyntacticDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -836,14 +836,13 @@ class SyntacticDetector(DMVDetector):
 
         total_starttime = time.time()
 
-        df_predict = dataset.copy()
-        df_predict.loc[:, :] = 0
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
         assessed = []
 
         for idx, column in enumerate(dataset.columns):
             if target_columns is not None and column not in target_columns:
                 continue
-            if types.get(column) not in self.target_types:
+            if column_types.get(column) not in self.target_types:
                 continue
             assessed.append(column)
 
@@ -878,6 +877,6 @@ class SyntacticDetector(DMVDetector):
             df_predict.iloc[:, idx] = np.array(not_represented).astype(int)
             times["scoring"] += time.time() - scoring_starttime
 
-        times["total"] = time.time() - total_starttim
+        times["total"] = time.time() - total_starttime
 
         return df_predict.copy().astype(float), df_predict.astype(int), times, assessed

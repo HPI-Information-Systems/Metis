@@ -90,7 +90,7 @@ class Metric(ABC):
                 else:
                     config_dict = json.loads(config) if len(config) > 0 else {}
 
-                parsed_config = model(**config_dict)
+                parsed_config = model.from_dict(config_dict)
             except Exception as e:
                 raise ValueError(
                     f"Failed to load metric configuration from {config}: {e}"

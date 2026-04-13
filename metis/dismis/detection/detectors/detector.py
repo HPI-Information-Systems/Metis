@@ -2,15 +2,20 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
+from metis.dismis.utils.types import COLUMN_TYPES
+
 
 class DMVDetector:
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+    ) -> (
+        Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]
+        | Dict[str, Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]]
+    ):
         """
         Detects disguised missing values (DMVs) in the dataset.
         Args:

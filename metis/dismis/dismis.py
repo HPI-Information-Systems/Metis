@@ -3,15 +3,16 @@ import pickle
 import time
 import warnings
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-from detection.detection import run_detection_algorithms
+from metis.dismis.detection.detection import DETECTORS_LITERAL, run_detection_algorithms
 from tqdm import tqdm
 
 from metis.dismis.utils.logging import dismis_logger
 from metis.dismis.utils.pathutils import require_exists
+from metis.dismis.utils.types import COLUMN_TYPES
 
 warnings.filterwarnings("ignore")
 
@@ -20,7 +21,7 @@ type_mapping = {"numeric": 0, "date": 1, "categorical": 2, "text": 3}
 target_type_str_map = {v: k for k, v in type_mapping.items()}
 
 
-def load_trained_models(model_path: Path):
+def load_trained_models(model_path: Path | str | None):
     """Load pretrained xgboost, random_forest, and mlp models."""
     # These imports are needed to load the trained models, which include xgboost and sklearn models. Without these imports, python throws a segfault
     import sklearn
@@ -30,7 +31,9 @@ def load_trained_models(model_path: Path):
         return pickle.load(f)
 
 
-def predict_with_ensemble(detection_results, types, trained_models):
+def predict_with_ensemble(
+    detection_results, column_types: Dict[str, COLUMN_TYPES], trained_models
+):
     """
     Use trained models to predict DMVs and create ensemble predictions.
 
@@ -38,7 +41,7 @@ def predict_with_ensemble(detection_results, types, trained_models):
         detection_results: Dictionary of detector results (detector_name -> (df_score, df_predict))
                           where df_score has same shape as input dataset (rows x columns)
                           and each cell contains the feature value for that position
-        types: Dictionary mapping column names to their types
+        column_types: Dictionary mapping column names to their types
         trained_models: Dictionary of trained models by classifier and type
 
     Returns:
@@ -61,11 +64,11 @@ def predict_with_ensemble(detection_results, types, trained_models):
 
     # Process each column
     for col in tqdm(column_names, desc="Predicting DMVs"):
-        if col not in types:
-            print(f"Warning: Column '{col}' not found in types, skipping...")
+        if col not in column_types:
+            print(f"Warning: Column '{col}' not found in column_types, skipping...")
             continue
 
-        col_type = types[col]
+        col_type = column_types[col]
         type_id = type_mapping.get(col_type)
 
         # Build feature matrix for this column
@@ -101,7 +104,7 @@ def predict_with_ensemble(detection_results, types, trained_models):
                 # print(f"Mapped {feat_name} to {mapped_feature}")
                 mapped_features.append(mapped_feature)
             elif feat_name == "type":
-                feature_data["type"] = [type_mapping[types[col]]] * n_rows
+                feature_data["type"] = [type_mapping[column_types[col]]] * n_rows
                 mapped_features.append("type")
             else:
                 missing_features.append(feat_name)
@@ -128,22 +131,17 @@ def predict_with_ensemble(detection_results, types, trained_models):
 
 
 def run_dismis_detection(
-    evaluation_config_path: Path,
-    dataset_path: Path,
-    types_path: Path,
-    pollution_mask_path: Path,
-    model_path: Path,
-    value_embeddings_path: Path,
-    example_dmvs_path: Path,
-    example_embeddings_path: Path,
+    *,
+    detectors: List[DETECTORS_LITERAL],
+    dataset: pd.DataFrame,
+    column_types: Dict[str, COLUMN_TYPES],
+    model_path: Path | str,
+    value_embeddings_path: Path | str,
+    example_dmvs_path: Path | str,
+    example_embeddings_path: Path | str,
     embedding_dim=128,
 ):
     trained_models = load_trained_models(model_path)
-
-    with open(evaluation_config_path, "r") as f:
-        config = json.load(f)
-
-    dismis_logger.info(f"Dataset: {dataset_path}")
     all_embeddings = None
 
     with require_exists(value_embeddings_path, "Value embeddings").open("r") as f:
@@ -161,16 +159,10 @@ def run_dismis_detection(
 
     # 1. Load dataset
     loading_starttime = time.time()
-    polluted_dataset = pd.read_csv(
-        require_exists(dataset_path, "Dataset"), keep_default_na=False, na_values=[""]
-    )
-    dmv_labels = pd.read_csv(require_exists(pollution_mask_path, "Pollution mask"))
-    target_columns = polluted_dataset.columns.to_list()
+    target_columns = dataset.columns.to_list()
+    polluted_dataset = dataset.copy()
 
-    with require_exists(types_path, "Types").open("r") as f:
-        types = json.load(f)
-
-    for col, col_type in types.items():
+    for col, col_type in column_types.items():
         if col_type == "numeric":
             polluted_dataset[col] = (
                 polluted_dataset[col]
@@ -198,8 +190,8 @@ def run_dismis_detection(
 
     del example_embeddings
     embeddings = {}
-    for col in types.keys():
-        if types[col] not in ["text", "categorical"]:
+    for col in column_types.keys():
+        if column_types[col] not in ["text", "categorical"]:
             continue
 
         emb = []
@@ -215,23 +207,13 @@ def run_dismis_detection(
     # 2. Run detection algorithms (these produce features)
     detection_starttime = time.time()
 
-    # This is to run Raha as competitor.
-    # Raha implicitly generates its labels by comparing the dirty and clean dataset. Where both differ, it counts the cell as error.
-    # Since DMVs are obviously never explicit missing values, we set them to pd.NA in the cleaned dataset to allow Raha to detect them.
-    cleaned_dataset = polluted_dataset.copy()
-    for col in dmv_labels.columns:
-        cleaned_dataset.loc[dmv_labels[col] == 1, col] = pd.NA
-
-    detection_results, detection_timings, _ = (
-        run_detection_algorithms(
-            polluted_dataset,
-            cleaned_dataset,
-            detectors=config["detectors"],
-            types=types,
-            target_columns=target_columns,
-            example_DMVs=example_dmvs,
-            embeddings=embeddings,
-        )
+    detection_results, detection_timings, _ = run_detection_algorithms(
+        polluted_dataset,
+        detectors=detectors,
+        column_types=column_types,
+        target_columns=target_columns,
+        example_DMVs=example_dmvs,
+        embeddings=embeddings,
     )
 
     time_measurements["detection"] += time.time() - detection_starttime
@@ -245,7 +227,7 @@ def run_dismis_detection(
     # 3. Use trained models to create ensemble predictions
     prediction_starttime = time.time()
     scores, predictions = predict_with_ensemble(
-        detection_results, types, trained_models
+        detection_results, column_types, trained_models
     )
     time_measurements["prediction"] = time.time() - prediction_starttime
 

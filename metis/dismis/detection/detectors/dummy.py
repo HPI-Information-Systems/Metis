@@ -1,9 +1,10 @@
 from typing import Dict, List, Tuple
 
 import pandas as pd
-from utils.datetime import datetime_to_numeric
 
 from metis.dismis.detection.detectors.detector import DMVDetector
+from metis.dismis.utils.datetime import datetime_to_numeric
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 class NanDetector(DMVDetector):
@@ -15,7 +16,7 @@ class NanDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -38,7 +39,7 @@ class QuantileDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -47,10 +48,10 @@ class QuantileDetector(DMVDetector):
         assessed = []
 
         for column in dataset.columns:
-            if types.get(column) == "numeric":
+            if column_types.get(column) == "numeric":
                 transformed[column] = dataset[column].rank(pct=True)
                 assessed.append(column)
-            elif types.get(column) == "date":
+            elif column_types.get(column) == "date":
                 transformed[column] = datetime_to_numeric(dataset[column])[0].rank(
                     pct=True
                 )

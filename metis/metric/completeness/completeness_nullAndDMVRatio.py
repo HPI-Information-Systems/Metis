@@ -2,6 +2,7 @@ from typing import List, Literal
 
 import pandas as pd
 
+from metis.dismis.dismis import run_dismis_detection
 from metis.metric.completeness.completeness_nullAndDMVRatio_config import (
     completeness_nullAndDMVRatio_config,
 )
@@ -38,21 +39,46 @@ class completeness_nullAndDMVRatio(Metric):
 
         config = self.load_config(metric_config, completeness_nullAndDMVRatio_config)
 
-        dmvs = run_fahes(data)
-        self.logger.info(f"Detected DMVs:\n{dmvs}")
-
         marked_cells = pd.DataFrame(
             IS_VALID_MARKER, index=data.index, columns=data.columns
         )
         marked_cells[data.isna()] = IS_NULL_MARKER
-        if dmvs is not None:
-            for _, dmv_row in dmvs.iterrows():
-                col = dmv_row["Attribute Name"]
-                val = dmv_row["DMV"]
-                marked_cells.loc[data[col] == val, col] = IS_DMV_MARKER
+
+        dismis_config = next(
+            iter(
+                [
+                    config
+                    for name, config in (config.dismis_config_per_dataset or {}).items()
+                    if name in data.columns
+                ]
+            ),
+            None,
+        )
+        metric_name_suffix = "_dismis" if dismis_config else "_fahes"
+        if dismis_config is None:
+            dmvs = run_fahes(data)
+            self.logger.info(f"Detected DMVs:\n{dmvs}")
+            if dmvs is not None:
+                for _, dmv_row in dmvs.iterrows():
+                    col = dmv_row["Attribute Name"]
+                    val = dmv_row["DMV"]
+                    marked_cells.loc[data[col] == val, col] = IS_DMV_MARKER
+            certainty = self.fahes_certainty(marked_cells)
+        else:
+            scores, predictions = run_dismis_detection(
+                detectors=dismis_config.detectors,
+                dataset=data,
+                column_types=dismis_config.column_types,
+                value_embeddings_path=dismis_config.value_embeddings_path,
+                example_dmvs_path=dismis_config.example_dmvs_path,
+                example_embeddings_path=dismis_config.example_embeddings_path,
+                embedding_dim=dismis_config.embedding_dim,
+                model_path=dismis_config.model_path,
+            )
+            marked_cells[predictions == 1] = IS_DMV_MARKER
+            certainty = self.dismis_certainty(scores)
 
         completeness = (marked_cells == IS_VALID_MARKER).astype(int)
-        certainty = self.certainty(marked_cells)
 
         if config.aggregation_axis is not None:
             mean_completeness = completeness.mean(axis=config.aggregation_axis)
@@ -66,7 +92,7 @@ class completeness_nullAndDMVRatio(Metric):
                         timestamp=pd.Timestamp.now(),
                         DQvalue=table_completeness,
                         DQdimension=DQDimension.COMPLETENESS,
-                        DQmetric=self.__class__.__name__,
+                        DQmetric=self.__class__.__name__ + metric_name_suffix,
                         columnNames=data.columns.tolist(),
                         DQexplanation={"certainty": float(table_certainty)},
                         DQgranularity=DQGranularity.TABLE,
@@ -78,11 +104,12 @@ class completeness_nullAndDMVRatio(Metric):
                 mean_certainty,
                 config.aggregation_axis,
                 data.columns.tolist(),
+                metric_name_suffix,
             )
 
-        return self.create_flat_results(completeness, certainty)
+        return self.create_flat_results(completeness, certainty, metric_name_suffix)
 
-    def certainty(self, marks: pd.DataFrame):
+    def fahes_certainty(self, marks: pd.DataFrame):
         # .replace with a dict sometimes throws an IndexError during pandas memory cleanup. Reason not yet identified, but using chained .replace calls seems to mitigate the issue.
         return (
             marks.replace(IS_VALID_MARKER, FAHES_RECALL)
@@ -90,12 +117,16 @@ class completeness_nullAndDMVRatio(Metric):
             .replace(IS_DMV_MARKER, FAHES_PRECISION)
         )
 
+    def dismis_certainty(self, scores: pd.DataFrame):
+        return 1 - scores
+
     def create_aggregated_results(
         self,
         mean_completeness: pd.Series,
         mean_certainty: pd.Series,
         aggregation_axis: Literal["index", "columns"],
         columns: List[str],
+        metric_name_suffix: str,
     ) -> List[DQResult]:
         results = []
         for (index, completeness), certainty in zip(
@@ -108,7 +139,7 @@ class completeness_nullAndDMVRatio(Metric):
                 timestamp=pd.Timestamp.now(),
                 DQvalue=completeness,
                 DQdimension=DQDimension.COMPLETENESS,
-                DQmetric=self.__class__.__name__,
+                DQmetric=self.__class__.__name__ + metric_name_suffix,
                 columnNames=col_names,
                 rowIndex=row_index,
                 DQexplanation={"certainty": float(certainty)},
@@ -123,7 +154,10 @@ class completeness_nullAndDMVRatio(Metric):
         return results
 
     def create_flat_results(
-        self, completeness: pd.DataFrame, certainty: pd.DataFrame
+        self,
+        completeness: pd.DataFrame,
+        certainty: pd.DataFrame,
+        metric_name_suffix: str,
     ) -> List[DQResult]:
         results = []
         for col in completeness.columns:
@@ -134,7 +168,7 @@ class completeness_nullAndDMVRatio(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(completeness_value),
                     DQdimension=DQDimension.COMPLETENESS,
-                    DQmetric=self.__class__.__name__,
+                    DQmetric=self.__class__.__name__ + metric_name_suffix,
                     columnNames=[col],
                     rowIndex=row_index,
                     DQexplanation={"certainty": float(certainty_value)},

@@ -1,16 +1,16 @@
-from typing import Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Literal
 
 import pandas as pd
 
 from metis.dismis.detection.detectors.bucketknn_square import (
     BucketKNN as BucketKNNSquare,
 )
+from metis.dismis.detection.detectors.detector import DMVDetector
 from metis.dismis.detection.detectors.distribution import (
     BucketPDFGoF,
     DistributionFitDetector,
 )
 from metis.dismis.detection.detectors.dummy import NanDetector, QuantileDetector
-from metis.dismis.detection.detectors.fahes_detector import FAHESDetector
 from metis.dismis.detection.detectors.frequent_value import (
     FrequentValuesDetector,
     FrequentValuesDetector2,
@@ -40,13 +40,15 @@ from metis.dismis.detection.detectors.pyod import (
     TypeOutlierDetector,
     TypeOutlierDetector2,
 )
-from metis.dismis.detection.detectors.raha_detector import RAHADetector
 from metis.dismis.detection.detectors.similar_samples import (
     FAISSNoDubSimilarSamplesDetector,
     FAISSSimilarSamplesDetector,
     MultiSimilarSamplesDetector,
 )
 from metis.dismis.detection.detectors.syntactic import SyntacticDetector
+from metis.dismis.preparation.generate_example_dmvs import EXAMPLE_DMV_CATEGORIES
+from metis.dismis.preparation.pollution.errors.error import DMV
+from metis.dismis.utils.types import COLUMN_TYPES
 
 FAST = False
 
@@ -66,13 +68,96 @@ def run_detector(
     return detector_name, (scores, predictions), times, assessed_columns
 
 
+DETECTORS_LITERAL = Literal[
+    "frequent_values_1",
+    "frequent_values_3",
+    "frequent_values_10",
+    "frequent_values_25",
+    "bucket_knn_square",
+    "distribution",
+    "BucketPDFGoF",
+    "pyod_knn",
+    "pyod_lof",
+    "pyod_iforest",
+    "pyod_loda",
+    "pyod_hbos",
+    "pyod_cblof",
+    "pyod_cof",
+    "pyod_gmm",
+    "pyod_mad",
+    "RobustZ",
+    "Quantile",
+    "ESD",
+    "pyod_mad2",
+    "pyod_mad3",
+    "frequent_values_1_2",
+    "frequent_values_1_3",
+    "type_feature_2",
+    "frequency_outlier",
+    "length_outlier_feature",
+    "length_outlier_distribution",
+    "length_outlier_MAD",
+    "length_outlier_hbos",
+    "repeated_substring1_outlier_feature",
+    "repeated_substring1_outlier_distribution",
+    "repeated_substring1_outlier_MAD",
+    "repeated_substring1_outlier_hbos",
+    "repeated_substring2_outlier_feature",
+    "repeated_substring2_outlier_distribution",
+    "repeated_substring2_outlier_MAD",
+    "repeated_substring2_outlier_hbos",
+    "repeated_substring3_outlier_feature",
+    "repeated_substring3_outlier_distribution",
+    "repeated_substring3_outlier_MAD",
+    "repeated_substring3_outlier_hbos",
+    "key_distance_outlier_feature",
+    "key_distance_outlier_distribution",
+    "key_distance_outlier_MAD",
+    "key_distance_outlier_hbos",
+    "capital_letter_outlier_distribution",
+    "non_alphanumerical_outlier_distribution",
+    "sign_outlier_feature",
+    "semantic_outlier_10",
+    "semantic_outlier_25",
+    "semantic_outlier_100",
+    "semantic_outlier_3_new",
+    "semantic_outlier_10_new",
+    "semantic_outlier_25_new",
+    "semantic_outlier_100_new",
+    "multi_semantic_outlier_new",
+    "multi_semantic_outlier_new_dub",
+    "semantic_outlier_3_new_dub",
+    "semantic_outlier_10_new_dub",
+    "semantic_outlier_25_new_dub",
+    "semantic_outlier_100_new_dub",
+    "type_feature",
+    "nan_outlier",
+    "quantile",
+    "approximate_similar_samples_5",
+    "approximate_similar_samples_corr_5",
+    "approximate_similar_samples_10",
+    "approximate_similar_samples_corr_10",
+    "approximate_similar_samples_25",
+    "approximate_similar_samples_corr_25",
+    "no_duplicate_similar_samples_5",
+    "no_duplicate_similar_samples_10",
+    "no_duplicate_similar_samples_25",
+    "multi_similar_samples",
+    "syntactic_outlier",
+    "llm_classifier",
+    "semantic_comments",
+    "semantic_placeholder",
+    "semantic_unsure",
+    "semantic_valid",
+]
+
+
 def run_detection_algorithms(
     polluted_dataset: pd.DataFrame,
-    clean_dataset: pd.DataFrame,
-    detectors: List[str],
-    types: Dict[str, str],
+    detectors: List[DETECTORS_LITERAL],
+    column_types: Dict[str, COLUMN_TYPES],
     target_columns: List[str],
-    example_DMVs: Dict,
+    example_DMVs: Dict[str, Dict[EXAMPLE_DMV_CATEGORIES, DMV]],
     embeddings: Dict[str, pd.DataFrame],
     LLM=None,
 ):
@@ -82,7 +167,7 @@ def run_detection_algorithms(
     Args:
         polluted_dataset (pd.DataFrame): The dataset with introduced errors.
         clean_dataset (pd.DataFrame): The dataset without introduced errors.
-        detectors (List[str]): List of detector names to run.
+        detectors (List[DETECTORS_LITERAL]): List of detector names to run.
         types (Dict[str, str]): Dictionary mapping column names to their types. Expects either "numeric" or "categorical" as of now.
         target_columns (List[str]): List of columns to target for detection.
         LLM: Optional LLM instance for semantic detector.
@@ -91,11 +176,7 @@ def run_detection_algorithms(
         dict: A dictionary containing the results of each detector.
     """
 
-    example_DMV_types = []
-    if len(example_DMVs) > 0:
-        example_DMV_types = list(example_DMVs[list(example_DMVs.keys())[0]].keys())
-
-    detector_mapper = {
+    detector_mapper: Dict[DETECTORS_LITERAL, Callable[[Any], DMVDetector]] = {
         "frequent_values_1": lambda data: FrequentValuesDetector(
             num_neighbors=1, target_types=["numeric", "date"]
         ),
@@ -350,21 +431,19 @@ def run_detection_algorithms(
                 if FAST
                 else ["numeric", "text", "categorical", "date"]
             ),
-        ),  # ["numeric", "text", "categorical", "date"]
+        ),
         "syntactic_outlier": lambda data: SyntacticDetector(
             target_types=["numeric", "categorical", "date"]
-        ),  # ["numeric", "categorical", "date", "text"]
+        ),
         "llm_classifier": lambda data: LLMClassifierDetector(
             LLM, target_types=["numeric", "categorical", "date", "text"]
         ),
-        "RAHA": lambda data: RAHADetector(clean_dataset),
-        "FAHES": lambda data: FAHESDetector(),
     }
 
-    for dmv_type in example_DMV_types:
+    for dmv_type in list(next(iter(example_DMVs.values()), {}).keys()):
         targets = {col: value[dmv_type] for col, value in example_DMVs.items()}
         # Bind `targets` and `dmv_type` as default arguments to avoid late binding in the lambda
-        detector_mapper[f"semantic_{dmv_type}"] = (
+        detector_mapper[f"semantic_{dmv_type}"] = (  # type: ignore
             lambda t=targets, dt=dmv_type: (
                 lambda data: SemanticDetector(
                     LLM,
@@ -391,7 +470,7 @@ def run_detection_algorithms(
             continue
         detector_instance = detector_mapper[name](polluted_dataset)
         detector_result = detector_instance(
-            polluted_dataset, types, target_columns, embeddings
+            polluted_dataset, column_types, target_columns, embeddings
         )
 
         # Check if detector returns multiple results (dict) or single result (tuple)

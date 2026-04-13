@@ -15,6 +15,7 @@ from numba import jit, prange
 from metis.dismis.detection.detectors.detector import DMVDetector
 from metis.dismis.detection.detectors.utils import force_numeric
 from metis.dismis.utils.datetime import datetime_to_numeric
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 @jit(nopython=True, parallel=True, cache=True)
@@ -226,7 +227,7 @@ class BucketKNN(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -258,9 +259,9 @@ class BucketKNN(DMVDetector):
             column_data = df_detect[target_column]
 
             # ensure float
-            if types[target_column] == "date":
+            if column_types[target_column] == "date":
                 processed_data, _, _ = datetime_to_numeric(column_data)
-            elif types[target_column] == "numeric":
+            elif column_types[target_column] == "numeric":
                 processed_data = force_numeric(column_data)
             else:
                 continue

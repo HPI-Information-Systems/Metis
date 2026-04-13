@@ -7,6 +7,7 @@ import pandas as pd
 from metis.dismis.detection.detectors.detector import DMVDetector
 from metis.dismis.detection.detectors.utils import force_numeric
 from metis.dismis.utils.datetime import datetime_to_numeric
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 def mean_neighbor_diff2(x, n):
@@ -107,7 +108,7 @@ class FrequentValuesDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -131,17 +132,17 @@ class FrequentValuesDetector(DMVDetector):
             print("Processing column:", target_column)
             # print(df_detect[target_column])
             # Skip non-numeric columns
-            if types[target_column] not in self.target_types:
+            if column_types[target_column] not in self.target_types:
                 continue
 
             preprocessing_starttime = time.time()
             # Check if the column is a date
-            if types[target_column] == "date":
+            if column_types[target_column] == "date":
                 df_detect[target_column], _, _ = datetime_to_numeric(
                     df_detect[target_column]
                 )
 
-            elif types[target_column] == "numeric":
+            elif column_types[target_column] == "numeric":
                 df_detect[target_column] = force_numeric(df_detect[target_column])
 
             else:
@@ -194,13 +195,9 @@ class FrequentValuesDetector(DMVDetector):
             value_to_diff = dict(zip(values.index.to_numpy(), differences))
             detection_scores = rounded_values.map(value_to_diff).to_numpy()
 
-            df_score.iloc[target_idx, df_detect.columns.get_loc(target_column)] = (
-                detection_scores
-            )
+            df_score.loc[target_idx, target_column] = detection_scores
             assessed.append(target_column)
-            df_predict.iloc[target_idx, df_detect.columns.get_loc(target_column)] = (
-                detection_labels
-            )
+            df_predict.loc[target_idx, target_column] = detection_labels
 
             times["scoring"] += time.time() - scoring_starttime
 
@@ -231,7 +228,7 @@ class FrequentValuesDetector2(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -254,17 +251,17 @@ class FrequentValuesDetector2(DMVDetector):
             print("Processing column:", target_column)
             # print(df_detect[target_column])
             # Skip non-numeric columns
-            if types[target_column] not in self.target_types:
+            if column_types[target_column] not in self.target_types:
                 continue
 
             preprocessing_starttime = time.time()
             # Check if the column is a date
-            if types[target_column] == "date":
+            if column_types[target_column] == "date":
                 df_detect[target_column], _, _ = datetime_to_numeric(
                     df_detect[target_column]
                 )
 
-            elif types[target_column] == "numeric":
+            elif column_types[target_column] == "numeric":
                 df_detect[target_column] = force_numeric(df_detect[target_column])
 
             else:
@@ -317,13 +314,9 @@ class FrequentValuesDetector2(DMVDetector):
             value_to_diff = dict(zip(values.index.to_numpy(), differences))
             detection_scores = rounded_values.map(value_to_diff).to_numpy()
 
-            df_score.iloc[target_idx, df_detect.columns.get_loc(target_column)] = (
-                detection_scores
-            )
+            df_score.loc[target_idx, target_column] = detection_scores
             assessed.append(target_column)
-            df_predict.iloc[target_idx, df_detect.columns.get_loc(target_column)] = (
-                detection_labels
-            )
+            df_predict.loc[target_idx, target_column] = detection_labels
 
             times["scoring"] += time.time() - scoring_starttime
 

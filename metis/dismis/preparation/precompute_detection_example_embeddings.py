@@ -40,7 +40,7 @@ def precompute_detection_example_embeddings(
             embeddings[text] = output[:trunc]
 
         # Save as precomputed_example_embeddings.json
-        output_path = Path(file).parent / "precomputed_example_embeddings.json"
+        output_path = Path(file).parent / f"{Path(file).stem}.embeddings.json"
         with open(output_path, "w") as f:
             json.dump(embeddings, f, indent=2)
 

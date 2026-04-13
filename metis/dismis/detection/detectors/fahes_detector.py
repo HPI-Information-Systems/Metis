@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 
 from metis.dismis.detection.detectors.detector import DMVDetector
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 class FAHESDetector(DMVDetector):
@@ -26,16 +27,15 @@ class FAHESDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
         times: Dict[str, float] = {}
         total_starttime = time.time()
 
-        df_detect, df_predict = dataset.copy(), dataset.copy()
-        df_predict.loc[:, :] = 0
-        df_predict = df_predict.astype(int)
+        df_detect = dataset.copy()
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
         assessed = []
 
         with tempfile.TemporaryDirectory() as temp_dir:

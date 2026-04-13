@@ -8,6 +8,7 @@ from scipy.stats import expon, kstest, norm, skewnorm, uniform
 from metis.dismis.detection.detectors.detector import DMVDetector
 from metis.dismis.detection.detectors.utils import force_numeric
 from metis.dismis.utils.datetime import datetime_to_numeric
+from metis.dismis.utils.types import COLUMN_TYPES
 
 
 class BucketPDFGoF(DMVDetector):
@@ -92,7 +93,7 @@ class BucketPDFGoF(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -115,13 +116,13 @@ class BucketPDFGoF(DMVDetector):
         dists = self._get_dist()
 
         for col in target_columns:
-            if types.get(col) not in self.target_types:
+            if column_types.get(col) not in self.target_types:
                 continue
 
             # --- preprocessing ---
             t0 = time.time()
             series = df_detect[col].dropna()
-            x_full = self._extract_features(series, types[col])
+            x_full = self._extract_features(series, column_types[col])
             if len(x_full) == 0:
                 continue
             mask = ~np.isnan(x_full)
@@ -224,7 +225,7 @@ class DistributionFitDetector(DMVDetector):
     def __call__(
         self,
         dataset: pd.DataFrame,
-        types: Dict[str, str],
+        column_types: Dict[str, COLUMN_TYPES],
         target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
@@ -245,12 +246,12 @@ class DistributionFitDetector(DMVDetector):
             target_columns = dataset.columns.tolist()
 
         for target_column in target_columns:
-            if types[target_column] not in self.target_types:
+            if column_types[target_column] not in self.target_types:
                 continue
 
             preprocessing_starttime = time.time()
             values = self._extract_features(
-                df_detect[target_column].dropna(), types[target_column]
+                df_detect[target_column].dropna(), column_types[target_column]
             )
             if len(values) == 0:
                 continue
