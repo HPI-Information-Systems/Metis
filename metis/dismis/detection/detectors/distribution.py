@@ -93,18 +93,21 @@ class BucketPDFGoF(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        times = {"preprocessing": 0.0, "fitting": 0.0, "bucketing": 0.0, "scoring": 0.0}
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+        times: Dict[str, float] = {
+            "preprocessing": 0.0,
+            "fitting": 0.0,
+            "bucketing": 0.0,
+            "scoring": 0.0,
+        }
         total_start = time.time()
-        assessed = []
+        assessed: List[str] = []
 
         df_detect = dataset.copy()
-        df_score = dataset.copy()
-        df_predict = dataset.copy()
-        df_score.loc[:, :] = 0.0
-        df_predict.loc[:, :] = 0
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         if target_columns is None:
             target_columns = dataset.columns.tolist()
@@ -124,7 +127,6 @@ class BucketPDFGoF(DMVDetector):
             mask = ~np.isnan(x_full)
             x = x_full[mask]
             idx = series.index[mask]
-            # print(x.shape)
             n = x.size
             times["preprocessing"] += time.time() - t0
             if n == 0:
@@ -136,7 +138,6 @@ class BucketPDFGoF(DMVDetector):
                 method, params = self._choose_best_fit(
                     x, {k: dists[k] for k in ["skewnorm", "uniform", "expon"]}
                 )
-                # print(method, col)
                 if method is None:  # fallback
                     method, params = "norm", (np.mean(x), np.std(x, ddof=0) or 1.0)
             else:
@@ -144,8 +145,7 @@ class BucketPDFGoF(DMVDetector):
                 params = dists[method].fit(x)
 
             dist = dists[method]
-            pdf = lambda z: dist.pdf(z, *params)
-            cdf = lambda z: dist.cdf(z, *params)
+            cdf = lambda z: dist.cdf(z, *(params or []))
             times["fitting"] += time.time() - t1
 
             # --- buckets / observed vs expected counts ---
@@ -167,32 +167,17 @@ class BucketPDFGoF(DMVDetector):
 
             obs = np.bincount(bin_ids, minlength=num_buckets)
             cdf_edges = cdf(edges)
-            # print(f"[DEBUG] cdf_edges: {cdf_edges}")
-            # print(f"[DEBUG] Any cdf_edges nan? {np.any(np.isnan(cdf_edges))}")
-            # print(f"[DEBUG] edges: {edges}")
-            # print(f"[DEBUG] params: {params}")
             probs = np.maximum(cdf_edges[1:] - cdf_edges[:-1], 0.0)
             exp = np.maximum(n * probs, self.min_expected)
-
-            # print(f"[DEBUG] obs: {obs}")
-            # print(f"[DEBUG] exp: {exp}")
-            # print(f"[DEBUG] Any exp==0? {np.any(exp==0)}")
-            # print(f"[DEBUG] resid before abs: {(obs - exp) / np.sqrt(exp)}")
             resid = (obs - exp) / np.sqrt(exp)
-            # print(f"[DEBUG] resid: {resid}")
-            # print(f"[DEBUG] Any resid nan? {np.any(np.isnan(resid))}")
             times["bucketing"] += time.time() - t2
 
             # --- score & predict ---
             t3 = time.time()
             sample_scores = np.abs(resid[bin_ids])
-            # print(f"[DEBUG] sample_scores: {sample_scores}")
-            # print(f"[DEBUG] Any sample_scores nan? {np.any(np.isnan(sample_scores))}")
             anomalous_bins = np.where(np.abs(resid) >= self.z_threshold)[0]
             labels = np.isin(bin_ids, anomalous_bins).astype(int)
 
-            # print(f"Number of null values in sample_scores for column '{col}': {np.isnan(sample_scores).sum()}")
-            # df_score.loc[:, col] = sample_scores.max() + 3
             df_score.loc[idx, col] = sample_scores
             assessed.append(col)
             df_predict.loc[idx, col] = labels
@@ -240,21 +225,21 @@ class DistributionFitDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "preprocessing": 0,
             "fitting": 0,
             "scoring": 0,
         }
         total_starttime = time.time()
-        assessed = []
+        assessed: List[str] = []
 
-        df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
-        df_score.loc[:, :] = 0  # 1.0
-        df_predict.loc[:, :] = 0
+        df_detect = dataset.copy()
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         if target_columns is None:
             target_columns = dataset.columns.tolist()

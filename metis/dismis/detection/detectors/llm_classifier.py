@@ -193,7 +193,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
 
         value_counts = all_values.value_counts()
         unique_values = value_counts.index.tolist()
-        frequencies = value_counts.values.tolist()
+        frequencies: List[int] = value_counts.values.tolist()
 
         print(
             f"  Processing {len(unique_values)} unique values out of {len(all_values)} total values"
@@ -217,7 +217,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
         for start_idx in range(0, len(unique_values), self.batch_size):
             end_idx = min(start_idx + self.batch_size, len(unique_values))
             batch_values = unique_values[start_idx:end_idx]
-            batch_frequencies = frequencies[start_idx:end_idx]
+            batch_frequencies: List[int] = frequencies[start_idx:end_idx]
 
             if numeric_stats is not None:
                 messages = self._create_classification_prompt_numeric(
@@ -274,7 +274,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
         """
@@ -294,7 +294,7 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
                 - assessed (List[str]): List of columns that were analyzed
         """
 
-        times = {
+        times: Dict[str, float] = {
             "classification": 0,
             "total": 0,
         }
@@ -302,13 +302,8 @@ Example response format: VALID, DMV, VALID, VALID, DMV"""
         total_starttime = time.time()
         assessed = []
 
-        df_score = dataset.copy()
-        df_score.loc[:, :] = 0
-        df_score = df_score.astype(float)
-
-        df_predict = dataset.copy()
-        df_predict.loc[:, :] = 0
-        df_predict = df_predict.astype(int)
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         columns = dataset.columns if target_columns is None else target_columns
 

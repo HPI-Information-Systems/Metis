@@ -25,11 +25,11 @@ class SimilarSamplesDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "preprocessing": 0,
             "fitting": 0,
             "querying": 0,
@@ -38,11 +38,9 @@ class SimilarSamplesDetector(DMVDetector):
         total_starttime = time.time()
         assessed = []
 
-        df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
-        df_score.loc[:, :] = 0
-        df_score = df_score.astype(float)
-        df_predict.loc[:, :] = 0
-        df_predict = df_predict.astype(int)
+        df_detect = dataset.copy()
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         scaler = MinMaxScaler()
 
@@ -133,11 +131,11 @@ class FAISSSimilarSamplesDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "preprocessing": 0,
             "fitting": 0,
             "querying": 0,
@@ -148,16 +146,8 @@ class FAISSSimilarSamplesDetector(DMVDetector):
         assessed = []
 
         # Initialize score/predict DataFrames directly instead of copying dataset
-        df_score = pd.DataFrame(
-            np.zeros(dataset.shape, dtype=np.float32),
-            columns=dataset.columns,
-            index=dataset.index,
-        )
-        df_predict = pd.DataFrame(
-            np.zeros(dataset.shape, dtype=np.int32),
-            columns=dataset.columns,
-            index=dataset.index,
-        )
+        df_score = pd.DataFrame(0.0, columns=dataset.columns, index=dataset.index)
+        df_predict = pd.DataFrame(0, columns=dataset.columns, index=dataset.index)
 
         # === Preprocessing ===
         preprocessing_starttime = time.time()
@@ -348,11 +338,11 @@ class FAISSNoDubSimilarSamplesDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "preprocessing": 0,
             "fitting": 0,
             "querying": 0,
@@ -362,16 +352,8 @@ class FAISSNoDubSimilarSamplesDetector(DMVDetector):
         total_starttime = time.time()
 
         # Initialize score/predict DataFrames directly instead of copying dataset
-        df_score = pd.DataFrame(
-            np.zeros(dataset.shape, dtype=np.float32),
-            columns=dataset.columns,
-            index=dataset.index,
-        )
-        df_predict = pd.DataFrame(
-            np.zeros(dataset.shape, dtype=np.int32),
-            columns=dataset.columns,
-            index=dataset.index,
-        )
+        df_score = pd.DataFrame(0.0, columns=dataset.columns, index=dataset.index)
+        df_predict = pd.DataFrame(0, columns=dataset.columns, index=dataset.index)
         assessed = []
 
         # === Preprocessing ===
@@ -537,9 +519,9 @@ class MultiSimilarSamplesDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Dict[str, Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
         total_starttime = time.time()
 

@@ -825,11 +825,11 @@ class SyntacticDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "pattern_generation": 0,
             "scoring": 0,
         }

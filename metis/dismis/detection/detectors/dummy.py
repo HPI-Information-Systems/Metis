@@ -16,17 +16,17 @@ class NanDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        result = (
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+        times: Dict[str, float] = {"total": 0}
+
+        return (
             dataset.notnull().astype(int),
             dataset.notnull().astype(int),
-            {"total": 0},
+            times,
             list(dataset.columns),
         )
-
-        return result
 
 
 class QuantileDetector(DMVDetector):
@@ -39,9 +39,9 @@ class QuantileDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
         transformed = pd.DataFrame(index=dataset.index)
         assessed = []
@@ -59,6 +59,6 @@ class QuantileDetector(DMVDetector):
                 transformed[column] = 0
 
         transformed.fillna(-1, inplace=True)
-        times = {"total": 0}
+        times: Dict[str, float] = {"total": 0}
 
         return transformed, (transformed == 0).astype(int), times, assessed

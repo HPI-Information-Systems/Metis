@@ -108,11 +108,11 @@ class FrequentValuesDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "preprocessing": 0,
             "valuelist_building": 0,
             "scoring": 0,
@@ -120,12 +120,9 @@ class FrequentValuesDetector(DMVDetector):
         total_starttime = time.time()
         assessed = []
 
-        df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
-        # print(df_detect["Length"])
-        df_score.loc[:, :] = 0  # 1
-        df_score = df_score.astype(float)
-        df_predict.loc[:, :] = 0
-        df_predict = df_predict.astype(int)
+        df_detect = dataset.copy()
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         if target_columns is None:
             target_columns = dataset.columns.tolist()
@@ -218,7 +215,7 @@ class FrequentValuesDetector2(DMVDetector):
         relative_prominence: float = 0.05,
         num_neighbors: int = 3,
         target_types: List[str] = ["numeric"],
-        nanvalue=0,
+        nanvalue: float = 0,
     ):
         """
         Initialize the FrequentValuesDetector with a specific detector.
@@ -235,11 +232,10 @@ class FrequentValuesDetector2(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-
-        times = {
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+        times: Dict[str, float] = {
             "preprocessing": 0,
             "valuelist_building": 0,
             "scoring": 0,
@@ -247,12 +243,9 @@ class FrequentValuesDetector2(DMVDetector):
         total_starttime = time.time()
         assessed = []
 
-        df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
-        # print(df_detect["Length"])
-        df_score.loc[:, :] = self.nanvalue  # 1
-        df_score = df_score.astype(float)
-        df_predict.loc[:, :] = 0
-        df_predict = df_predict.astype(int)
+        df_detect = dataset.copy()
+        df_score = pd.DataFrame(0.0, index=dataset.index, columns=dataset.columns)
+        df_predict = pd.DataFrame(0, index=dataset.index, columns=dataset.columns)
 
         if target_columns is None:
             target_columns = dataset.columns.tolist()

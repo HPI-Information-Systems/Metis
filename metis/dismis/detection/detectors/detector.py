@@ -8,7 +8,7 @@ class DMVDetector:
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
         """
@@ -22,4 +22,4 @@ class DMVDetector:
             Dict[str, float]: A Dictionary containing the runtimes of individual detection steps.
             List[str]: A List of columns that were analyzed.
         """
-        pass  # Placeholder for actual detection logic
+        raise NotImplementedError("This method should be implemented by subclasses.")

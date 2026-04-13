@@ -13,7 +13,7 @@ from metis.dismis.detection.detectors.detector import DMVDetector
 class FAHESDetector(DMVDetector):
     def __init__(
         self,
-        fahes_executable: str = "/sc/home/philipp.hildebrandt/DMV/FAHES_Code/src/FAHES",
+        fahes_executable: str,
     ):
         """
         Initialize the SimilarSamplesDetector with a specific detector.
@@ -27,10 +27,10 @@ class FAHESDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        times = {}
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
+        times: Dict[str, float] = {}
         total_starttime = time.time()
 
         df_detect, df_predict = dataset.copy(), dataset.copy()
@@ -96,9 +96,3 @@ class FAHESDetector(DMVDetector):
         times["total"] = time.time() - total_starttime
 
         return df_score, df_predict, times, assessed
-
-
-if __name__ == "__main__":
-    score, predict, times, assessed = FAHESDetector()(
-        pd.read_csv("/sc/home/philipp.hildebrandt/DMV/raha/datasets/flights/dirty.csv")
-    )

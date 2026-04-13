@@ -227,17 +227,17 @@ class BucketKNN(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "preprocessing": 0,
             "valuelist_building": 0,
             "scoring": 0,
         }
         total_starttime = time.time()
-        assessed = []
+        assessed: List[str] = []
 
         # More efficient DataFrame initialization - avoid full copies
         df_score = pd.DataFrame(1.0, index=dataset.index, columns=dataset.columns)

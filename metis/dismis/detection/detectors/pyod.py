@@ -30,7 +30,9 @@ from metis.dismis.detection.detectors.utils import (
 
 def series_hash(s: pd.Series) -> str:
     # robust hash of values + index
-    return hashlib.sha1(pd.util.hash_pandas_object(s, index=True).values).hexdigest()
+    return hashlib.sha1(
+        np.array(pd.util.hash_pandas_object(s, index=True).values)
+    ).hexdigest()
 
 
 def cache_with_limit(maxsize=128):
@@ -161,10 +163,10 @@ class PyODDetector(DMVDetector):
         elif type in ["numeric", "date"]:
             if type == "date":
                 # numeric_features, _, _ = datetime_to_numeric(column) #split_datetime_column(column, column.name)
-                numeric_features = split_datetime_column(column, column.name)
+                numeric_features = split_datetime_column(column, str(column.name))
             else:
                 # numeric_features = pd.to_numeric(column, errors='coerce').mask(np.isinf) #split_mixed_column(column, column.name)
-                numeric_features = split_mixed_column(column, column.name)
+                numeric_features = split_mixed_column(column, str(column.name))
             if numeric_features[f"{column.name}_null"].sum() == 0:
                 numeric_features.drop(columns=[f"{column.name}_null"], inplace=True)
             if numeric_features[f"{column.name}_str"].sum() == 0:
@@ -182,7 +184,7 @@ class PyODDetector(DMVDetector):
             # numeric_features = scaler.fit_transform(numeric_features.values.reshape(-1, 1))
             # return numeric_features#.values
         elif type == "text":
-            return embeddings[column.name]
+            return embeddings[str(column.name)]
         else:
             raise ValueError(f"Unsupported type for column {column.name}: {type}")
 
@@ -190,11 +192,11 @@ class PyODDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "extraction": 0,
             "fitting": 0,
             "scoring": 0,
@@ -264,7 +266,7 @@ class PyODDetector2(DMVDetector):
         self,
         detector_name: str,
         target_types: List[str] = ["numeric", "categorical", "text"],
-        nanvalue=0,
+        nanvalue: float = 0,
         **kwargs,
     ):
         """
@@ -356,11 +358,11 @@ class PyODDetector2(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "extraction": 0,
             "fitting": 0,
             "scoring": 0,
@@ -469,11 +471,11 @@ class FeatureDetector(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
 
-        times = {
+        times: Dict[str, float] = {
             "extraction": 0,
             "fitting": 0,
             "scoring": 0,
@@ -781,8 +783,8 @@ class RepeatedSubstringOutlierDetectorOD(PyODDetector):
     def _extract_features(
         self,
         column: pd.Series,
-        type: str = None,
-        embeddings: Dict[str, pd.DataFrame] = None,
+        type: str | None = None,
+        embeddings: Dict[str, pd.DataFrame] | None = None,
     ) -> np.ndarray:
         """
         Extract features based on the maximum number of repeated substrings of a given length.
@@ -1003,7 +1005,7 @@ class SignOutlierDetectorFeat(FeatureDetector):
 # TODO: Use this for straight up DMV detection
 class SemanticDetector(FeatureDetector):
     def __init__(
-        self, LLM, target_types, targets: List[str] | Dict = None, invert=False
+        self, LLM, target_types, targets: List[str] | Dict | None = None, invert=False
     ):
         """
         Initialize the SemanticDetector with a specific detector.
@@ -1035,7 +1037,7 @@ class SemanticDetector(FeatureDetector):
             np.ndarray: The extracted features.
         """
         # Encode the column values using the embedding model
-        emb = embeddings[column.name].astype(np.float32)
+        emb = embeddings[str(column.name)].astype(np.float32)
         # Normalize embeddings to unit vectors
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
 
@@ -1116,7 +1118,7 @@ class SemanticOutlierDetector(FeatureDetector):
         # process = psutil.Process(os.getpid())
 
         # Encode the column values using the embedding model
-        emb = embeddings[column.name].astype(np.float32)
+        emb = embeddings[str(column.name)].astype(np.float32)
         # Normalize embeddings to unit vectors
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
 
@@ -1176,7 +1178,7 @@ class SemanticOutlierDetectorNew(FeatureDetector):
         # process = psutil.Process(os.getpid())
 
         # Encode the column values using the embedding model
-        emb = embeddings[column.name].astype(np.float32)
+        emb = embeddings[str(column.name)].astype(np.float32)
         # Normalize embeddings to unit vectors
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
 
@@ -1264,7 +1266,7 @@ class SemanticOutlierDetectorNewDub(FeatureDetector):
         # process = psutil.Process(os.getpid())
 
         # Encode the column values using the embedding model
-        emb = embeddings[column.name].astype(np.float32)
+        emb = embeddings[str(column.name)].astype(np.float32)
         # Normalize embeddings to unit vectors
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
 
@@ -1345,7 +1347,7 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
         Extract features for multiple num_neighbors settings efficiently.
         Returns dict mapping num_neighbors -> scores.
         """
-        emb = embeddings[column.name].astype(np.float32)
+        emb = embeddings[str(column.name)].astype(np.float32)
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
 
         null_mask = column.isna()
@@ -1408,9 +1410,9 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
         self,
         dataset: pd.DataFrame,
         types: Dict[str, str],
-        target_columns: List[str] = None,
+        target_columns: List[str] | None = None,
         embeddings: Dict[str, pd.DataFrame] = {},
-    ) -> Dict[str, Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]:
         """
         Returns a dictionary mapping detector names to (df_score, df_predict, times, assessed).
         """
