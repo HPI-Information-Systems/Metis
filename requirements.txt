@@ -7,3 +7,14 @@ tqdm
 numpy
 datasketch
 openai
+polars
+scipy
+scikit-learn==1.6.1
+xgboost
+numba
+torch
+faiss-cpu
+openai
+pyod
+raha
+scikit-posthocs
