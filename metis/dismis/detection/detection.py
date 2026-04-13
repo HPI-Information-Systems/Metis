@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 from typing import List, Tuple, Dict
 
-from .detectors.frequent_value import FrequentValuesDetector, FrequentValuesDetector2
-from .detectors.bucketknn_square import BucketKNN as BucketKNNSquare
-from .detectors.distribution import DistributionFitDetector, BucketPDFGoF
-from .detectors.pyod import (
+from metis.dismis.detection.detectors.frequent_value import FrequentValuesDetector, FrequentValuesDetector2
+from metis.dismis.detection.detectors.bucketknn_square import BucketKNN as BucketKNNSquare
+from metis.dismis.detection.detectors.distribution import DistributionFitDetector, BucketPDFGoF
+from metis.dismis.detection.detectors.pyod import (
     PyODDetector,
     PyODDetector2,
     LengthOutlierDetectorFeat,
@@ -29,12 +29,12 @@ from .detectors.pyod import (
     NonAlphanumericalOutlierDetectorDist,
     SignOutlierDetectorFeat
 )
-from .detectors.dummy import NanDetector, QuantileDetector
-from .detectors.similar_samples import FAISSSimilarSamplesDetector, FAISSNoDubSimilarSamplesDetector, MultiSimilarSamplesDetector
-from .detectors.raha_detector import RAHADetector
-from .detectors.fahes_detector import FAHESDetector
-from .detectors.syntactic import SyntacticDetector
-from .detectors.llm_classifier import LLMClassifierDetector
+from metis.dismis.detection.detectors.dummy import NanDetector, QuantileDetector
+from metis.dismis.detection.detectors.similar_samples import FAISSSimilarSamplesDetector, FAISSNoDubSimilarSamplesDetector, MultiSimilarSamplesDetector
+from metis.dismis.detection.detectors.raha_detector import RAHADetector
+from metis.dismis.detection.detectors.fahes_detector import FAHESDetector
+from metis.dismis.detection.detectors.syntactic import SyntacticDetector
+from metis.dismis.detection.detectors.llm_classifier import LLMClassifierDetector
 
 FAST = False
 
@@ -72,7 +72,7 @@ def run_detection_algorithms(polluted_dataset: pd.DataFrame, clean_dataset: pd.D
         "distribution": lambda data: DistributionFitDetector(target_types=["numeric", "date"]), #checked #checked
         "BucketPDFGoF": lambda data: BucketPDFGoF(target_types=["numeric", "date"]),  #checked #checked
 
-        "pyod_knn": lambda data: PyODDetector("KNN", target_types=["numeric", "date"]), #checked #checked 
+        "pyod_knn": lambda data: PyODDetector("KNN", target_types=["numeric", "date"]), #checked #checked
         "pyod_lof": lambda data: PyODDetector("LOF", target_types=["numeric", "date"]), #checked #checked
         "pyod_iforest": lambda data: PyODDetector("IForest", target_types=["numeric", "date"]), #checked #checked
         "pyod_loda": lambda data: PyODDetector("LODA", target_types=["numeric", "date"]), #checked #checked
@@ -186,7 +186,7 @@ def run_detection_algorithms(polluted_dataset: pd.DataFrame, clean_dataset: pd.D
             continue
         detector_instance = detector_mapper[name](polluted_dataset)
         detector_result = detector_instance(polluted_dataset, types, target_columns, embeddings)
-        
+
         # Check if detector returns multiple results (dict) or single result (tuple)
         if isinstance(detector_result, dict):
             # Multi-result detector
@@ -200,7 +200,7 @@ def run_detection_algorithms(polluted_dataset: pd.DataFrame, clean_dataset: pd.D
             results[name] = detector_result[:2]
             all_times[name] = detector_result[2]
             assessed_columns_per_detector[name] = detector_result[3]
-        
+
         print(f"[MEMORY] Current memory usage: {process.memory_info().rss / 1024 ** 2:.2f} MB")
 
     return results, all_times, assessed_columns_per_detector

@@ -4,21 +4,21 @@ import pandas as pd
 import numpy as np
 import scikit_posthocs as sp
 
-from pyod.models.knn import KNN 
-from pyod.models.lof import LOF 
-from pyod.models.iforest import IForest  
-from pyod.models.cblof import CBLOF 
-from pyod.models.loda import LODA  
+from pyod.models.knn import KNN
+from pyod.models.lof import LOF
+from pyod.models.iforest import IForest
+from pyod.models.cblof import CBLOF
+from pyod.models.loda import LODA
 from pyod.models.cof import COF
 from pyod.models.gmm import GMM
 from pyod.models.mad import MAD
-from pyod.models.hbos import HBOS  
+from pyod.models.hbos import HBOS
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from typing import List, Tuple, Dict
 
-from .detector import DMVDetector
-from .distribution import DistributionFitDetector
-from .utils import split_mixed_column, split_datetime_column
+from metis.dismis.detection.detectors.detector import DMVDetector
+from metis.dismis.detection.detectors.distribution import DistributionFitDetector
+from metis.dismis.detection.detectors.utils import split_mixed_column, split_datetime_column
 from utils.datetime import datetime_to_numeric
 
 import hashlib
@@ -130,7 +130,7 @@ class PyODDetector(DMVDetector):
         }
 
         return detectors[name]
-    
+
     def _extract_features(self, column: pd.Series, type: str, embeddings: Dict[str, pd.DataFrame]) -> np.ndarray:
         """
         Extract features from a pandas Series for the detector.
@@ -168,7 +168,7 @@ class PyODDetector(DMVDetector):
             raise ValueError(f"Unsupported type for column {column.name}: {type}")
 
     def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        
+
         times = {
             'extraction': 0,
             'fitting': 0,
@@ -184,7 +184,7 @@ class PyODDetector(DMVDetector):
         df_predict = df_predict.astype(int)
 
         columns = dataset.columns if target_columns is None else target_columns
- 
+
         for column in columns:
             if types[column] not in self.target_types:
                 continue
@@ -198,7 +198,7 @@ class PyODDetector(DMVDetector):
                 target_values = target_values[:, 0].reshape(-1, 1) if target_values.ndim > 1 else target_values.reshape(-1, 1)
             times['extraction'] += time.time() - extraction_starttime
 
-            
+
             target_idx = target.index
 
             fitting_starttime = time.time()
@@ -223,7 +223,7 @@ class PyODDetector(DMVDetector):
             times['scoring'] += time.time() - scoring_starttime
 
         times['total'] = time.time() - total_starttime
-        
+
         return df_score, df_predict.astype(int), times, assessed
 
 class PyODDetector2(DMVDetector):
@@ -268,7 +268,7 @@ class PyODDetector2(DMVDetector):
         }
 
         return detectors[name]
-    
+
     def _extract_features(self, column: pd.Series, type: str, embeddings: Dict[str, pd.DataFrame]) -> np.ndarray:
         """
         Extract features from a pandas Series for the detector.
@@ -306,7 +306,7 @@ class PyODDetector2(DMVDetector):
             raise ValueError(f"Unsupported type for column {column.name}: {type}")
 
     def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        
+
         times = {
             'extraction': 0,
             'fitting': 0,
@@ -322,7 +322,7 @@ class PyODDetector2(DMVDetector):
         df_predict = df_predict.astype(int)
 
         columns = dataset.columns if target_columns is None else target_columns
- 
+
         for column in columns:
             if types[column] not in self.target_types:
                 continue
@@ -336,7 +336,7 @@ class PyODDetector2(DMVDetector):
                 target_values = target_values[:, 0].reshape(-1, 1) if target_values.ndim > 1 else target_values.reshape(-1, 1)
             times['extraction'] += time.time() - extraction_starttime
 
-            
+
             target_idx = target.index
 
             fitting_starttime = time.time()
@@ -361,8 +361,8 @@ class PyODDetector2(DMVDetector):
             times['scoring'] += time.time() - scoring_starttime
 
         times['total'] = time.time() - total_starttime
-        
-        return df_score, df_predict.astype(int), times, assessed 
+
+        return df_score, df_predict.astype(int), times, assessed
 
 class FeatureDetector(DMVDetector):
     def __init__(self, target_types: List[str] = ["numeric", "categorical"]):
@@ -399,9 +399,9 @@ class FeatureDetector(DMVDetector):
             return numeric_features.values
         else:
             raise ValueError(f"Unsupported type for column {column.name}: {type}")
-        
+
     def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        
+
         times = {
             'extraction': 0,
             'fitting': 0,
@@ -418,7 +418,7 @@ class FeatureDetector(DMVDetector):
         df_predict = df_predict.astype(int)
 
         columns = dataset.columns if target_columns is None else target_columns
-  
+
         for column in columns:
             if types[column] not in self.target_types:
                 continue
@@ -437,15 +437,15 @@ class FeatureDetector(DMVDetector):
 
             col_idx = df_predict.columns.get_loc(column)
             threshold = np.quantile(target_values, 0.9)
-            assessed.append(column) 
+            assessed.append(column)
             df_predict.iloc[target_idx, col_idx] = (target_values > threshold).astype(int)
             times['scoring'] += time.time() - scoring_starttime
 
         times['total'] = time.time() - total_starttime
-        
+
         return df_score, df_predict.astype(int), times, assessed
 
-    
+
 
 #target types: all
 class TypeOutlierDetector2(FeatureDetector):
@@ -516,7 +516,7 @@ class LengthOutlierDetectorFeat(FeatureDetector):
         lengths = np.array([len(str(value)) if not pd.isna(value) else 0 for value in column])#.reshape(-1, 1)
         #lengths = MinMaxScaler().fit_transform(lengths)
         return lengths
-    
+
 class LengthOutlierDetectorDist(DistributionFitDetector):
     def _extract_features(self, column: pd.Series, type: str) -> np.ndarray:
         """
@@ -547,7 +547,7 @@ class LengthOutlierDetectorOD(PyODDetector):
         if len(lengths) > 0:
             lengths = MinMaxScaler().fit_transform(lengths)
         return lengths
-    
+
 class FrequencyOutlierDetector(FeatureDetector):
     def _extract_features(self, column: pd.Series, type: str, embeddings: Dict[str, pd.DataFrame]) -> np.ndarray:
         """
@@ -562,7 +562,7 @@ class FrequencyOutlierDetector(FeatureDetector):
         value_counts = column.value_counts()
         frequencies = column.map(value_counts).fillna(0).to_numpy()
         return frequencies / column.notna().sum()
-    
+
 @cache_with_limit(maxsize=128)
 def count_repeated_substrings(column, substring_length):
     """
@@ -624,7 +624,7 @@ class RepeatedSubstringOutlierDetectorFeat(FeatureDetector):
         if type == "date":
             column = column.astype(str).str.replace(":", "").str.replace("-", "").str.replace(" ", "").str.replace(".", "")
         return count_repeated_substrings(column, self.substring_length).reshape(-1)
-    
+
 class RepeatedSubstringOutlierDetectorDist(DistributionFitDetector):
     def __init__(self, target_types: List[str], substring_length: int = 2):
         """
@@ -649,7 +649,7 @@ class RepeatedSubstringOutlierDetectorDist(DistributionFitDetector):
         if type == "date":
             column = column.astype(str).str.replace(":", "").str.replace("-", "").str.replace(" ", "").str.replace(".", "")
         return count_repeated_substrings(column, self.substring_length).reshape(-1)
-    
+
 class RepeatedSubstringOutlierDetectorOD(PyODDetector):
     def __init__(self, detector_name, target_types: List[str], substring_length: int = 2):
         """
@@ -674,7 +674,7 @@ class RepeatedSubstringOutlierDetectorOD(PyODDetector):
         if type == "date":
             column = column.astype(str).str.replace(":", "").str.replace("-", "").str.replace(" ", "").str.replace(".", "")
         return count_repeated_substrings(column, self.substring_length)
-    
+
 @cache_with_limit(maxsize=128)
 def get_key_distances(column):
     # Keyboard layout
@@ -684,14 +684,14 @@ def get_key_distances(column):
         ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "\\"],
         ["\\", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/"]
     ]
-    
+
     # Create map from character to (row, col) coordinates
     keyboard_map = {
         char: np.array([row_idx, col_idx])
         for row_idx, row in enumerate(keyboard_rows)
         for col_idx, char in enumerate(row)
     }
-    
+
     def compute_avg_distance(value: str) -> float:
         if pd.isna(value):
             return 0.0
@@ -706,7 +706,7 @@ def get_key_distances(column):
 
     return column.map(compute_avg_distance).to_numpy()
 
-#target types: all    
+#target types: all
 class KeyDistanceOutlierDetectorFeat(FeatureDetector):
     def _extract_features(self, column: pd.Series, type: str, embeddings: Dict[str, pd.DataFrame]) -> np.ndarray:
         """
@@ -721,7 +721,7 @@ class KeyDistanceOutlierDetectorFeat(FeatureDetector):
         if type == "date":
             column = column.astype(str).str.replace(":", "").str.replace("-", "").str.replace(" ", "").str.replace(".", "")
         return -get_key_distances(column)
-    
+
 class KeyDistanceOutlierDetectorDist(DistributionFitDetector):
     def _extract_features(self, column: pd.Series, type: str) -> np.ndarray:
         """
@@ -736,7 +736,7 @@ class KeyDistanceOutlierDetectorDist(DistributionFitDetector):
         if type == "date":
             column = column.astype(str).str.replace(":", "").str.replace("-", "").str.replace(" ", "").str.replace(".", "")
         return get_key_distances(column)
-    
+
 class KeyDistanceOutlierDetectorOD(PyODDetector):
     def _extract_features(self, column: pd.Series, type: str, embeddings: Dict[str, pd.DataFrame]) -> np.ndarray:
         """
@@ -822,7 +822,7 @@ class SignOutlierDetectorFeat(FeatureDetector):
         return pd.to_numeric(column, errors='coerce').map(lambda x: pos_fraction if (not pd.isna(x) and float(x) > 0) else (neg_fraction if (not pd.isna(x) and float(x) < 0) else 0)).to_numpy()
 
 # TODO: Mimic all other detectors using the querying capability of the LLM for comparison
-# TODO: Use this for straight up DMV detection   
+# TODO: Use this for straight up DMV detection
 class SemanticDetector(FeatureDetector):
     def __init__(self, LLM, target_types, targets: List[str] | Dict = None, invert=False):
         """
@@ -853,7 +853,7 @@ class SemanticDetector(FeatureDetector):
         emb = embeddings[column.name].astype(np.float32)
         # Normalize embeddings to unit vectors
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
-        
+
         # Target embeddings
         target_emb = None
         if isinstance(self.targets, dict):
@@ -878,7 +878,7 @@ class SemanticDetector(FeatureDetector):
         batch_size = 1000
         n_samples = emb.shape[0]
         max_similarities = np.zeros(n_samples, dtype=np.float32)
-        
+
         for i in range(0, n_samples, batch_size):
             end_idx = min(i + batch_size, n_samples)
             batch_emb = emb[i:end_idx]
@@ -918,14 +918,14 @@ class SemanticOutlierDetector(FeatureDetector):
         emb = embeddings[column.name].astype(np.float32)
         # Normalize embeddings to unit vectors
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
-        
+
         #print(f"[MEMORY] Current memory usage (before similarities): {process.memory_info().rss / 1024 ** 2:.2f} MB")
-        
+
         # Compute similarities in batches to reduce memory usage
         batch_size = 1000
         n_samples = emb.shape[0]
         outlier_scores = np.zeros(n_samples, dtype=np.float32)
-        
+
         for i in range(0, n_samples, batch_size):
             end_idx = min(i + batch_size, n_samples)
             batch_emb = emb[i:end_idx]
@@ -936,7 +936,7 @@ class SemanticOutlierDetector(FeatureDetector):
             # Compute outlier scores: 1 - mean of top num_neighbors similarities (excluding self)
             batch_outlier_scores = 1 - batch_similarities[:, -(self.num_neighbors + 1):-1].mean(axis=1)
             outlier_scores[i:end_idx] = batch_outlier_scores
-        
+
         #print(f"[MEMORY] Current memory usage (after similarities): {process.memory_info().rss / 1024 ** 2:.2f} MB")
 
         outlier_scores = np.clip(outlier_scores, 0, 1)
@@ -973,12 +973,12 @@ class SemanticOutlierDetectorNew(FeatureDetector):
         emb = embeddings[column.name].astype(np.float32)
         # Normalize embeddings to unit vectors
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
-        
+
         #print(f"[MEMORY] Current memory usage (before similarities): {process.memory_info().rss / 1024 ** 2:.2f} MB")
-        
+
         # Track None/NaN values in the original column
         null_mask = column.isna()
-        
+
         # Compute similarities in batches to reduce memory usage
         batch_size = 10000000
         n_samples = emb.shape[0]
@@ -995,12 +995,12 @@ class SemanticOutlierDetectorNew(FeatureDetector):
         index.hnsw.efConstruction = ef_construction
         index.hnsw.efSearch = ef_search
         unique_emb, _ = np.unique(emb, axis=0, return_index=True)
-        
+
         print("Unique embeddings:", unique_emb.shape[0], "out of", n_samples)
-        
+
         # Ensure we don't search for more neighbors than available
         k = min(self.num_neighbors + 1, unique_emb.shape[0])
-        
+
         if unique_emb.shape[0] > 1:
             index.add(unique_emb)
 
@@ -1018,9 +1018,9 @@ class SemanticOutlierDetectorNew(FeatureDetector):
                 else:
                     # If only 1 unique embedding, all are outliers
                     outlier_scores[i:end_idx] = 1.0
-        
+
             outlier_scores = np.clip(outlier_scores, 0, 1)
-        
+
         # Set scores to 0 for None/NaN values
         outlier_scores[null_mask] = 0
 
@@ -1058,12 +1058,12 @@ class SemanticOutlierDetectorNewDub(FeatureDetector):
         emb = embeddings[column.name].astype(np.float32)
         # Normalize embeddings to unit vectors
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
-        
+
         #print(f"[MEMORY] Current memory usage (before similarities): {process.memory_info().rss / 1024 ** 2:.2f} MB")
-        
+
         # Track None/NaN values in the original column
         null_mask = column.isna()
-        
+
         # Compute similarities in batches to reduce memory usage
         batch_size = 10000000
         n_samples = emb.shape[0]
@@ -1079,10 +1079,10 @@ class SemanticOutlierDetectorNewDub(FeatureDetector):
         index = faiss.IndexHNSWFlat(emb.shape[1], M, faiss.METRIC_INNER_PRODUCT)
         index.hnsw.efConstruction = ef_construction
         index.hnsw.efSearch = ef_search
-        
+
         # Ensure we don't search for more neighbors than available
         k = min(self.num_neighbors + 1, emb.shape[0])
-        
+
         if emb.shape[0] > 1:
             index.add(emb)
 
@@ -1100,9 +1100,9 @@ class SemanticOutlierDetectorNewDub(FeatureDetector):
                 else:
                     # If only 1 unique embedding, all are outliers
                     outlier_scores[i:end_idx] = 1.0
-        
+
             outlier_scores = np.clip(outlier_scores, 0, 1)
-        
+
         # Set scores to 0 for None/NaN values
         outlier_scores[null_mask] = 0
 
@@ -1121,7 +1121,7 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
         self.num_neighbors_list = sorted(num_neighbors_list)
         self.max_neighbors = max(num_neighbors_list)
         self.remove_duplicates = remove_duplicates
-    
+
     def _extract_features_multi(self, column: pd.Series, type: str, embeddings: Dict[str, pd.DataFrame]) -> Dict[int, np.ndarray]:
         """
         Extract features for multiple num_neighbors settings efficiently.
@@ -1129,19 +1129,19 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
         """
         emb = embeddings[column.name].astype(np.float32)
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-8)
-        
+
         null_mask = column.isna()
         n_samples = emb.shape[0]
-        
+
         # Build index once
         M = max(16, min(48, int(np.log2(n_samples))))
         ef_construction = M * 4
         ef_search = int(ef_construction * 0.5)
-        
+
         index = faiss.IndexHNSWFlat(emb.shape[1], M, faiss.METRIC_INNER_PRODUCT)
         index.hnsw.efConstruction = ef_construction
         index.hnsw.efSearch = ef_search
-        
+
         # Use unique embeddings if remove_duplicates is True
         if self.remove_duplicates:
             unique_emb, _ = np.unique(emb, axis=0, return_index=True)
@@ -1149,30 +1149,30 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
             index_emb = unique_emb
         else:
             index_emb = emb
-        
+
         # Query once with max_neighbors
         k = min(self.max_neighbors + 1, index_emb.shape[0])
         results = {}
         batch_size = 10000000
-        
+
         if index_emb.shape[0] > 1:
             index.add(index_emb)
-            
+
             for i in range(0, n_samples, batch_size):
                 end_idx = min(i + batch_size, n_samples)
                 similarities, _ = index.search(emb[i:end_idx], k)
-                
+
                 # Compute scores for each num_neighbors setting
                 for num_neighbors in self.num_neighbors_list:
                     if num_neighbors not in results:
                         results[num_neighbors] = np.zeros(n_samples, dtype=np.float32)
-                    
+
                     k_actual = min(num_neighbors + 1, k)
                     if k_actual > 1:
                         results[num_neighbors][i:end_idx] = 1 - similarities[:, 1:k_actual].mean(axis=1)
                     else:
                         results[num_neighbors][i:end_idx] = 1.0
-            
+
             # Post-process all results
             for num_neighbors in self.num_neighbors_list:
                 results[num_neighbors] = np.clip(results[num_neighbors], 0, 1)
@@ -1181,60 +1181,60 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
             # Handle edge case
             for num_neighbors in self.num_neighbors_list:
                 results[num_neighbors] = np.zeros(n_samples, dtype=np.float32)
-        
+
         return results
-    
-    def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], 
-                 target_columns: List[str] = None, 
+
+    def __call__(self, dataset: pd.DataFrame, types: Dict[str, str],
+                 target_columns: List[str] = None,
                  embeddings: Dict[str, pd.DataFrame] = {}) -> Dict[str, Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float], List[str]]]:
         """
         Returns a dictionary mapping detector names to (df_score, df_predict, times, assessed).
         """
-        
+
         total_starttime = time.time()
         columns = dataset.columns if target_columns is None else target_columns
-        
+
         # Initialize results dict for each configuration
         all_results = {}
         for num_neighbors in self.num_neighbors_list:
             df_score = dataset.copy()
             df_score.loc[:, :] = 0
             df_score = df_score.astype(float)
-            
+
             df_predict = dataset.copy()
             df_predict.loc[:, :] = 0
             df_predict = df_predict.astype(int)
-            
+
             all_results[num_neighbors] = {
                 'df_score': df_score,
                 'df_predict': df_predict,
                 'assessed': []
             }
-        
+
         # Process each column once for all configurations
         for column in columns:
             if types[column] not in self.target_types:
                 continue
-            
+
             if len(dataset[column].dropna()) == 0:
                 continue
-            
+
             # Get scores for all num_neighbors settings at once
             scores_dict = self._extract_features_multi(dataset[column], types[column], embeddings)
-            
+
             # Distribute scores to respective dataframes
             for num_neighbors, scores in scores_dict.items():
                 col_idx = all_results[num_neighbors]['df_score'].columns.get_loc(column)
                 all_results[num_neighbors]['df_score'].iloc[:, col_idx] = scores
-                
+
                 # Simple threshold for predictions
                 threshold = np.quantile(scores[scores > 0], 0.9) if (scores > 0).any() else 0.5
                 predictions = (scores > threshold).astype(int)
                 all_results[num_neighbors]['df_predict'].iloc[:, col_idx] = predictions
                 all_results[num_neighbors]['assessed'].append(column)
-        
+
         total_time = time.time() - total_starttime
-        
+
         # Package results with detector names
         final_results = {}
         for num_neighbors in self.num_neighbors_list:
@@ -1244,7 +1244,7 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
                 detector_name = f"semantic_outlier_{num_neighbors}_new_dub"
             times = {'total': total_time / len(self.num_neighbors_list)}
 
-            
+
             final_results[detector_name] = (
                 all_results[num_neighbors]['df_score'],
                 all_results[num_neighbors]['df_predict'],
@@ -1252,5 +1252,5 @@ class MultiSemanticOutlierDetectorNew(DMVDetector):
                 all_results[num_neighbors]['assessed']
             )
 
-        
+
         return final_results

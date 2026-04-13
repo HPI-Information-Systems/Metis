@@ -3,9 +3,9 @@ import numpy as np
 import time
 from typing import Tuple, Dict, List
 
-from .detector import DMVDetector
-from .utils import force_numeric
-from utils.datetime import datetime_to_numeric
+from metis.dismis.detection.detectors.detector import DMVDetector
+from metis.dismis.detection.detectors.utils import force_numeric
+from metis.dismis.utils.datetime import datetime_to_numeric
 import numpy as np
 
 def mean_neighbor_diff2(x, n):
@@ -41,7 +41,7 @@ def mean_neighbor_diff2(x, n):
     # sum over all shifts
     total_diffs = np.sum(diffs, axis=0)
     avg_diffs = np.divide(total_diffs, counts, out=np.zeros_like(total_diffs), where=counts>0)
-    
+
     # Only return positive values (where current is more frequent than neighbors)
     # Negative values mean less frequent, so set them to 0
     return np.maximum(avg_diffs, 0)
@@ -93,7 +93,7 @@ class FrequentValuesDetector(DMVDetector):
         self.target_types = target_types
 
     def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        
+
         times = {
             'preprocessing': 0,
             'valuelist_building': 0,
@@ -102,7 +102,7 @@ class FrequentValuesDetector(DMVDetector):
         }
         total_starttime = time.time()
         assessed = []
-    
+
         df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
         # print(df_detect["Length"])
         df_score.loc[:, :] = 0 #1
@@ -130,7 +130,7 @@ class FrequentValuesDetector(DMVDetector):
 
             else:
                 continue
-            
+
             # print(df_detect[target_column])
             target = df_detect[target_column].dropna()
 
@@ -146,7 +146,7 @@ class FrequentValuesDetector(DMVDetector):
             values = target.value_counts().sort_index()
             value_range = values.max() - values.min()
             times['valuelist_building'] += time.time() - valuelist_building_starttime
-            
+
             scoring_starttime = time.time()
             npvals = values.to_numpy()
             if len(npvals) < 2:
@@ -188,7 +188,7 @@ class FrequentValuesDetector2(DMVDetector):
         self.nanvalue = nanvalue
 
     def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        
+
         times = {
             'preprocessing': 0,
             'valuelist_building': 0,
@@ -197,7 +197,7 @@ class FrequentValuesDetector2(DMVDetector):
         }
         total_starttime = time.time()
         assessed = []
-    
+
         df_detect, df_score, df_predict = dataset.copy(), dataset.copy(), dataset.copy()
         # print(df_detect["Length"])
         df_score.loc[:, :] = self.nanvalue #1
@@ -225,7 +225,7 @@ class FrequentValuesDetector2(DMVDetector):
 
             else:
                 continue
-            
+
             # print(df_detect[target_column])
             target = df_detect[target_column].dropna()
 
@@ -241,7 +241,7 @@ class FrequentValuesDetector2(DMVDetector):
             values = target.value_counts().sort_index()
             value_range = values.max() - values.min()
             times['valuelist_building'] += time.time() - valuelist_building_starttime
-            
+
             scoring_starttime = time.time()
             npvals = values.to_numpy()
             if len(npvals) < 2:

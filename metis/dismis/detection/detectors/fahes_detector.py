@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Tuple, Dict, List
 
-from .detector import DMVDetector
+from metis.dismis.detection.detectors.detector import DMVDetector
 
 
 class FAHESDetector(DMVDetector):
@@ -39,15 +39,15 @@ class FAHESDetector(DMVDetector):
             # Run FAHES
             cmd = [self.executable, input_csv, output_dir, "4"]
             fahes_starttime = time.time()
-            
+
             try:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    
+
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"FAHES failed: {e.stderr.decode()}")
             times['fahes'] = time.time() - fahes_starttime
 
-        
+
             # Look for result file
             result_files = list(Path(output_dir).glob("*.csv"))
 
@@ -72,9 +72,9 @@ class FAHESDetector(DMVDetector):
 
         df_score = df_predict.copy().astype(float)
         times['total'] = time.time() - total_starttime
-                  
+
         return df_score, df_predict, times, assessed
-    
+
 
 if __name__ == "__main__":
     score, predict, times, assessed = FAHESDetector()(pd.read_csv("/sc/home/philipp.hildebrandt/DMV/raha/datasets/flights/dirty.csv"))

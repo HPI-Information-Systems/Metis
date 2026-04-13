@@ -1,13 +1,12 @@
 import numpy as np
 import pandas as pd
 import time
-import tracemalloc
 from typing import Tuple, Dict, List
 from scipy.stats import norm, skewnorm, uniform, expon, kstest
 
-from .utils import force_numeric
-from .detector import DMVDetector
-from utils.datetime import datetime_to_numeric
+from metis.dismis.detection.detectors.utils import force_numeric
+from metis.dismis.detection.detectors.detector import DMVDetector
+from metis.dismis.utils.datetime import datetime_to_numeric
 
 class BucketPDFGoF(DMVDetector):
     def __init__(
@@ -42,7 +41,7 @@ class BucketPDFGoF(DMVDetector):
     def _get_dist(self):
         if self._dist is not None:
             return self._dist
-        
+
         self._dist = {
             "norm": norm,
             "skewnorm": skewnorm,
@@ -70,7 +69,7 @@ class BucketPDFGoF(DMVDetector):
                 continue
 
         return best_method, best_params
-    
+
     def _extract_features(self, column: pd.Series, type: str) -> np.ndarray:
 
         if type == "date":
@@ -127,7 +126,7 @@ class BucketPDFGoF(DMVDetector):
             # --- fit distribution ---
             t1 = time.time()
             if self.method == "auto":
-                method, params = self._choose_best_fit(x, 
+                method, params = self._choose_best_fit(x,
                                     {k: dists[k] for k in ["skewnorm", "uniform", "expon"]})
                 #print(method, col)
                 if method is None:  # fallback
@@ -189,7 +188,7 @@ class BucketPDFGoF(DMVDetector):
             times["scoring"] += time.time() - t3
 
         times["total"] = time.time() - total_start
-        
+
         return df_score, df_predict.astype(int), times, assessed
 
 class DistributionFitDetector(DMVDetector):
@@ -221,7 +220,7 @@ class DistributionFitDetector(DMVDetector):
         return values
 
     def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        
+
         times = {
             'preprocessing': 0,
             'fitting': 0,
@@ -258,7 +257,7 @@ class DistributionFitDetector(DMVDetector):
             fitting_start = time.time()
             if self.method == "skewnorm":
                 shape, loc, scale = skewnorm.fit(values)
-  
+
                 pdf_values = skewnorm.pdf(values, shape, loc=loc, scale=scale)
             else:  # default: normal
                 mu, sigma = np.mean(values), np.std(values)
@@ -269,13 +268,13 @@ class DistributionFitDetector(DMVDetector):
             # --- Scoring ---
             scoring_start = time.time()
             #print(pdf_values)
-            
+
             # Convert PDF to outlier score using sigmoid on negative log-likelihood
             # Maps unbounded scores to [0,1] with smooth transition
             # Lower PDF → higher negative log → higher outlier score
             scores = -np.log(pdf_values + 1e-12)
             #scores = 1 / (1 + np.exp(-scores + 5))  # sigmoid with center at 5
-            
+
             threshold = np.nanquantile(scores, 1 - self.density_quantile)
             labels = (scores >= threshold).astype(int)
 
@@ -285,5 +284,5 @@ class DistributionFitDetector(DMVDetector):
             times['scoring'] += time.time() - scoring_start
 
         times['total'] = time.time() - total_starttime
-        
+
         return df_score, df_predict.astype(int), times, assessed

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from typing import Dict
-from utils.datetime import datetime_to_numeric
+from metis.dismis.utils.datetime import datetime_to_numeric
 
 def force_numeric(series: pd.Series) -> pd.Series:
     """

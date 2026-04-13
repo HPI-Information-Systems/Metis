@@ -5,7 +5,7 @@ import time
 import numpy as np
 from typing import Tuple, Dict, List
 
-from .detector import DMVDetector
+from metis.dismis.detection.detectors.detector import DMVDetector
 import random
 import string
 
@@ -64,7 +64,7 @@ class RAHADetector(DMVDetector):
         self.clean_dataset = clean_dataset
 
     def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        
+
         times = {}
         total_starttime = time.time()
 
@@ -94,13 +94,13 @@ class RAHADetector(DMVDetector):
             rows, cols = positions[:, 0], positions[:, 1]
             array = df_predict.to_numpy()
             array[rows, cols] = 1
-            df_predict.iloc[:, :] = array 
+            df_predict.iloc[:, :] = array
         df_score = df_predict.copy().astype(float)
 
         times['score_save'] = time.time() - score_save_starttime
 
         times['total'] = time.time() - total_starttime
-        
+
 
         return df_score, df_predict.astype(int), times, df_detect.columns.tolist()
 

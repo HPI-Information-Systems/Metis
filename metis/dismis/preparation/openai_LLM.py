@@ -108,11 +108,12 @@ class OpenAIEmbedding:
             f"Embedding {len(new_texts)} unique new texts out of {len(texts)} total texts for column '{column_name}'"
         )
         if len(new_texts) > 0:
-            resp = self.client.embeddings.create(input=new_texts, model=self.model_name)
+            resp = self.client.embeddings.create(
+                input=new_texts, model=self.model_name, timeout=60 * 60
+            )
             for text, item in zip(new_texts, resp.data):
                 emb = np.array(item.embedding, dtype=np.float32)
                 self.embeddings_map[column_name][text] = self._normalize(
                     emb.reshape(1, -1)
                 )[0].tolist()
-        return [self.embeddings_map[column_name][text] for text in texts]
         return [self.embeddings_map[column_name][text] for text in texts]

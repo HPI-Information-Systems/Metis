@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from functools import lru_cache
 from itertools import chain, combinations
-from .detector import DMVDetector
+from metis.dismis.detection.detectors.detector import DMVDetector
 import time
 
 # The algorithm for this detector is taken from https://github.com/HPI-Information-Systems/SURAGH
@@ -440,7 +440,7 @@ def _all_dependencies(name: str) -> frozenset[str]:
 def is_valid_abstraction_sequence(sequence: Sequence[type]) -> bool:
     """
     Return True when dependency constraints are satisfied for the given abstraction order.
-    
+
     A sequence is valid if for every abstraction in it, all of its direct
     dependencies are also present in the sequence *before* it.
     """
@@ -454,13 +454,13 @@ def is_valid_abstraction_sequence(sequence: Sequence[type]) -> bool:
         dependencies = _ABSTRACTION_DEPENDENCIES.get(abstraction.name, set())
         if not dependencies.issubset(present_abstractions):
             return False
-        
+
         # Check that dependencies appear before the current abstraction
         # We only need to check against the part of the sequence we've already seen.
         abstractions_before = {sequence[j].name for j in range(i)}
         if not dependencies.issubset(abstractions_before):
             return False
-            
+
     return True
 
 def powerset(iterable):
@@ -481,7 +481,7 @@ _STAGE_ONE_CLASSES = [
     SymbolAbstraction,
     LineBreakAbstraction,
  ]
- 
+
 _STAGE_TWO_CLASSES = [
     DateAbstraction,
     UpperCaseSequenceAbstraction,
@@ -489,7 +489,7 @@ _STAGE_TWO_CLASSES = [
     DigitSequenceAbstraction,
     WhitespaceSequenceAbstraction,
  ]
- 
+
 _STAGE_THREE_CLASSES = [
     NumberAbstraction,
     TextAbstraction,
@@ -504,24 +504,24 @@ _ALL_TRANSFORMS = {
     cls.name: cls()
     for cls in _STAGE_ONE_CLASSES + _STAGE_TWO_CLASSES + _STAGE_THREE_CLASSES + _STAGE_FOUR_CLASSES
 }
- 
+
 @lru_cache(maxsize=1024)
 def applicable_abstractions(value: str) -> list[object]:
     """Return abstraction instances that meaningfully apply to ``value``."""
     if not isinstance(value, str):
         raise TypeError("value must be a string")
- 
+
     if len(value) > 50:
         return [FulltextAbstraction]
 
     applicable: list[type] = []
     seen: set[type] = set()
- 
+
     def record(cls: type) -> None:
         if cls not in seen:
             seen.add(cls)
             applicable.append(cls)
- 
+
     tokens = list(value)
     for cls in _STAGE_ONE_CLASSES:
         transform = _ALL_TRANSFORMS[cls.name]
@@ -529,7 +529,7 @@ def applicable_abstractions(value: str) -> list[object]:
         if new_tokens != tokens:
             record(cls)
         tokens = new_tokens
- 
+
     stage_one_tokens = tokens
     stage_two_tokens = stage_one_tokens
     for cls in _STAGE_TWO_CLASSES:
@@ -552,7 +552,7 @@ def applicable_abstractions(value: str) -> list[object]:
         # Build upon the result of the prefix
         prefix = transform_list[:-1]
         last_cls = transform_list[-1]
-        
+
         # Prefixes are guaranteed to be in memo because of the sort
         base_tokens = memo[prefix]
 
@@ -567,7 +567,7 @@ def applicable_abstractions(value: str) -> list[object]:
             if new_tokens != tokens:
                 record(cls)
                 break # Found it's applicable, no need to check other lists for this class
- 
+
     return [cls for cls in applicable]
 
 #---------Pattern generation---------#
@@ -684,13 +684,13 @@ def generate_syntactic_value_patterns(
         for abstraction_sequence in abstraction_lists:
             prefix = abstraction_sequence[:-1]
             last_cls = abstraction_sequence[-1]
-            
+
             base_tokens = memo[prefix]
-            
+
             transform = _ALL_TRANSFORMS[last_cls.name]
             new_tokens = transform(base_tokens)
             memo[abstraction_sequence] = new_tokens
-            
+
             _record_pattern(
                 new_tokens,
                 abstraction_sequence,
@@ -763,7 +763,7 @@ class SyntacticDetector(DMVDetector):
         self.coverage_threshold = coverage_threshold
 
     def __call__(self, dataset: pd.DataFrame, types: Dict[str, str], target_columns: List[str] = None, embeddings: Dict[str, pd.DataFrame] = {}) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-        
+
         times = {
             'pattern_generation': 0,
             'scoring': 0,
@@ -774,7 +774,7 @@ class SyntacticDetector(DMVDetector):
         df_predict = dataset.copy()
         df_predict.loc[:, :] = 0
         assessed = []
-        
+
 
         for idx, column in enumerate(dataset.columns):
             if target_columns is not None and column not in target_columns:
@@ -782,7 +782,7 @@ class SyntacticDetector(DMVDetector):
             if types.get(column) not in self.target_types:
                 continue
             assessed.append(column)
-            
+
             pattern_generation_starttime = time.time()
             values = dataset[column].astype(str).tolist()
             (
@@ -801,7 +801,7 @@ class SyntacticDetector(DMVDetector):
             not_represented = [not any(pattern in value_patterns.get(value, []) for pattern in pruned_patterns) for value in values]
             df_predict.iloc[:, idx] = np.array(not_represented).astype(int)
             times["scoring"] += time.time() - scoring_starttime
-            
+
         times["total"] = time.time() - total_starttim
 
         return df_predict.copy().astype(float), df_predict.astype(int), times, assessed

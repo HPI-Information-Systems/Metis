@@ -65,7 +65,7 @@ def precompute_value_embeddings(
 
         embeddings = {col: {} for col in text_columns}
         for col in unique_values:
-            outputs = model.embed(list(unique_values[col]))
+            outputs = model.embed(list(unique_values[col]), col)
             embeddings[col] = {
                 val: o[:trunc] for val, o in zip(unique_values[col], outputs)
             }
