@@ -12,16 +12,9 @@ import pandas as pd
 from metis.metric.metric import Metric
 from metis.utils.result import DQResult
 
-from .tokenization import split_identifier, split_text, compute_case_consistency_scores
-from .llm_backend import HFTransformersBackend, LLMBackend
-from .scorers import (
-    load_abbreviations,
-    WordNetScorer,
-    WordNetOnlyAdapter,
-    HybridScorer,
-    schema_label_score,
-    content_cell_score,
-)
+from metis.utils.readability.tokenization import (split_identifier, split_text, compute_case_consistency_scores)
+from metis.utils.readability.llm_backend import HFTransformersBackend, LLMBackend
+from metis.utils.readability.scorers import (load_abbreviations, WordNetScorer, WordNetOnlyAdapter, HybridScorer, schema_label_score, content_cell_score)
 
 # ---------------- Config (moved here; former config.py) ----------------
 
@@ -153,7 +146,7 @@ def _sample_df(df: pd.DataFrame, sample_size: Optional[int], rng: random.Random)
 
 # ---------------- Metric ----------------
 
-class ReadabilityLLM(Metric):
+class readability_llm(Metric):
     """Hybrid readability metric: WordNet-first with LLM fallback (lazy backend loading)."""
 
     def assess(
@@ -162,6 +155,42 @@ class ReadabilityLLM(Metric):
         reference: Union[pd.DataFrame, None] = None,
         metric_config: Union[str, None] = None,
     ) -> List[DQResult]:
+        """
+        Assess the readability of a tabular dataset using the hybrid readability metric.
+
+        This metric combines WordNet-based readability scoring with optional LLM support.
+        Depending on the configuration, it can produce readability results for schema
+        labels, table-level text content, individual columns, and optionally individual
+        cells.
+
+        Parameters
+        - data: pd.DataFrame
+                The DataFrame to assess. This is the primary dataset whose schema labels
+                and textual cell values are evaluated for readability.
+
+        - reference: Optional[pd.DataFrame]
+                Optional reference DataFrame. This metric does not use a reference
+                dataset and accepts this parameter only to conform to the framework-wide
+                metric interface.
+
+        - metric_config: Optional[str]
+                Optional path or JSON string containing readability-specific
+                configuration. The configuration is parsed via
+                `ReadabilityLLMConfig.from_metric_config(...)` and controls sampling,
+                schema scoring, output granularity, and LLM-related behavior.
+
+        Returns
+        - List[DQResult]
+                A list of readability assessment results. Depending on the configuration,
+                the method may return `DQResult` objects for schema-level, table-level,
+                column-level, and optional cell-level readability scores.
+
+        Notes
+        - The input DataFrame is not modified in-place.
+        - Only textual columns are considered for content readability scoring when
+        numeric columns are ignored by configuration.
+        - The exact output granularity depends on the metric configuration.
+        """
         cfg = ReadabilityLLMConfig.from_metric_config(metric_config)
         rng = random.Random(cfg.random_seed)
 
@@ -282,7 +311,7 @@ class ReadabilityLLM(Metric):
                             mesTime=pd.Timestamp.now(),
                             DQvalue=float(z_hybrid),
                             DQdimension="Readability",
-                            DQmetric="llm",
+                            DQmetric="LLM",
                             columnNames=[col],
                             rowIndex=row_pos,  # ✅ stable int position (never crashes)
                             DQgranularity="cell",
@@ -342,7 +371,7 @@ class ReadabilityLLM(Metric):
                     mesTime=now,
                     DQvalue=float(content_hybrid),
                     DQdimension="Readability",
-                    DQmetric="llm",
+                    DQmetric="LLM",
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity="table",
@@ -373,7 +402,7 @@ class ReadabilityLLM(Metric):
                     mesTime=now,
                     DQvalue=float(schema_hybrid),
                     DQdimension="Readability",
-                    DQmetric="llm",
+                    DQmetric="LLM",
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity="schema",
@@ -396,7 +425,7 @@ class ReadabilityLLM(Metric):
                         mesTime=now,
                         DQvalue=float(col_combined.get(col, 0.0)),
                         DQdimension="Readability",
-                        DQmetric="llm",
+                        DQmetric="LLM",
                         columnNames=[col],
                         rowIndex=None,
                         DQgranularity="column",
@@ -406,8 +435,3 @@ class ReadabilityLLM(Metric):
                     )
                 )
         return results
-
-
-class readability_llm(ReadabilityLLM):
-    """snake_case alias for METIS registry."""
-    pass

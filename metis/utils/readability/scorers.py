@@ -1,3 +1,9 @@
+"""
+Scoring helpers for the readability metrics.
+
+This module contains the shared scoring logic used by the readability metrics, including abbreviation loading, WordNet-based checks, and optional hybrid/LLM-assisted scoring for schema labels and textual cell content.
+"""
+
 from __future__ import annotations
 
 import os

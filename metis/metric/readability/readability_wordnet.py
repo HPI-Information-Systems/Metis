@@ -11,14 +11,8 @@ import pandas as pd
 from metis.metric.metric import Metric
 from metis.utils.result import DQResult
 
-from .tokenization import split_identifier, split_text, compute_case_consistency_scores
-from .scorers import (
-    load_abbreviations,
-    WordNetScorer,
-    WordNetOnlyAdapter,
-    schema_label_score,
-    content_cell_score,
-)
+from metis.utils.readability.tokenization import (split_identifier, split_text, compute_case_consistency_scores)
+from metis.utils.readability.scorers import (load_abbreviations, WordNetScorer, WordNetOnlyAdapter, schema_label_score, content_cell_score)
 
 @dataclass
 class ReadabilityWordNetConfig:
@@ -89,7 +83,7 @@ def _sample_df(df: pd.DataFrame, sample_size: Optional[int], rng: random.Random)
     return df.loc[sampled_idx]
 
 
-class ReadabilityWordNet(Metric):
+class readability_wordnet(Metric):
     """WordNet-only readability metric (no LLM / no HF dependencies)."""
 
     def assess(
@@ -98,6 +92,42 @@ class ReadabilityWordNet(Metric):
         reference: Union[pd.DataFrame, None] = None,
         metric_config: Union[str, None] = None,
     ) -> List[DQResult]:
+        """
+        Assess the readability of a tabular dataset using the WordNet-only readability metric.
+
+        This metric evaluates the readability of schema labels and textual content
+        without using LLM-based fallback or hybrid scoring. Depending on the
+        configuration, it can produce readability results for schema labels, table-level
+        text content, individual columns, and optionally individual cells.
+
+        Parameters
+        - data: pd.DataFrame
+                The DataFrame to assess. This is the primary dataset whose schema labels
+                and textual cell values are evaluated for readability.
+
+        - reference: Optional[pd.DataFrame]
+                Optional reference DataFrame. This metric does not use a reference
+                dataset and accepts this parameter only to conform to the framework-wide
+                metric interface.
+
+        - metric_config: Optional[str]
+                Optional path or JSON string containing readability-specific
+                configuration. The configuration is parsed via
+                `ReadabilityWordNetConfig.from_metric_config(...)` and controls
+                sampling, schema scoring, and output granularity.
+
+        Returns
+        - List[DQResult]
+                A list of readability assessment results. Depending on the configuration,
+                the method may return `DQResult` objects for schema-level, table-level,
+                column-level, and optional cell-level readability scores.
+
+        Notes
+        - The input DataFrame is not modified in-place.
+        - This implementation uses WordNet-based scoring only and does not initialize
+        or call any LLM backend.
+        - The exact output granularity depends on the metric configuration.
+        """
         cfg = ReadabilityWordNetConfig.from_metric_config(metric_config)
         rng = random.Random(cfg.random_seed)
 
@@ -156,7 +186,7 @@ class ReadabilityWordNet(Metric):
                         DQResult(
                             mesTime=pd.Timestamp.now(),
                             DQdimension="Readability",
-                            DQmetric="readability_wordnet",
+                            DQmetric="WordNet",
                             DQgranularity="cell",
                             DQvalue=z,
                             columnNames=[col],
@@ -194,7 +224,7 @@ class ReadabilityWordNet(Metric):
                     mesTime=now,
                     DQvalue=float(content_wordnet),
                     DQdimension="Readability",
-                    DQmetric="wordnet",
+                    DQmetric="WordNet",
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity="table",
@@ -212,7 +242,7 @@ class ReadabilityWordNet(Metric):
                     mesTime=now,
                     DQvalue=float(schema_wordnet),
                     DQdimension="Readability",
-                    DQmetric="wordnet",
+                    DQmetric="WordNet",
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity="schema",
@@ -232,7 +262,7 @@ class ReadabilityWordNet(Metric):
                         mesTime=now,
                         DQvalue=float(col_scores.get(col, 0.0)),
                         DQdimension="Readability",
-                        DQmetric="wordnet",
+                        DQmetric="WordNet",
                         columnNames=[col],
                         rowIndex=None,
                         DQgranularity="column",
@@ -243,8 +273,3 @@ class ReadabilityWordNet(Metric):
                 )
 
         return results
-
-
-class readability_wordnet(ReadabilityWordNet):
-    """snake_case alias for METIS registry."""
-    pass

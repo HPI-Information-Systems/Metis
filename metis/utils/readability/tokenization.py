@@ -1,3 +1,9 @@
+"""
+Utility functions for tokenizing schema names and entity texts for readability assessment.
+
+The `tokenize` module built into Python is not used below, as it is designed for tokenizing Python source code. Instead, this module requires a simple separation of dataset-specific identifiers and free-text values, such as Snake_Case, CamelCase, Kebab-Case, and plain-text cell contents.
+"""
+
 from __future__ import annotations
 
 import re
