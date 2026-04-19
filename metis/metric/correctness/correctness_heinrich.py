@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import StandardScaler
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import OrdinalEncoder
 
 from metis.metric.config import MetricConfig
@@ -33,7 +32,9 @@ class correctness_heinrich(Metric):
         :return: List of DQResult objects containing correctness results.
         """
         config = self.load_config(metric_config, correctness_heinrich_config)
-        reference_data = pd.read_csv(config.reference_file_path)
+        reference_data = pd.read_csv(
+            config.reference_file_path_per_dataset[data.columns[0]]
+        )
 
         if data.shape != reference_data.shape:
             raise ValueError(
@@ -41,8 +42,10 @@ class correctness_heinrich(Metric):
             )
 
         representativeness = None
-        if config.superset_file_path is not None:
-            superset_data = pd.read_csv(config.superset_file_path)
+        if config.superset_file_path_per_dataset is not None:
+            superset_data = pd.read_csv(
+                config.superset_file_path_per_dataset[data.columns[0]]
+            )
             representativeness = self.measure_representativeness(
                 reference_data, superset_data
             )
