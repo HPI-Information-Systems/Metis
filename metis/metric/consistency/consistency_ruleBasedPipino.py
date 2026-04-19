@@ -21,7 +21,7 @@ class consistency_ruleBasedPipino(Metric):
     ) -> List[DQResult]:
         """
         Assess the consistency of the data by checking the given rules for each value. The rules are defined in the metric configuration. There are attribute rules that apply to individual columns and tuple rules that apply to entire rows. The quality measurement is calculated as 1 - degree_of_violation / N, where degree_of_violation is the sum of the result of all applicable rules for a given value/row and N is the total number of rules.
-        Additionally, this metric assesses the certainty of the measurement based on the minimum quality in the assessed data. The certainty is calculated as sqrt((1 - dq_value) * (1 - min_quality)), where dq_value is the quality measurement for the specific value/row and min_quality is the lowest quality measurement observed in the dataset.
+        Additionally, this metric assesses the certainty of the measurement based on the minimum quality in the assessed data. The certainty is calculated as , where dq_value is the quality measurement for the specific value/row and min_quality is the lowest quality measurement observed in the dataset.
 
         :param data: DataFrame to assess.
         :param reference: Optional reference DataFrame (not used in this metric).
@@ -41,8 +41,9 @@ class consistency_ruleBasedPipino(Metric):
                 f"Metric configuration must be an instance of {consistency_ruleBasedPipino_config.__name__} but was of type {type(metric_config)}."
             )
 
-        attribute_rules = metric_config.attribute_rules or {}
+        column_rules_config = metric_config.column_rules or {}
         tuple_rules = metric_config.tuple_rules or []
+        skip_nulls = metric_config.skip_null_values
 
         results: List[DQResult] = []
 
@@ -54,7 +55,9 @@ class consistency_ruleBasedPipino(Metric):
             ]
             fulfilled_rules_mask = pd.DataFrame(
                 {
-                    f"rule_{i}": data.apply(rule, axis="columns")
+                    f"rule_{i}": data[
+                        data.notnull().any(axis=1) | (not skip_nulls)
+                    ].apply(rule, axis="columns")
                     for i, rule in enumerate(applicable_tuple_rules)
                 }
             )
@@ -76,18 +79,20 @@ class consistency_ruleBasedPipino(Metric):
         warn_unconfigured_columns(
             self.logger,
             set(data.columns),
-            set(attribute_rules.keys()),
+            set(column_rules_config.keys()),
             "consistency rules",
         )
 
         for col_name in data.columns:
-            column_rules = attribute_rules.get(col_name, [])
+            column_rules = column_rules_config.get(col_name, [])
             if not column_rules:
                 continue
 
             fulfilled_rules_mask = pd.DataFrame(
                 {
-                    f"rule_{i}": data[col_name].apply(rule)
+                    f"rule_{i}": data[col_name][
+                        data[col_name].notnull() | (not skip_nulls)
+                    ].apply(rule)
                     for i, rule in enumerate(column_rules)
                 }
             )

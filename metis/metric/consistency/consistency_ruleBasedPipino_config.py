@@ -1,6 +1,6 @@
 import inspect
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Literal, Tuple
 
 import pandas as pd
 
@@ -12,24 +12,25 @@ class consistency_ruleBasedPipino_config(MetricConfig):
     """
     Configuration class for the consistency_ruleBasedPipino metric.
 
-    Accepts a dictionary mapping attribute names to lists of functions that define consistency rules.
-    :param attribute_rules: Dictionary of functions that define consistency rules for each column given by the key
+    Accepts a dictionary mapping column names to lists of functions that define consistency rules.
+    :param column_rules: Dictionary of functions that define consistency rules for each column given by the key
     :param tuple_rules: List of functions that define consistency rules for entire tuples
+    :param skip_null_values: Whether to skip null values when assessing consistency. If True, null values will be ignored. For tuple rules, a tuple is skipped if all of the values in the tuple are null.
     """
 
-    attribute_rules: Dict[str, List[Callable[[Any], bool]]] | None = None
-
+    column_rules: Dict[str, List[Callable[[Any], bool]]] | None = None
     tuple_rules: List[Tuple[List[str], Callable[[pd.Series], bool]]] | None = None
+    skip_null_values: bool = False
 
     def to_json(self):
         return {
             "name": self.__class__.__name__,
-            "attribute_rules": (
+            "column_rules": (
                 {
                     column: [inspect.getsource(rule).strip() for rule in rules]
-                    for column, rules in self.attribute_rules.items()
+                    for column, rules in self.column_rules.items()
                 }
-                if self.attribute_rules
+                if self.column_rules
                 else {}
             ),
             "tuple_rules": (
@@ -40,4 +41,5 @@ class consistency_ruleBasedPipino_config(MetricConfig):
                 if self.tuple_rules
                 else []
             ),
+            "skip_null_values": self.skip_null_values,
         }
