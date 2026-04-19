@@ -1,7 +1,7 @@
 import argparse
 import json
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import pandas as pd
 
@@ -16,6 +16,7 @@ def precompute_value_embeddings(
     llm_base_url: str,
     llm_api_key: str,
     datasets_and_types: Tuple[str, str] | List[Tuple[str, str]],
+    cached_embeddings: Dict[str, Dict[str, List[float]]] | None = None,
 ):
     trunc = 512
     model = OpenAIEmbedding(
@@ -65,9 +66,18 @@ def precompute_value_embeddings(
 
         embeddings = {col: {} for col in text_columns}
         for col in unique_values:
-            outputs = model.embed(list(unique_values[col]), col)
+            values_to_embed = unique_values[col]
+            if cached_embeddings and col in cached_embeddings:
+                values_to_embed = values_to_embed.difference(cached_embeddings[col].keys())
+                values_from_cache = unique_values[col].intersection(cached_embeddings[col].keys())
+                embeddings[col].update(
+                    {val: cached_embeddings[col][val] for val in values_from_cache}
+                )
+
+            outputs = model.embed(list(values_to_embed), col)
             embeddings[col] = {
-                val: o[:trunc] for val, o in zip(unique_values[col], outputs)
+                val: o[:trunc]
+                for val, o in zip(values_to_embed, outputs)
             }
 
         with open(
