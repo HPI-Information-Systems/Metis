@@ -22,7 +22,6 @@ class timeliness_heinrich_column_config:
     ingestion_date_column: str
     to_datetime_kwargs: Dict | None = None
     simulated_assessment_date: str | None = None
-    simulated_timestamp_precision: DTPrecision | None = None
 
 
 @dataclass

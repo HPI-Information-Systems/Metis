@@ -21,22 +21,19 @@ class completeness_nullAndDMVRatio_config(MetricConfig):
 
     aggregation_axis: Literal["index", "columns", None] = None
     aggregate_all: bool = False
-    dismis_config_per_dataset: (
-        Dict[str, completeness_nullAndDMVRatio_config_dismis] | None
-    ) = None
+    dismis_config: completeness_nullAndDMVRatio_config_dismis | None = None
 
     @classmethod
     def from_dict(cls, config_dict: Dict):
-        dismis_config_per_dataset = config_dict.get("dismis_config_per_dataset")
-        if dismis_config_per_dataset is not None:
-            dismis_config_per_dataset = {
-                name: completeness_nullAndDMVRatio_config_dismis.from_dict(config)
-                for name, config in dismis_config_per_dataset.items()
-            }
+        dismis_config = config_dict.get("dismis_config")
+        if dismis_config is not None:
+            dismis_config = completeness_nullAndDMVRatio_config_dismis.from_dict(
+                dismis_config
+            )
         return cls(
             aggregation_axis=config_dict.get("aggregation_axis", None),
             aggregate_all=config_dict.get("aggregate_all", False),
-            dismis_config_per_dataset=dismis_config_per_dataset,
+            dismis_config=dismis_config,
         )
 
     def to_json(self):
@@ -45,12 +42,7 @@ class completeness_nullAndDMVRatio_config(MetricConfig):
             "aggregation_axis": self.aggregation_axis,
             "aggregate_all": self.aggregate_all,
             "dismis_config": (
-                {
-                    name: dataclasses.asdict(config)
-                    for name, config in self.dismis_config_per_dataset.items()
-                }
-                if self.dismis_config_per_dataset
-                else None
+                dataclasses.asdict(self.dismis_config) if self.dismis_config else None
             ),
         }
 

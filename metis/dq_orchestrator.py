@@ -8,7 +8,7 @@ import pandas as pd
 from metis.database import Database
 from metis.loader.csv_loader import CSVLoader
 from metis.metric import Metric
-from metis.metric.config import MetricConfig
+from metis.metric.config import DatasetDependentMetricConfig, MetricConfig
 from metis.profiling.data_profile_manager import DataProfileManager
 from metis.profiling.importers import get_importer
 from metis.utils.data_config import DataConfig
@@ -81,17 +81,26 @@ class DQOrchestrator:
                 raise ValueError(f"Metric {metric} is not registered.")
             metric_instance: Metric = metric_class()
             for df_name, df in self.dataframes.items():
+                metric_config_for_dataset = metric_config
+                if isinstance(metric_config, DatasetDependentMetricConfig):
+                    metric_config_for_dataset = metric_config.resolve_for_dataset(
+                        df_name
+                    )
+
                 # Set profiling context so cached functions know the active dataset.
                 if DataProfileManager.is_initialized():
                     DataProfileManager.get_instance().set_context(
                         dataset=self.data_paths[df_name], table=df_name
                     )
-                measure_runtime = self._should_measure_runtime(metric_config)
+
+                measure_runtime = self._should_measure_runtime(
+                    metric_config_for_dataset
+                )
                 if measure_runtime:
                     start = time.perf_counter()
                     incomplete_metric_results = metric_instance.assess(
                         data=df,
-                        metric_config=metric_config,
+                        metric_config=metric_config_for_dataset,
                     )
                     elapsed = time.perf_counter() - start
                     for result in incomplete_metric_results:
@@ -99,7 +108,7 @@ class DQOrchestrator:
                 else:
                     incomplete_metric_results = metric_instance.assess(
                         data=df,
-                        metric_config=metric_config,
+                        metric_config=metric_config_for_dataset,
                     )
                 for result in incomplete_metric_results:
                     result.tableName = df_name

@@ -66,13 +66,8 @@ class timeliness_heinrich(Metric):
             ages_in_days = (
                 (assessment_date - ingestion_dates).dt.total_seconds() / 60 / 60 / 24
             )
-            precision_of_dates = (
-                pd.Series(
-                    [col_config.simulated_timestamp_precision] * len(data),
-                    index=data.index,
-                )
-                if col_config.simulated_timestamp_precision
-                else data[ingestion_date_column].apply(determine_datetime_precision)
+            precision_of_dates = data[ingestion_date_column].apply(
+                determine_datetime_precision
             )
             age_and_precision = pd.DataFrame(
                 {"age": ages_in_days, "precision": precision_of_dates}

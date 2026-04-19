@@ -48,17 +48,12 @@ class consistency_ruleBasedPipino(Metric):
         results: List[DQResult] = []
 
         if tuple_rules:
-            applicable_tuple_rules = [
-                rule
-                for required_columns, rule in tuple_rules
-                if all(col in data.columns for col in required_columns)
-            ]
             fulfilled_rules_mask = pd.DataFrame(
                 {
                     f"rule_{i}": data[
                         data.notnull().any(axis=1) | (not skip_nulls)
                     ].apply(rule, axis="columns")
-                    for i, rule in enumerate(applicable_tuple_rules)
+                    for i, rule in enumerate(tuple_rules)
                 }
             )
 

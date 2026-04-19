@@ -44,16 +44,7 @@ class completeness_nullAndDMVRatio(Metric):
         )
         marked_cells[data.isna()] = IS_NULL_MARKER
 
-        dismis_config = next(
-            iter(
-                [
-                    config
-                    for name, config in (config.dismis_config_per_dataset or {}).items()
-                    if name in data.columns
-                ]
-            ),
-            None,
-        )
+        dismis_config = config.dismis_config
         metric_name_suffix = "_dismis" if dismis_config else "_fahes"
         if dismis_config is None:
             dmvs = run_fahes(data)

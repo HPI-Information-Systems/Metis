@@ -32,9 +32,7 @@ class correctness_heinrich(Metric):
         :return: List of DQResult objects containing correctness results.
         """
         config = self.load_config(metric_config, correctness_heinrich_config)
-        reference_data = pd.read_csv(
-            config.reference_file_path_per_dataset[data.columns[0]]
-        )
+        reference_data = pd.read_csv(config.reference_file_path)
 
         if data.shape != reference_data.shape:
             raise ValueError(
@@ -42,10 +40,8 @@ class correctness_heinrich(Metric):
             )
 
         representativeness = None
-        if config.superset_file_path_per_dataset is not None:
-            superset_data = pd.read_csv(
-                config.superset_file_path_per_dataset[data.columns[0]]
-            )
+        if config.superset_file_path is not None:
+            superset_data = pd.read_csv(config.superset_file_path)
             representativeness = self.measure_representativeness(
                 reference_data, superset_data
             )
