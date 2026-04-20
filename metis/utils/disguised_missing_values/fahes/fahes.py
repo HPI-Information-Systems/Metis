@@ -79,7 +79,7 @@ def run_fahes(data: Path | str | pd.DataFrame) -> pd.DataFrame | None:
             call_fahes(str(data_file_path.absolute()), results_dir)
             result_file = Path(results_dir) / ("DMV_" + data_file_path.name)
             if result_file.stat().st_size > 0:
-                return pd.read_csv(result_file)
+                return pd.read_csv(result_file, on_bad_lines="warn")
     finally:
         if tmp_file is not None:
             tmp_file.close()

@@ -76,7 +76,7 @@ class correctness_heinrich(Metric):
         return results
 
     def measure_correctness(self, value, *, reference_value, dtype) -> float:
-        if value == reference_value:
+        if value == reference_value or (pd.isna(value) and pd.isna(reference_value)):
             return 1
         if pd.isna(value) or pd.isna(reference_value):
             return 0
