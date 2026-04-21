@@ -1,28 +1,24 @@
-from typing import Dict, List
+from typing import List
 
-from sqlalchemy import Engine
 from sqlalchemy.orm import Session
+from tqdm import tqdm
 
-from metis.database_models import Base, register_models
+from metis.database import Database
+from metis.utils.numbers import format_count
 from metis.utils.result import DQResult
 from metis.writer.writer import DQResultWriter
 
 
 class DatabaseWriter(DQResultWriter):
-    def __init__(self, writer_config: Dict) -> None:
-        self.engine = self.create_engine(writer_config)
-
-        self.DQResultModel = register_models(writer_config.get("table_name", "dq_results"))
-        Base.metadata.create_all(self.engine)
-
-    def create_engine(self, writer_config: Dict) -> Engine:
-        raise NotImplementedError("Subclasses must implement the create_engine method.")
+    def __init__(self, db: Database) -> None:
+        self.engine = db.engine
+        self.DQResultModel = db.DQResultModel
 
     def write(self, results: List[DQResult]) -> None:
         with Session(self.engine) as session:
             db_entities = [
                 self.DQResultModel(
-                    mes_time=result.mesTime.to_pydatetime(),
+                    timestamp=result.timestamp.to_pydatetime(),
                     dq_dimension=result.DQdimension,
                     dq_metric=result.DQmetric,
                     dq_granularity=result.DQgranularity,
@@ -38,5 +34,11 @@ class DatabaseWriter(DQResultWriter):
                 )
                 for result in results
             ]
-            session.add_all(db_entities)
+            for batch in tqdm(
+                range(0, len(db_entities), 1000),
+                desc=f"Writing {format_count(len(db_entities))} DQ results to database",
+                unit="k results",
+            ):
+                session.add_all(db_entities[batch : batch + 1000])
+                session.flush()
             session.commit()

@@ -1,15 +1,23 @@
 import re
-import pandas as pd
 from typing import List, Union
-from metis.utils.result import DQResult
-from metis.metric.metric import Metric
 
 import nltk
+import pandas as pd
 from nltk.corpus import words as nltk_words
-nltk.download("words", quiet=True)
+
+from metis.metric.config import MetricConfig
+from metis.metric.metric import Metric
+from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
+from metis.utils.result import DQResult
+
 
 class validity_outOfVocabulary(Metric):
-    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, set, None] = None, metric_config: Union[str, None] = None) -> List[DQResult]:
+    def __init__(self) -> None:
+        super().__init__()
+        nltk.download("words", quiet=True)
+
+    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, set, None] = None, metric_config: Union[MetricConfig, str, None] = None) -> List[DQResult]:
         """
         General vocabulary check at token level.
         Any alphabetic token not in the standard vocab is OOV.
@@ -62,10 +70,10 @@ class validity_outOfVocabulary(Metric):
                 }
 
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
-                DQdimension="Validity",
-                DQmetric="OutOfVocabulary",
-                DQgranularity="column",
+                timestamp=pd.Timestamp.now(),
+                DQdimension=DQDimension.VALIDITY,
+                DQmetric=self.__class__.__name__,
+                DQgranularity=DQGranularity.COLUMN,
                 DQvalue=dq_value,
                 DQexplanation=annotations,
                 columnNames=[column],
