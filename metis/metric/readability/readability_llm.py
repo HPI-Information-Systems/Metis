@@ -1,116 +1,25 @@
-# metis/metric/readability/readability_llm.py
 from __future__ import annotations
 
-import json
-import os
 import random
 from collections import Counter
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 from metis.metric.metric import Metric
 from metis.utils.result import DQResult
+from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
+from metis.metric.readability.readability_llm_config import readability_llm_config
 
 from metis.utils.readability.tokenization import (split_identifier, split_text, compute_case_consistency_scores)
 from metis.utils.readability.llm_backend import HFTransformersBackend, LLMBackend
 from metis.utils.readability.scorers import (load_abbreviations, WordNetScorer, WordNetOnlyAdapter, HybridScorer, schema_label_score, content_cell_score)
 
-# ---------------- Config (moved here; former config.py) ----------------
-
-@dataclass
-class LLMTriggerConfig:
-    wordnet_unknown_only: bool = True
-    also_if_contains_digit_or_symbol: bool = True
-
-@dataclass
-class ReadabilityLLMConfig:
-    # Core
-    sample_size: Optional[int] = None
-    random_seed: int = 13
-    min_token_length: int = 2
-    abbr_csv: Optional[str] = None
-    ignore_numeric_columns: bool = True
-
-    compute_schema: bool = True
-    # cell output (optional)
-    output_cells: bool = False
-    output_columns: bool = True
-    output_table: bool = True
-
-    # HF LLM
-    use_llm_fallback: bool = True
-    hf_model_id: str = "Qwen/Qwen2.5-3B-Instruct"
-    hf_device: str = "auto"
-    hf_dtype: str = "auto"
-    hf_max_new_tokens: int = 512
-
-    # Mode
-    llm_mode: str = "fallback"  # Ziel-2 default
-
-    # Shared LLM params
-    llm_batch_size: int = 80
-    llm_trigger: LLMTriggerConfig = field(default_factory=LLMTriggerConfig)
-
-    @staticmethod
-    def from_metric_config(metric_config: Optional[str]) -> "ReadabilityLLMConfig":
-        cfg = ReadabilityLLMConfig()
-        if metric_config is None:
-            return cfg
-
-        metric_config = metric_config.strip()
-        if metric_config.startswith("{"):
-            data = json.loads(metric_config)
-        else:
-            if not os.path.exists(metric_config):
-                raise ValueError(f"metric_config is neither JSON nor an existing path: {metric_config}")
-            with open(metric_config, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-        if isinstance(data, dict) and ("common" in data or "wordnet" in data or "llm" in data):
-            common = data.get("common", {})
-            llm = data.get("llm", {})
-            if isinstance(common, dict) and isinstance(llm, dict):
-                merged = dict(common)
-                merged.update(llm)
-                data = merged
-
-        cfg.sample_size = data.get("sample_size", cfg.sample_size)
-        cfg.random_seed = int(data.get("random_seed", cfg.random_seed))
-        cfg.min_token_length = int(data.get("min_token_length", cfg.min_token_length))
-        cfg.abbr_csv = data.get("abbr_csv", cfg.abbr_csv)
-        cfg.ignore_numeric_columns = bool(data.get("ignore_numeric_columns", cfg.ignore_numeric_columns))
-        cfg.compute_schema = bool(data.get("compute_schema", cfg.compute_schema))
-        cfg.output_cells = bool(data.get("output_cells", cfg.output_cells))
-        cfg.output_columns = bool(data.get("output_columns", cfg.output_columns))
-        cfg.output_table = bool(data.get("output_table", cfg.output_table))
-
-        cfg.llm_mode = str(data.get("llm_mode", cfg.llm_mode)).strip().lower()
-        if cfg.llm_mode not in ("strict", "fallback"):
-            cfg.llm_mode = "fallback"
-
-        cfg.use_llm_fallback = bool(data.get("use_llm_fallback", cfg.use_llm_fallback))
-        cfg.hf_model_id = str(data.get("hf_model_id", cfg.hf_model_id))
-        cfg.hf_device = str(data.get("hf_device", cfg.hf_device))
-        cfg.hf_dtype = str(data.get("hf_dtype", cfg.hf_dtype))
-        cfg.hf_max_new_tokens = int(data.get("hf_max_new_tokens", cfg.hf_max_new_tokens))
-
-        cfg.llm_batch_size = int(data.get("llm_batch_size", cfg.llm_batch_size))
-
-        trig = data.get("llm_trigger", None)
-        if isinstance(trig, dict):
-            cfg.llm_trigger = LLMTriggerConfig(
-                wordnet_unknown_only=bool(trig.get("wordnet_unknown_only", cfg.llm_trigger.wordnet_unknown_only)),
-                also_if_contains_digit_or_symbol=bool(trig.get("also_if_contains_digit_or_symbol", cfg.llm_trigger.also_if_contains_digit_or_symbol)),
-            )
-        
-        return cfg
-
 # ---------------- Helpers ----------------
 
 _BACKEND_CACHE: Dict[tuple, LLMBackend] = {}
 
-def _build_backend(cfg: ReadabilityLLMConfig) -> Optional[LLMBackend]:
+def _build_backend(cfg: readability_llm_config) -> Optional[LLMBackend]:
     if not cfg.use_llm_fallback:
         return None
 
@@ -191,7 +100,12 @@ class readability_llm(Metric):
         numeric columns are ignored by configuration.
         - The exact output granularity depends on the metric configuration.
         """
-        cfg = ReadabilityLLMConfig.from_metric_config(metric_config)
+        if metric_config is None:
+            raise ValueError(
+                f"Metric configuration is required for metric {readability_llm_config.__name__} but None was provided."
+            )
+
+        cfg = self.load_config(metric_config, readability_llm_config)
         rng = random.Random(cfg.random_seed)
 
         text_cols = _select_text_columns(data, cfg.ignore_numeric_columns)
@@ -360,7 +274,6 @@ class readability_llm(Metric):
 
         llm_tokens_share_total = float(total_llm_tokens_used / total_unique_tokens_seen) if total_unique_tokens_seen else 0.0
 
-        now = pd.Timestamp.now()
         results: List[DQResult] = []
         if cfg.output_cells:
             results.extend(cell_results)
@@ -368,13 +281,13 @@ class readability_llm(Metric):
         if cfg.output_table:
             results.append(
                 DQResult(
-                    mesTime=now,
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=float(content_hybrid),
-                    DQdimension="Readability",
+                    DQdimension=DQDimension.READABILITY,
                     DQmetric="LLM",
                     columnNames=None,
                     rowIndex=None,
-                    DQgranularity="table",
+                    DQgranularity=DQGranularity.TABLE,
                     DQexplanation={
                         "content_readability": float(content_hybrid),
                         "content_readability_wordnet_only": float(content_wordnet),
@@ -393,19 +306,20 @@ class readability_llm(Metric):
                     },
                     dataset=None,
                     tableName=None,
+                    configJson=cfg.to_json(),
                 )
             )
 
         if cfg.compute_schema:
             results.append(
                 DQResult(
-                    mesTime=now,
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=float(schema_hybrid),
-                    DQdimension="Readability",
+                    DQdimension=DQDimension.READABILITY,
                     DQmetric="LLM",
                     columnNames=None,
                     rowIndex=None,
-                    DQgranularity="schema",
+                    DQgranularity=DQGranularity.SCHEMA,
                     DQexplanation={
                         "schema_readability": float(schema_hybrid),
                         "schema_readability_wordnet_only": float(schema_wordnet),
@@ -415,6 +329,7 @@ class readability_llm(Metric):
                     },
                     dataset=None,
                     tableName=None,
+                    configJson=cfg.to_json(),
                 )
             )
 
@@ -422,16 +337,17 @@ class readability_llm(Metric):
             for col in text_cols:
                 results.append(
                     DQResult(
-                        mesTime=now,
+                        timestamp=pd.Timestamp.now(),
                         DQvalue=float(col_combined.get(col, 0.0)),
-                        DQdimension="Readability",
+                        DQdimension=DQDimension.READABILITY,
                         DQmetric="LLM",
                         columnNames=[col],
                         rowIndex=None,
-                        DQgranularity="column",
+                        DQgranularity=DQGranularity.COLUMN,
                         DQexplanation=col_ann.get(col, {}),
                         dataset=None,
                         tableName=None,
+                        configJson=cfg.to_json(),
                     )
                 )
         return results

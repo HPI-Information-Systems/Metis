@@ -28,6 +28,9 @@ class readability_base_config(MetricConfig):
     """
 
     sample_size: Optional[int] = field(default=None)
+    output_cells: bool = field(default=False)
+    output_columns: bool = field(default=True)
+    output_table: bool = field(default=True)
     random_seed: int = field(default=13)
     min_token_length: int = field(default=2)
     abbr_csv: Optional[str] = field(default=None)
@@ -38,6 +41,15 @@ class readability_base_config(MetricConfig):
         if self.sample_size is not None:
             if not isinstance(self.sample_size, int) or self.sample_size < 1:
                 raise ValueError(f"sample_size must be a positive integer or None, got {self.sample_size!r}")
+        
+        if not isinstance(self.output_cells, bool):
+            raise ValueError(f"output_cells must be boolean, got {type(self.output_cells)}")
+
+        if not isinstance(self.output_columns, bool):
+            raise ValueError(f"output_columns must be boolean, got {type(self.output_columns)}")
+
+        if not isinstance(self.output_table, bool):
+            raise ValueError(f"output_table must be boolean, got {type(self.output_table)}")
 
         if not isinstance(self.random_seed, int):
             raise ValueError(f"random_seed must be an integer, got {type(self.random_seed)}")

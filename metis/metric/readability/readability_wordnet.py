@@ -1,68 +1,17 @@
-# metis/metric/readability/readability_wordnet.py
 from __future__ import annotations
 
-import json
-import os
 import random
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 from metis.metric.metric import Metric
 from metis.utils.result import DQResult
+from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
+from metis.metric.readability.readability_wordnet_config import readability_wordnet_config
 
 from metis.utils.readability.tokenization import (split_identifier, split_text, compute_case_consistency_scores)
 from metis.utils.readability.scorers import (load_abbreviations, WordNetScorer, WordNetOnlyAdapter, schema_label_score, content_cell_score)
-
-@dataclass
-class ReadabilityWordNetConfig:
-    # Core
-    sample_size: Optional[int] = None
-    random_seed: int = 13
-    min_token_length: int = 2
-    abbr_csv: Optional[str] = None
-    ignore_numeric_columns: bool = True
-
-    # Schema (separate)
-    compute_schema: bool = True
-    # Output toggles
-    output_cells: bool = False
-    output_columns: bool = True
-    output_table: bool = True
-
-    @staticmethod
-    def from_metric_config(metric_config: Optional[str]) -> "ReadabilityWordNetConfig":
-        cfg = ReadabilityWordNetConfig()
-        if metric_config is None:
-            return cfg
-
-        metric_config = metric_config.strip()
-        if metric_config.startswith("{"):
-            data = json.loads(metric_config)
-        else:
-            if not os.path.exists(metric_config):
-                raise ValueError(f"metric_config is neither JSON nor an existing path: {metric_config}")
-            with open(metric_config, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        if isinstance(data, dict) and ("common" in data or "wordnet" in data or "llm" in data):
-            common = data.get("common", {})
-            wordnet = data.get("wordnet", {})
-            if isinstance(common, dict) and isinstance(wordnet, dict):
-                merged = dict(common)
-                merged.update(wordnet)
-                data = merged
-
-        cfg.sample_size = data.get("sample_size", cfg.sample_size)
-        cfg.random_seed = int(data.get("random_seed", cfg.random_seed))
-        cfg.min_token_length = int(data.get("min_token_length", cfg.min_token_length))
-        cfg.abbr_csv = data.get("abbr_csv", cfg.abbr_csv)
-        cfg.ignore_numeric_columns = bool(data.get("ignore_numeric_columns", cfg.ignore_numeric_columns))
-        cfg.compute_schema = bool(data.get("compute_schema", cfg.compute_schema))
-        cfg.output_cells = bool(data.get("output_cells", cfg.output_cells))
-        cfg.output_columns = bool(data.get("output_columns", cfg.output_columns))
-        cfg.output_table = bool(data.get("output_table", cfg.output_table))
-        return cfg
-
 
 def _select_text_columns(df: pd.DataFrame, ignore_numeric: bool) -> List[str]:
     if not ignore_numeric:
@@ -128,7 +77,12 @@ class readability_wordnet(Metric):
         or call any LLM backend.
         - The exact output granularity depends on the metric configuration.
         """
-        cfg = ReadabilityWordNetConfig.from_metric_config(metric_config)
+        if metric_config is None:
+            raise ValueError(
+                f"Metric configuration is required for metric {readability_wordnet_config.__name__} but None was provided."
+            )
+
+        cfg = self.load_config(metric_config, readability_wordnet_config)
         rng = random.Random(cfg.random_seed)
 
         text_cols = _select_text_columns(data, cfg.ignore_numeric_columns)
@@ -185,7 +139,7 @@ class readability_wordnet(Metric):
                     cell_results.append(
                         DQResult(
                             mesTime=pd.Timestamp.now(),
-                            DQdimension="Readability",
+                            DQdimension=DQDimension.READABILITY,
                             DQmetric="WordNet",
                             DQgranularity="cell",
                             DQvalue=z,
@@ -213,7 +167,6 @@ class readability_wordnet(Metric):
 
         content_wordnet = float(sum(col_scores.values()) / len(col_scores)) if col_scores else 0.0
 
-        now = pd.Timestamp.now()
         results: List[DQResult] = []
         if cfg.output_cells:
             results.extend(all_cell_results)
@@ -221,37 +174,39 @@ class readability_wordnet(Metric):
         if cfg.output_table:
             results.append(
                 DQResult(
-                    mesTime=now,
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=float(content_wordnet),
-                    DQdimension="Readability",
+                    DQdimension=DQDimension.READABILITY,
                     DQmetric="WordNet",
                     columnNames=None,
                     rowIndex=None,
-                    DQgranularity="table",
+                    DQgranularity=DQGranularity.TABLE,
                     DQexplanation={
                         "content_readability_wordnet_only": float(content_wordnet),
                         "use_llm_fallback": False},
                     dataset=None,
-                    tableName=None
+                    tableName=None,
+                    configJson=cfg.to_json(),
                 )
             )
 
         if cfg.compute_schema:
             results.append(
                 DQResult(
-                    mesTime=now,
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=float(schema_wordnet),
-                    DQdimension="Readability",
+                    DQdimension=DQDimension.READABILITY,
                     DQmetric="WordNet",
                     columnNames=None,
                     rowIndex=None,
-                    DQgranularity="schema",
+                    DQgranularity=DQGranularity.SCHEMA,
                     DQexplanation={
                         "schema_readability_wordnet_only": float(schema_wordnet),
                         "use_llm_fallback": False,
                     },
                     dataset=None,
                     tableName=None,
+                    configJson=cfg.to_json(),
                 )
             )
 
@@ -259,16 +214,17 @@ class readability_wordnet(Metric):
             for col in text_cols:
                 results.append(
                     DQResult(
-                        mesTime=now,
+                        timestamp=pd.Timestamp.now(),
                         DQvalue=float(col_scores.get(col, 0.0)),
-                        DQdimension="Readability",
+                        DQdimension=DQDimension.READABILITY,
                         DQmetric="WordNet",
                         columnNames=[col],
                         rowIndex=None,
-                        DQgranularity="column",
+                        DQgranularity=DQGranularity.COLUMN,
                         DQexplanation=col_ann.get(col, {}),
                         dataset=None,
                         tableName=None,
+                        configJson=cfg.to_json(),
                     )
                 )
 

@@ -10,6 +10,7 @@ from semhash import SemHash
 from metis.metric.metric import Metric
 from metis.metric.minimality.minimality_clustering_config import minimality_clustering_config
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 from metis.utils.similarity_measures.row import row_similarity
@@ -54,10 +55,10 @@ class minimality_clustering(Metric):
             minimality = (num_clusters - 1) / (n_rows - 1)
 
         result = DQResult(
-            mesTime=pd.Timestamp.now(),
+            timestamp=pd.Timestamp.now(),
             DQdimension=DQDimension.MINIMALITY,
             DQmetric="Clustering",
-            DQgranularity="table",
+            DQgranularity=DQGranularity.TABLE,
             DQvalue=float(minimality),
             DQexplanation={
                 "total_rows": n_rows,
@@ -67,7 +68,7 @@ class minimality_clustering(Metric):
             },
             columnNames=None,
             rowIndex=None,
-            configJson=metric_config,
+            configJson=config.to_json(),
         )
 
         return [result]

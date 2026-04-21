@@ -8,3 +8,4 @@ class DQGranularity(StrEnum):
     ROW = "row"
     COLUMN = "column"
     TABLE = "table"
+    SCHEMA = "schema"

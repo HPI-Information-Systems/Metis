@@ -1,3 +1,5 @@
+import pandas as pd
+
 def timestamp_similarity(a: pd.Timestamp, b: pd.Timestamp) -> float:
     """Returns similarity based on relative difference in seconds."""
     delta = abs((a - b).total_seconds())
