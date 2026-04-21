@@ -7,9 +7,9 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-from metis.dismis.detection.detection import DETECTORS_LITERAL, run_detection_algorithms
 from tqdm import tqdm
 
+from metis.dismis.detection.detection import DETECTORS_LITERAL, run_detection_algorithms
 from metis.dismis.utils.logging import dismis_logger
 from metis.dismis.utils.pathutils import require_exists
 from metis.dismis.utils.types import COLUMN_TYPES
@@ -139,6 +139,7 @@ def run_dismis_detection(
     value_embeddings_path: Path | str,
     example_dmvs_path: Path | str,
     example_embeddings_path: Path | str,
+    results_path: Path | str | None = None,
     embedding_dim=128,
 ):
     trained_models = load_trained_models(model_path)
@@ -230,5 +231,21 @@ def run_dismis_detection(
         detection_results, column_types, trained_models
     )
     time_measurements["prediction"] = time.time() - prediction_starttime
+
+    # Write results to output directory for later inspection
+    if results_path is not None:
+        results_path = Path(results_path)
+        results_path.mkdir(parents=True, exist_ok=True)
+        scores.to_csv(results_path / "dismis_scores.csv", index=False)
+        predictions.to_csv(results_path / "dismis_predictions.csv", index=False)
+        for detector_name, (df_score, df_predict) in detection_results.items():
+            detector_dir = results_path / detector_name
+            detector_dir.mkdir(parents=True, exist_ok=True)
+            df_score.to_csv(detector_dir / "scores.csv", index=False)
+            df_predict.to_csv(detector_dir / "predictions.csv", index=False)
+        with (results_path / "timings.json").open("w") as f:
+            json.dump(time_measurements, f, indent=4)
+        with (results_path / "detectors_timings.json").open("w") as f:
+            json.dump(detectors_time_measurements, f, indent=4)
 
     return (scores, predictions)

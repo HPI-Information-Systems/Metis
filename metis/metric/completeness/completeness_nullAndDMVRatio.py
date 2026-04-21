@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Literal
 
 import pandas as pd
@@ -47,7 +48,14 @@ class completeness_nullAndDMVRatio(Metric):
         dismis_config = config.dismis_config
         metric_name_suffix = "_dismis" if dismis_config else "_fahes"
         if dismis_config is None:
-            dmvs = run_fahes(data)
+            dmvs = run_fahes(
+                data,
+                results_path=(
+                    Path(config.explanatory_results_path) / "fahes"
+                    if config.explanatory_results_path
+                    else None
+                ),
+            )
             self.logger.info(f"Detected DMVs:\n{dmvs}")
             if dmvs is not None:
                 for _, dmv_row in dmvs.iterrows():
@@ -65,9 +73,14 @@ class completeness_nullAndDMVRatio(Metric):
                 example_embeddings_path=dismis_config.example_embeddings_path,
                 embedding_dim=dismis_config.embedding_dim,
                 model_path=dismis_config.model_path,
+                results_path=(
+                    Path(config.explanatory_results_path) / "dismis"
+                    if config.explanatory_results_path
+                    else None
+                ),
             )
             marked_cells[predictions == 1] = IS_DMV_MARKER
-            certainty = self.dismis_certainty(scores)
+            certainty = self.dismis_certainty(marked_cells, scores)
 
         completeness = (marked_cells == IS_VALID_MARKER).astype(int)
 
@@ -108,8 +121,10 @@ class completeness_nullAndDMVRatio(Metric):
             .replace(IS_DMV_MARKER, FAHES_PRECISION)
         )
 
-    def dismis_certainty(self, scores: pd.DataFrame):
-        return 1 - scores
+    def dismis_certainty(self, marks: pd.DataFrame, scores: pd.DataFrame):
+        certainty = 1 - (marks - scores).abs()
+        certainty[marks == IS_NULL_MARKER] = 1
+        return certainty
 
     def create_aggregated_results(
         self,
