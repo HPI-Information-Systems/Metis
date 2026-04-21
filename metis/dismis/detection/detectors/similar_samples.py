@@ -549,7 +549,9 @@ class MultiSimilarSamplesDetector(DMVDetector):
         corr = None
         if self.include_correlations and len(df_detect.columns) <= 500:
             corr = df_detect.corr().abs()
-            np.fill_diagonal(corr.values, 0)
+            values = corr.values
+            values.flags.writeable = True
+            np.fill_diagonal(values, 0)
         preprocessing_time = time.time() - preprocessing_starttime
 
         # Initialize result containers for each configuration
@@ -573,7 +575,7 @@ class MultiSimilarSamplesDetector(DMVDetector):
             encoded_target_columns = [
                 col
                 for col in df_detect.columns
-                if target_column == "_".join(col.split("_")[:-1])
+                if col.startswith(target_column + "_")
             ]
             idx = dataset.columns.tolist().index(target_column)
 

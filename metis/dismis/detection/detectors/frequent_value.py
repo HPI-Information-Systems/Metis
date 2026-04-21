@@ -129,8 +129,6 @@ class FrequentValuesDetector(DMVDetector):
             target_columns = dataset.columns.tolist()
 
         for target_column in target_columns:
-            print("Processing column:", target_column)
-            # print(df_detect[target_column])
             # Skip non-numeric columns
             if column_types[target_column] not in self.target_types:
                 continue
@@ -148,7 +146,6 @@ class FrequentValuesDetector(DMVDetector):
             else:
                 continue
 
-            # print(df_detect[target_column])
             target = df_detect[target_column].dropna()
 
             target_idx = df_detect[target_column].dropna().index
@@ -248,8 +245,6 @@ class FrequentValuesDetector2(DMVDetector):
             target_columns = dataset.columns.tolist()
 
         for target_column in target_columns:
-            print("Processing column:", target_column)
-            # print(df_detect[target_column])
             # Skip non-numeric columns
             if column_types[target_column] not in self.target_types:
                 continue
@@ -267,7 +262,6 @@ class FrequentValuesDetector2(DMVDetector):
             else:
                 continue
 
-            # print(df_detect[target_column])
             target = df_detect[target_column].dropna()
 
             target_idx = df_detect[target_column].dropna().index

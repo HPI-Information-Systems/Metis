@@ -81,7 +81,7 @@ def encode_dataset(
             if normalize:
                 encoded = encoded * (1 / (2**0.5))
             ohe_features = pd.DataFrame(
-                encoded.astype(ohe_dtype), columns=feature_names
+                encoded.toarray().astype(ohe_dtype), columns=feature_names
             )
             df_detect = pd.concat(
                 [df_detect.drop(columns=[column]), ohe_features], axis=1

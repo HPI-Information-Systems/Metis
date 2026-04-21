@@ -261,7 +261,6 @@ class DistributionFitDetector(DMVDetector):
             target_idx = df_detect[target_column].dropna().index
             target_idx = np.array(list(range(len(values))))[np.isnan(values) == False]
             values = values[np.isnan(values) == False]
-            # print(target_idx)
             times["preprocessing"] += time.time() - preprocessing_starttime
 
             # --- Fit distribution ---
@@ -279,7 +278,6 @@ class DistributionFitDetector(DMVDetector):
 
             # --- Scoring ---
             scoring_start = time.time()
-            # print(pdf_values)
 
             # Convert PDF to outlier score using sigmoid on negative log-likelihood
             # Maps unbounded scores to [0,1] with smooth transition

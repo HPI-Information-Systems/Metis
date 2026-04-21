@@ -267,7 +267,6 @@ class BucketKNN(DMVDetector):
                 continue
 
             target = processed_data.dropna()
-            print(target.to_list())
             if len(target) < self.k + 1:
                 continue  # not enough data
 

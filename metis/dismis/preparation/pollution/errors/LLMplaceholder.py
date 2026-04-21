@@ -12,6 +12,13 @@ from .error import DMV
 logger = logging.getLogger("metis").getChild(__name__)
 
 
+def jsonify(value):
+    if isinstance(value, list) or isinstance(value, dict):
+        return json.dumps(value)
+    else:
+        return value
+
+
 class LLMPlaceholderDMV2(DMV):
     prompt = """Your task is to act as a data quality analyst to find Disguised Missing Values (DMVs).
 
@@ -140,8 +147,8 @@ Column name: "{column_name}"
                     invalid = analysis_json.get("Placeholders", [])
 
                     # Store the judged values
-                    valid_values[col].update([val for val in valid if val])
-                    invalid_values[col].update([val for val in invalid if val])
+                    valid_values[col].update([jsonify(val) for val in valid if val])
+                    invalid_values[col].update([jsonify(val) for val in invalid if val])
 
                     # Second JSON: Placeholder values with Generic and Context-Specific
                     placeholder_json = json.loads(json_matches[1])
@@ -182,7 +189,7 @@ Column name: "{column_name}"
                                 # Extract quoted strings from the array
                                 values = re.findall(r'"([^"]*)"', array_str)
                                 col_placeholders[col].update(
-                                    [val for val in values if val]
+                                    [jsonify(val) for val in values if val]
                                 )
 
         return (
