@@ -1,0 +1,24 @@
+{
+    "loader": "CSV",
+    "name": "2MASS",
+    "file_name": "duplicate_detection/2MASS.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "ra",
+        "decl",
+        "jdate",
+        "j_m",
+        "j_msigcom",
+        "h_m",
+        "h_msigcom",
+        "k_m",
+        "k_msigcom",
+        "instance_id"
+    ],
+    "parse_dates": false,
+    "decimal": ".",
+    "thousands": null
+}

@@ -6,11 +6,17 @@ import pandas as pd
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
 class consistency_countFDViolations(Metric):
-    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, None] = None, metric_config: Union[MetricConfig, str, None] = None) -> List[DQResult]:
+    def assess(
+        self,
+        data: pd.DataFrame,
+        reference: Union[pd.DataFrame, None] = None,
+        metric_config: Union[MetricConfig, str, None] = None,
+    ) -> List[DQResult]:
         """
         Assess the consistency of a dataset by checking the compliance of a functional dependency specified in the metric_config.
 
@@ -51,18 +57,18 @@ class consistency_countFDViolations(Metric):
                 # for the same determinant (FD violation)
                 violations = grouped[grouped > 1].index.tolist()
 
-            consistency = 1 - (len(violations) / len(data[determinant]))
+                consistency = 1 - (len(violations) / len(data[determinant]))
 
-            result = DQResult(
-                mesTime=pd.Timestamp.now(),
-                DQdimension=DQDimension.CONSISTENCY,
-                DQmetric="CountFDViolations",
-                DQgranularity="table",
-                DQvalue=consistency,
-                DQexplanation={f"{determinant}:{dependent}": violations},  # FD
-                columnNames=[determinant],
-                configJson=metric_conf
-            )
-            results.append(result)
+                result = DQResult(
+                    timestamp=pd.Timestamp.now(),
+                    DQdimension=DQDimension.CONSISTENCY,
+                    DQmetric=self.__class__.__name__,
+                    DQgranularity=DQGranularity.TABLE,
+                    DQvalue=consistency,
+                    DQexplanation={f"{determinant}:{dependent}": violations},  # FD
+                    columnNames=[determinant],
+                    configJson=metric_conf,
+                )
+                results.append(result)
 
         return results

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 
 import pandas as pd
 
@@ -8,6 +8,7 @@ from metis.metric.completeness.completeness_nullRatio_config import (
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
@@ -33,65 +34,89 @@ class completeness_nullRatio(Metric):
 
         na_mask = data.isna()
 
-        def counts(null_mask: pd.Series):
-            return null_mask.sum(), len(null_mask)
+        completeness = (~na_mask).astype(int)
+        null_count = na_mask.astype(int)
 
-        def not_null_ratio(null_mask: pd.Series):
-            null_count, total_count = counts(null_mask)
-            return (total_count - null_count) / total_count
+        if config.aggregation_axis is not None:
+            mean_completeness = completeness.mean(axis=config.aggregation_axis)
+            mean_null_count = null_count.sum(axis=config.aggregation_axis)
 
-        def null_count(null_mask: pd.Series):
-            null_count, _ = counts(null_mask)
-            return null_count
+            if config.aggregate_all:
+                table_completeness = mean_completeness.mean()
+                table_null_count = mean_null_count.sum()
 
-        not_null_ratios = na_mask.agg(
-            [not_null_ratio, null_count],
-            axis=config.aggregation_axis,
-        )
+                return [
+                    DQResult(
+                        timestamp=pd.Timestamp.now(),
+                        DQvalue=table_completeness,
+                        DQdimension=DQDimension.COMPLETENESS,
+                        DQmetric=self.__class__.__name__,
+                        columnNames=data.columns.tolist(),
+                        DQgranularity=DQGranularity.TABLE,
+                        DQexplanation={
+                            "null_count": float(table_null_count),
+                        },
+                    )
+                ]
 
-        if config.aggregation_axis == "index":
-            not_null_ratios = not_null_ratios.T
+            return self.create_aggregated_results(
+                mean_completeness,
+                mean_null_count,
+                config.aggregation_axis,
+                data.columns.tolist(),
+            )
 
-        if config.aggregate_all:
-            table_completeness = not_null_ratios["not_null_ratio"].mean()
+        return self.create_flat_results(completeness, null_count)
+
+    def create_aggregated_results(
+        self,
+        mean_completeness: pd.Series,
+        mean_null_count: pd.Series,
+        aggregation_axis: Literal["index", "columns"],
+        columns: List[str],
+    ) -> List[DQResult]:
+        results = []
+        for (index, completeness), null_count in zip(
+            mean_completeness.items(), mean_null_count.values
+        ):
+            row_index = int(str(index)) if aggregation_axis == "columns" else None
+            col_names = columns if aggregation_axis == "columns" else [str(index)]
+
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
-                DQvalue=table_completeness,
-                DQdimension=DQDimension.COMPLETENESS,
-                DQmetric=self.__class__.__name__,
-                columnNames=data.columns.tolist(),
-                DQgranularity="table",
-                DQexplanation={
-                    "null_count": not_null_ratios["null_count"].sum(),
-                }
-            )
-            results.append(result)
-            return results
-
-        for index, row in not_null_ratios.iterrows():
-            row_index = (
-                int(str(index)) if config.aggregation_axis == "columns" else None
-            )
-            col_names = (
-                data.columns.tolist()
-                if config.aggregation_axis == "columns"
-                else [str(index)]
-            )
-
-            result = DQResult(
-                mesTime=pd.Timestamp.now(),
-                DQvalue=row["not_null_ratio"],
+                timestamp=pd.Timestamp.now(),
+                DQvalue=completeness,
                 DQdimension=DQDimension.COMPLETENESS,
                 DQmetric=self.__class__.__name__,
                 columnNames=col_names,
                 rowIndex=row_index,
+                DQexplanation={"null_count": float(null_count)},
                 DQgranularity=(
-                    "row" if config.aggregation_axis == "columns" else "column"
+                    DQGranularity.ROW
+                    if aggregation_axis == "columns"
+                    else DQGranularity.COLUMN
                 ),
-                DQexplanation={
-                    "null_count": row["null_count"],
-                }
             )
             results.append(result)
 
+        return results
+
+    def create_flat_results(
+        self, completeness: pd.DataFrame, null_count: pd.DataFrame
+    ) -> List[DQResult]:
+        results = []
+        for col in completeness.columns:
+            for row_index, (completeness_value, null_count_value) in enumerate(
+                zip(completeness[col].values, null_count[col].values)
+            ):
+                result = DQResult(
+                    timestamp=pd.Timestamp.now(),
+                    DQvalue=float(completeness_value),
+                    DQdimension=DQDimension.COMPLETENESS,
+                    DQmetric=self.__class__.__name__,
+                    columnNames=[col],
+                    rowIndex=row_index,
+                    DQexplanation={"null_count": float(null_count_value)},
+                    DQgranularity=DQGranularity.CELL,
+                )
+                results.append(result)
         return results

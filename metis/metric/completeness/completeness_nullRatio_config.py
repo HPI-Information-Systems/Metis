@@ -3,6 +3,7 @@ from typing import Literal
 
 from metis.metric.config import MetricConfig
 
+VALID_AGGREGATION_AXES = ["index", "columns", None]
 
 @dataclass
 class completeness_nullRatio_config(MetricConfig):
@@ -13,7 +14,7 @@ class completeness_nullRatio_config(MetricConfig):
     :param aggregate_all: Whether to aggregate all completeness results into a single value for the whole input data.
     """
 
-    aggregation_axis: Literal["index", "columns"] = "columns"
+    aggregation_axis: Literal["index", "columns", None] = None
     aggregate_all: bool = False
 
     def to_json(self):
@@ -24,9 +25,9 @@ class completeness_nullRatio_config(MetricConfig):
         }
 
     def validate(self):
-        if self.aggregation_axis not in ["index", "columns"]:
+        if self.aggregation_axis not in VALID_AGGREGATION_AXES:
             raise ValueError(
-                f"aggregation_axis must be either 'index' or 'columns' but was {self.aggregation_axis}"
+                f"aggregation_axis must be one of {VALID_AGGREGATION_AXES} but was {self.aggregation_axis}"
             )
         if not isinstance(self.aggregate_all, bool):
             raise ValueError(

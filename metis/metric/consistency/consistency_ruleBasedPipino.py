@@ -8,6 +8,7 @@ from metis.metric.consistency.consistency_ruleBasedPipino_config import (
 )
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
@@ -54,16 +55,16 @@ class consistency_ruleBasedPipino(Metric):
                 }
             )
 
-            dq_measurements = fulfilled_rules_mask.sum(axis=1) / len(tuple_rules)
+            dq_measurements = fulfilled_rules_mask.mean(axis=1)
             certainties = self.certainties(fulfilled_rules_mask)
-            for (row_index, dq_value), certainty in zip(
-                dq_measurements.items(), certainties.values
+            for row_index, (dq_value, certainty) in enumerate(
+                zip(dq_measurements.values, certainties.values)
             ):
                 results.append(
                     self.create_result(
                         dq_value,
-                        None,
-                        int(str(row_index)),
+                        data.columns.tolist(),
+                        row_index,
                         float(certainty),
                     )
                 )
@@ -82,22 +83,22 @@ class consistency_ruleBasedPipino(Metric):
 
             fulfilled_rules_mask = pd.DataFrame(
                 {
-                    f"rule_{i}": data[col_name].dropna().apply(rule)
+                    f"rule_{i}": data[col_name].apply(rule)
                     for i, rule in enumerate(column_rules)
                 }
             )
 
-            dq_measurements = fulfilled_rules_mask.sum(axis=1) / len(column_rules)
+            dq_measurements = fulfilled_rules_mask.mean(axis=1)
             certainties = self.certainties(fulfilled_rules_mask)
 
-            for (row_index, dq_value), certainty in zip(
-                dq_measurements.items(), certainties.values
+            for row_index, (dq_value, certainty) in enumerate(
+                zip(dq_measurements.values, certainties.values)
             ):
                 results.append(
                     self.create_result(
                         dq_value,
-                        col_name,
-                        int(str(row_index)),
+                        [col_name],
+                        row_index,
                         float(certainty),
                     )
                 )
@@ -111,17 +112,23 @@ class consistency_ruleBasedPipino(Metric):
         )
 
     def create_result(
-        self, dq_value: float, col_name: str | None, row_index: int, certainty: float
+        self,
+        dq_value: float,
+        col_names: List[str],
+        row_index: int,
+        certainty: float,
     ) -> DQResult:
         return DQResult(
-            mesTime=pd.Timestamp.now(),
+            timestamp=pd.Timestamp.now(),
             DQvalue=dq_value,
             DQdimension=DQDimension.CONSISTENCY,
             DQmetric=self.__class__.__name__,
-            columnNames=[col_name] if col_name else [],
+            columnNames=col_names,
             rowIndex=row_index,
             DQexplanation={
                 "certainty": certainty,
             },
-            DQgranularity="cell" if col_name else "row",
+            DQgranularity=(
+                DQGranularity.CELL if len(col_names) == 1 else DQGranularity.ROW
+            ),
         )

@@ -9,6 +9,7 @@ from metis.metric.consistency.consistency_ruleBasedHinrichs_config import (
 )
 from metis.metric.metric import Metric
 from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
@@ -54,19 +55,19 @@ class consistency_ruleBasedHinrichs(Metric):
 
             dq_measurements = 1 / (1 + degree_of_violation)
             min_quality = dq_measurements.min()
-            for row_index, dq_value in dq_measurements.items():
+            for row_index, dq_value in enumerate(dq_measurements.values):
                 results.append(
                     DQResult(
-                        mesTime=pd.Timestamp.now(),
+                        timestamp=pd.Timestamp.now(),
                         DQvalue=dq_value,
                         DQdimension=DQDimension.CONSISTENCY,
                         DQmetric=self.__class__.__name__,
-                        columnNames=[],
-                        rowIndex=int(str(row_index)),
+                        columnNames=data.columns.tolist(),
+                        rowIndex=row_index,
                         DQexplanation={
                             "certainty": self.certainty(dq_value, min_quality)
                         },
-                        DQgranularity="row",
+                        DQgranularity=DQGranularity.ROW,
                     )
                 )
 
@@ -89,19 +90,19 @@ class consistency_ruleBasedHinrichs(Metric):
             dq_measurements = 1 / (1 + degree_of_violation)
             min_quality = dq_measurements.min()
 
-            for row_index, dq_value in dq_measurements.items():
+            for row_index, dq_value in enumerate(dq_measurements.values):
                 results.append(
                     DQResult(
-                        mesTime=pd.Timestamp.now(),
+                        timestamp=pd.Timestamp.now(),
                         DQvalue=dq_value,
                         DQdimension=DQDimension.CONSISTENCY,
                         DQmetric=self.__class__.__name__,
                         columnNames=[col_name],
-                        rowIndex=int(str(row_index)),
+                        rowIndex=row_index,
                         DQexplanation={
                             "certainty": self.certainty(dq_value, min_quality)
                         },
-                        DQgranularity="cell",
+                        DQgranularity=DQGranularity.CELL,
                     )
                 )
 

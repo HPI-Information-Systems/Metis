@@ -1,13 +1,21 @@
-import pandas as pd
 from typing import List, Union
 
+import pandas as pd
+
 from metis.metric.config import MetricConfig
-from metis.utils.dq_dimension import DQDimension
-from metis.utils.result import DQResult
 from metis.metric.metric import Metric
+from metis.utils.dq_dimension import DQDimension
+from metis.utils.dq_granularity import DQGranularity
+from metis.utils.result import DQResult
+
 
 class minimality_duplicateCount(Metric):
-    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, None] = None, metric_config: Union[MetricConfig, str, None] = None) -> List[DQResult]:
+    def assess(
+        self,
+        data: pd.DataFrame,
+        reference: Union[pd.DataFrame, None] = None,
+        metric_config: Union[MetricConfig, str, None] = None,
+    ) -> List[DQResult]:
         """
         Assess the minimality for each attribute of a dataset by checking for unique values.
 
@@ -29,10 +37,10 @@ class minimality_duplicateCount(Metric):
                 annotations = {"CandidateKey": "CandidateKey"}
 
             result = DQResult(
-                mesTime=pd.Timestamp.now(),
+                timestamp=pd.Timestamp.now(),
                 DQdimension=DQDimension.MINIMALITY,
-                DQmetric="DuplicateCount",
-                DQgranularity="column",
+                DQmetric=self.__class__.__name__,
+                DQgranularity=DQGranularity.COLUMN,
                 DQvalue=minimality,
                 DQexplanation=annotations,
                 columnNames=[column],

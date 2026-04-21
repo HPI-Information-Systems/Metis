@@ -56,18 +56,18 @@ class minimality_clustering(Metric):
         result = DQResult(
             mesTime=pd.Timestamp.now(),
             DQdimension=DQDimension.MINIMALITY,
-            DQmetric="clustering",
+            DQmetric="Clustering",
             DQgranularity="table",
             DQvalue=float(minimality),
             DQexplanation={
                 "total_rows": n_rows,
                 "clusters": num_clusters,
-                "use_semhash": config.use_semhash,
-                "similarity_threshold": config.similarity_threshold,
+                "use_semhash": config["use_semhash"],
+                "similarity_threshold": config["similarity_threshold"],
             },
             columnNames=None,
             rowIndex=None,
-            configJson=config.to_json(),
+            configJson=metric_config,
         )
 
         return [result]
@@ -80,7 +80,7 @@ class minimality_clustering(Metric):
         text_df = data.select_dtypes(include=["object"]).copy()
 
         if text_df.empty:
-            return len(data)  # fallback: keine Textdaten → jeder Datensatz eigener Cluster
+            return len(data)  # fallback: no text data → every data set own cluster
 
         records = text_df.astype(str).to_dict(orient="records")
 

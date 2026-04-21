@@ -11,16 +11,12 @@ from metis.metric.timeliness.timeliness_heinrich_config import (
 )
 from metis.utils.datetime.datetime_precision import determine_datetime_precision
 from metis.utils.dq_dimension import DQDimension
-from metis.utils.logging import logger as main_logger
+from metis.utils.dq_granularity import DQGranularity
 from metis.utils.logging import warn_unconfigured_columns
 from metis.utils.result import DQResult
 
 
 class timeliness_heinrich(Metric):
-    def __init__(self) -> None:
-        super().__init__()
-        self.logger = main_logger.getChild(self.__class__.__name__)
-
     def assess(
         self,
         data: pd.DataFrame,
@@ -32,7 +28,7 @@ class timeliness_heinrich(Metric):
         The formula used is: timeliness = exp(-decline_rate * age), where age and decline_rate are measured in years. The age is calculated as the difference between the reference date and the ingestion date of the tuple (defined by the ingestion_date_column in the configuration).
 
         :param data: DataFrame to assess.
-        : param reference: Optional reference DataFrame (not used in this metric).
+        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Configuration for the metric (required).
         :return: List of DQResult objects containing timeliness results.
         """
@@ -42,49 +38,45 @@ class timeliness_heinrich(Metric):
             )
 
         config = self.load_config(metric_config, timeliness_heinrich_config)
-
-        ingestion_date_column = config.ingestion_date_column
-        assessment_date = pd.to_datetime(
-            config.simulated_assessment_date or pd.Timestamp.now()
-        )
-
         results = []
-
-        if not ingestion_date_column or ingestion_date_column not in data.columns:
-            self.logger.warning(
-                f"Ingestion date column '{ingestion_date_column}' is not present in the data."
-            )
-            return results
-
         warn_unconfigured_columns(
             self.logger,
             set(data.columns),
-            set(config.decline_rate_per_column.keys()),
-            "decline rates",
+            set(config.timeliness_config_per_column.keys()),
+            "timeliness configuration",
         )
 
-        ingestion_dates = pd.to_datetime(
-            data[ingestion_date_column], **(config.to_datetime_kwargs or {})
-        )
-        ages_in_days = (
-            (assessment_date - ingestion_dates).dt.total_seconds() / 60 / 60 / 24
-        )
-        precision_of_dates = (
-            pd.Series(
-                [config.simulated_timestamp_precision] * len(data), index=data.index
+        for col_name, col_config in config.timeliness_config_per_column.items():
+            ingestion_date_column = col_config.ingestion_date_column
+            assessment_date = pd.to_datetime(
+                col_config.simulated_assessment_date or pd.Timestamp.now()
             )
-            if config.simulated_timestamp_precision
-            else data[ingestion_date_column].apply(determine_datetime_precision)
-        )
-        age_and_precision = pd.DataFrame(
-            {"age": ages_in_days, "precision": precision_of_dates}
-        )
 
-        for col_name in data.columns:
-            decline_rate = config.decline_rate_per_column.get(col_name)
-            if decline_rate is None:
-                continue
+            if not ingestion_date_column or ingestion_date_column not in data.columns:
+                self.logger.warning(
+                    f"Ingestion date column '{ingestion_date_column}' is not present in the data. Skipping assessment for column '{col_name}'."
+                )
+                return results
 
+            ingestion_dates = pd.to_datetime(
+                data[ingestion_date_column], **(col_config.to_datetime_kwargs or {})
+            )
+            ages_in_days = (
+                (assessment_date - ingestion_dates).dt.total_seconds() / 60 / 60 / 24
+            )
+            precision_of_dates = (
+                pd.Series(
+                    [col_config.simulated_timestamp_precision] * len(data),
+                    index=data.index,
+                )
+                if col_config.simulated_timestamp_precision
+                else data[ingestion_date_column].apply(determine_datetime_precision)
+            )
+            age_and_precision = pd.DataFrame(
+                {"age": ages_in_days, "precision": precision_of_dates}
+            )
+
+            decline_rate = col_config.decline_rate
             timeliness = pd.Series(np.exp(-decline_rate * ages_in_days))
             certainty = age_and_precision.apply(
                 lambda row: self.certainty(
@@ -94,20 +86,20 @@ class timeliness_heinrich(Metric):
                 ),
                 axis=1,
             )
-            for (index, timeliness_value), (_, certainty_value) in zip(
-                timeliness.items(), certainty.items()
+            for row_index, (timeliness_value, certainty_value) in enumerate(
+                zip(timeliness.values, certainty.values)
             ):
                 result = DQResult(
-                    mesTime=pd.Timestamp.now(),
+                    timestamp=pd.Timestamp.now(),
                     DQvalue=timeliness_value,
                     DQdimension=DQDimension.TIMELINESS,
                     DQmetric=self.__class__.__name__,
                     columnNames=[col_name],
-                    rowIndex=int(str(index)),
+                    rowIndex=row_index,
                     DQexplanation={
                         "certainty": certainty_value,
                     },
-                    DQgranularity="cell",
+                    DQgranularity=DQGranularity.CELL,
                 )
                 results.append(result)
 
