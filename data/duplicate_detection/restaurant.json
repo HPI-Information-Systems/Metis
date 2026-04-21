@@ -1,0 +1,20 @@
+{
+    "loader": "CSV",
+    "name": "Restaurant",
+    "file_name": "duplicate_detection/restaurant.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "id",
+        "name",
+        "addr",
+        "city",
+        "phone",
+        "type"
+    ],
+    "parse_dates": false,
+    "decimal": ".",
+    "thousands": null
+}

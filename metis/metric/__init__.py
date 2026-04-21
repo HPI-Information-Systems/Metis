@@ -2,6 +2,7 @@ from .metric import Metric
 from .completeness.completeness_nullRatio import completeness_nullRatio
 from .consistency.consistency_countFDViolations import consistency_countFDViolations
 from .minimality.minimality_duplicateCount import minimality_duplicateCount
+from .minimality.minimality_clustering import minimality_clustering
 from .validity.validity_outOfVocabulary import validity_outOfVocabulary
 from .readability.readability_wordnet import readability_wordnet
 from .readability.readability_llm import readability_llm
