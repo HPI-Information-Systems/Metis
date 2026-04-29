@@ -59,6 +59,7 @@ class consistency_ruleBasedPipino(Metric):
 
             dq_measurements = fulfilled_rules_mask.mean(axis=1)
             certainties = self.certainties(fulfilled_rules_mask)
+            rule_fulfillment_percentages = fulfilled_rules_mask.mean(axis=0)
             for row_index, (dq_value, certainty) in enumerate(
                 zip(dq_measurements.values, certainties.values)
             ):
@@ -68,6 +69,7 @@ class consistency_ruleBasedPipino(Metric):
                         data.columns.tolist(),
                         row_index,
                         float(certainty),
+                        rule_fulfillment_percentages,
                     )
                 )
 
@@ -94,6 +96,7 @@ class consistency_ruleBasedPipino(Metric):
 
             dq_measurements = fulfilled_rules_mask.mean(axis=1)
             certainties = self.certainties(fulfilled_rules_mask)
+            rule_fulfillment_percentages = fulfilled_rules_mask.mean(axis=0)
 
             for row_index, (dq_value, certainty) in enumerate(
                 zip(dq_measurements.values, certainties.values)
@@ -104,6 +107,7 @@ class consistency_ruleBasedPipino(Metric):
                         [col_name],
                         row_index,
                         float(certainty),
+                        rule_fulfillment_percentages,
                     )
                 )
 
@@ -121,6 +125,7 @@ class consistency_ruleBasedPipino(Metric):
         col_names: List[str],
         row_index: int,
         certainty: float,
+        rule_fulfillment_percentages: pd.Series,
     ) -> DQResult:
         return DQResult(
             timestamp=pd.Timestamp.now(),
@@ -131,6 +136,7 @@ class consistency_ruleBasedPipino(Metric):
             rowIndex=row_index,
             DQexplanation={
                 "certainty": certainty,
+                "rule_fulfillment_percentages": rule_fulfillment_percentages.to_dict(),
             },
             DQgranularity=(
                 DQGranularity.CELL if len(col_names) == 1 else DQGranularity.ROW

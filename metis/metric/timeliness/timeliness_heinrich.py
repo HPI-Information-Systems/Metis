@@ -83,8 +83,8 @@ class timeliness_heinrich(Metric):
                 ),
                 axis=1,
             )
-            for row_index, (timeliness_value, certainty_value) in enumerate(
-                zip(timeliness.values, certainty.values)
+            for row_index, (timeliness_value, certainty_value, age_and_precision_value) in enumerate(
+                zip(timeliness.values, certainty.values, age_and_precision.values)
             ):
                 result = DQResult(
                     timestamp=pd.Timestamp.now(),
@@ -95,6 +95,8 @@ class timeliness_heinrich(Metric):
                     rowIndex=row_index,
                     DQexplanation={
                         "certainty": float(certainty_value),
+                        "age_in_days": float(age_and_precision_value[0]),
+                        "precision": age_and_precision_value[1],
                     },
                     DQgranularity=DQGranularity.CELL,
                 )

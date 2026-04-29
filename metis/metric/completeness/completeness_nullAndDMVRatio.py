@@ -63,6 +63,7 @@ class completeness_nullAndDMVRatio(Metric):
                     val = dmv_row["DMV"]
                     marked_cells.loc[data[col] == val, col] = IS_DMV_MARKER
             certainty = self.fahes_certainty(marked_cells)
+            scores = certainty
         else:
             scores, predictions = run_dismis_detection(
                 detectors=dismis_config.detectors,
@@ -87,10 +88,12 @@ class completeness_nullAndDMVRatio(Metric):
         if config.aggregation_axis is not None:
             mean_completeness = completeness.mean(axis=config.aggregation_axis)
             mean_certainty = certainty.mean(axis=config.aggregation_axis)
+            mean_scores = scores.mean(axis=config.aggregation_axis)
 
             if config.aggregate_all:
                 table_completeness = mean_completeness.mean()
                 table_certainty = mean_certainty.mean()
+                table_score = mean_scores.mean()
                 return [
                     DQResult(
                         timestamp=pd.Timestamp.now(),
@@ -98,7 +101,10 @@ class completeness_nullAndDMVRatio(Metric):
                         DQdimension=DQDimension.COMPLETENESS,
                         DQmetric=self.__class__.__name__ + metric_name_suffix,
                         columnNames=data.columns.tolist(),
-                        DQexplanation={"certainty": float(table_certainty)},
+                        DQexplanation={
+                            "certainty": float(table_certainty),
+                            "score": float(table_score),
+                        },
                         DQgranularity=DQGranularity.TABLE,
                     )
                 ]
@@ -106,12 +112,15 @@ class completeness_nullAndDMVRatio(Metric):
             return self.create_aggregated_results(
                 mean_completeness,
                 mean_certainty,
+                mean_scores,
                 config.aggregation_axis,
                 data.columns.tolist(),
                 metric_name_suffix,
             )
 
-        return self.create_flat_results(completeness, certainty, metric_name_suffix)
+        return self.create_flat_results(
+            completeness, certainty, scores, metric_name_suffix
+        )
 
     def fahes_certainty(self, marks: pd.DataFrame):
         # .replace with a dict sometimes throws an IndexError during pandas memory cleanup. Reason not yet identified, but using chained .replace calls seems to mitigate the issue.
@@ -130,13 +139,14 @@ class completeness_nullAndDMVRatio(Metric):
         self,
         mean_completeness: pd.Series,
         mean_certainty: pd.Series,
+        mean_scores: pd.Series,
         aggregation_axis: Literal["index", "columns"],
         columns: List[str],
         metric_name_suffix: str,
     ) -> List[DQResult]:
         results = []
-        for (index, completeness), certainty in zip(
-            mean_completeness.items(), mean_certainty.values
+        for (index, completeness), certainty, score in zip(
+            mean_completeness.items(), mean_certainty.values, mean_scores.values
         ):
             row_index = int(str(index)) if aggregation_axis == "columns" else None
             col_names = columns if aggregation_axis == "columns" else [str(index)]
@@ -148,7 +158,7 @@ class completeness_nullAndDMVRatio(Metric):
                 DQmetric=self.__class__.__name__ + metric_name_suffix,
                 columnNames=col_names,
                 rowIndex=row_index,
-                DQexplanation={"certainty": float(certainty)},
+                DQexplanation={"certainty": float(certainty), "score": float(score)},
                 DQgranularity=(
                     DQGranularity.ROW
                     if aggregation_axis == "columns"
@@ -163,12 +173,17 @@ class completeness_nullAndDMVRatio(Metric):
         self,
         completeness: pd.DataFrame,
         certainty: pd.DataFrame,
+        scores: pd.DataFrame,
         metric_name_suffix: str,
     ) -> List[DQResult]:
         results = []
         for col in completeness.columns:
-            for row_index, (completeness_value, certainty_value) in enumerate(
-                zip(completeness[col].values, certainty[col].values)
+            for row_index, (
+                completeness_value,
+                certainty_value,
+                score_value,
+            ) in enumerate(
+                zip(completeness[col].values, certainty[col].values, scores[col].values)
             ):
                 result = DQResult(
                     timestamp=pd.Timestamp.now(),
@@ -177,7 +192,10 @@ class completeness_nullAndDMVRatio(Metric):
                     DQmetric=self.__class__.__name__ + metric_name_suffix,
                     columnNames=[col],
                     rowIndex=row_index,
-                    DQexplanation={"certainty": float(certainty_value)},
+                    DQexplanation={
+                        "certainty": float(certainty_value),
+                        "score": float(score_value),
+                    },
                     DQgranularity=DQGranularity.CELL,
                 )
                 results.append(result)
