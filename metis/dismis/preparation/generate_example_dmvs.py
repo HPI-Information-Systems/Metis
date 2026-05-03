@@ -40,35 +40,40 @@ def generate_example_dmvs(
         "valid": LLMValidDMV2(llm, table_name=dataset_name),
     }
 
-    types_file = dataset_file.parent / f"{dataset_name}_types.json"
-
-    with require_exists(types_file, "Column types").open("r") as f:
-        types = json.load(f)
-
-    unique_columns = [
-        col for col in types.keys() if types[col] in ["categorical", "text"]
-    ]
     dataset = pd.read_csv(dataset_file, keep_default_na=False, na_values=[""])
 
     example_values = {}
-    for col in unique_columns:
+    columns = dataset.columns.to_list()
+    for col in columns:
         unique_values = dataset[col][:10000].dropna().astype(str).tolist()
         sampled_values = list(
             set(random.sample(unique_values, min(20, len(unique_values))))
         )
         selected_values = sampled_values[: min(5, len(sampled_values))]
         example_values[col] = selected_values
-    generated_dmvs = {col: {} for col in unique_columns}
+
+    if (dataset_file.parent / f"{output_file_name}.json").exists():
+        with (dataset_file.parent / f"{output_file_name}.json").open("r") as f:
+            generated_dmvs = json.load(f)
+            columns = [col for col in columns if col not in generated_dmvs]
+    else:
+        generated_dmvs = {}
+
+    for col in columns:
+        if col not in generated_dmvs:
+            generated_dmvs[col] = {}
+
+    print("Remaining columns to generate DMVs for:", columns)
 
     for dmv_idx, (dmv_type, dmv_generator) in enumerate(DMV_types.items(), 1):
         logger.info(f"Generating {dmv_type} DMVs ({dmv_idx}/{len(DMV_types)})")
         all_placeholders, _, _ = dmv_generator.get_column_placeholders(
-            unique_columns, example_values=example_values
+            columns, example_values=example_values
         )
-        for col in unique_columns:
+        for col in columns:
             generated_dmvs[col][dmv_type] = all_placeholders[col]
 
-    with open(os.path.join(dataset_file.parent, f"{output_file_name}.json"), "w") as f:
+    with (dataset_file.parent / f"{output_file_name}.json").open("w") as f:
         json.dump(generated_dmvs, f, indent=4)
 
 
