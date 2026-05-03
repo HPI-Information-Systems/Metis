@@ -21,7 +21,7 @@ class completeness_nullAndDMVRatio_config(MetricConfig):
 
     aggregation_axis: Literal["index", "columns", None] = None
     aggregate_all: bool = False
-    dismis_config: completeness_nullAndDMVRatio_config_dismis | None = None
+    dismis_config: "completeness_nullAndDMVRatio_config_dismis | None" = None
     explanatory_results_path: str | None = None
 
     @classmethod

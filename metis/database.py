@@ -8,7 +8,7 @@ from metis.database_models import register_models
 class Database:
     """Provides a singleton reference for the database connection and models. Can be used by different modules to access the database without risking conflicts caused by multiple bases or engines."""
 
-    _instance: Database | None = None
+    _instance: "Database | None" = None
 
     def __init__(self, db_type: Literal["sqlite", "postgres"], db_config: Dict):
         if Database._instance is not None:
@@ -26,7 +26,7 @@ class Database:
         Database._instance = self
 
     @classmethod
-    def get_instance(cls) -> Database:
+    def get_instance(cls):
         """Return the current singleton. Raises if not initialized."""
         if cls._instance is None:
             raise RuntimeError(
@@ -36,7 +36,7 @@ class Database:
         return cls._instance
 
     @classmethod
-    def is_initialized(cls) -> bool:
+    def is_initialized(cls):
         return cls._instance is not None
 
     def create_engine(self, db_type: Literal["sqlite", "postgres"], db_config: Dict):

@@ -68,17 +68,20 @@ def precompute_value_embeddings(
         for col in unique_values:
             values_to_embed = unique_values[col]
             if cached_embeddings and col in cached_embeddings:
-                values_to_embed = values_to_embed.difference(cached_embeddings[col].keys())
-                values_from_cache = unique_values[col].intersection(cached_embeddings[col].keys())
+                values_to_embed = values_to_embed.difference(
+                    cached_embeddings[col].keys()
+                )
+                values_from_cache = unique_values[col].intersection(
+                    cached_embeddings[col].keys()
+                )
                 embeddings[col].update(
                     {val: cached_embeddings[col][val] for val in values_from_cache}
                 )
 
             outputs = model.embed(list(values_to_embed), col)
-            embeddings[col] = {
-                val: o[:trunc]
-                for val, o in zip(values_to_embed, outputs)
-            }
+            embeddings[col].update(
+                {val: o[:trunc] for val, o in zip(values_to_embed, outputs)}
+            )
 
         with open(
             dataset_file.parent / f"{dataset_file.stem}_value_embeddings.json", "w"
