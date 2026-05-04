@@ -1,0 +1,21 @@
+{
+    "Date": "date",
+    "Location": "categorical",
+    "MinTemp": "numeric",
+    "MaxTemp": "numeric",
+    "Rainfall": "numeric",
+    "WindGustDir": "categorical",
+    "WindGustSpeed": "numeric",
+    "WindDir9am": "categorical",
+    "WindDir3pm": "categorical",
+    "WindSpeed9am": "numeric",
+    "WindSpeed3pm": "numeric",
+    "Humidity9am": "numeric",
+    "Humidity3pm": "numeric",
+    "Pressure9am": "numeric",
+    "Pressure3pm": "numeric",
+    "Temp9am": "numeric",
+    "Temp3pm": "numeric",
+    "RainToday": "categorical",
+    "RainTomorrow": "categorical"
+}
