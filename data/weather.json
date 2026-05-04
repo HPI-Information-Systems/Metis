@@ -1,0 +1,30 @@
+{
+    "loader": "CSV",
+    "name": "Weather",
+    "file_name": "weather.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null,
+    "usecols": [
+        "Date",
+        "Location",
+        "MinTemp",
+        "MaxTemp",
+        "Rainfall",
+        "WindGustDir",
+        "WindGustSpeed",
+        "WindDir9am",
+        "WindDir3pm",
+        "WindSpeed9am",
+        "WindSpeed3pm",
+        "Humidity9am",
+        "Humidity3pm",
+        "Pressure9am",
+        "Pressure3pm",
+        "Temp9am",
+        "Temp3pm",
+        "RainToday",
+        "RainTomorrow"
+    ]
+}
