@@ -1,5 +1,4 @@
-import ctypes
-import os
+import subprocess
 import tempfile
 from pathlib import Path
 from statistics import mean
@@ -14,39 +13,21 @@ FAHES_F1 = 2 * FAHES_PRECISION * FAHES_RECALL / (FAHES_PRECISION + FAHES_RECALL)
 
 
 def call_fahes(tab_full_name, output_dir):
-    path = Path(__file__).parent.resolve() / "lib" / "FAHES_Code" / "libFahes.so"
-    if not path.exists():
+    executable = (
+        Path(__file__).parent.resolve() / "lib" / "FAHES_Code" / "src" / "FAHES"
+    )
+    if not executable.exists():
         raise FileNotFoundError(
-            f"Fahes shared library not found at: {path}. Please clone https://github.com/qcri/FAHES_Code.git into {path.parent} and compile it using the provided makefile at {path.parent.parent / 'makefile'}."
+            f"FAHES executable not found at: {executable}. Please clone https://github.com/qcri/FAHES_Code.git into {executable.parent} and compile it using the makefile at {executable.parent / 'makefile'}."
         )
 
-    LP_c_char = ctypes.POINTER(ctypes.c_char)
-    LP_LP_c_char = ctypes.POINTER(LP_c_char)
-    try:
-        Fahes = ctypes.CDLL(str(path), use_errno=True)
-    except OSError as e:
-        raise ImportError(f"Failed to load Fahes shared library: {path}") from e
+    cmd = [str(executable), tab_full_name, output_dir, "4"]
 
     try:
-        Fahes.main.argtypes = (ctypes.c_int, LP_LP_c_char)
-    except AttributeError as e:
-        raise AttributeError(
-            "Fahes library missing 'main' or has unexpected signature"
-        ) from e
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    ctypes.set_errno(0)
-    args = [str(path), tab_full_name, output_dir, "4"]
-    argc = len(args)
-    argv = (LP_c_char * (argc + 1))()
-    for i, arg in enumerate(args):
-        enc_arg = arg.encode("utf-8")
-        argv[i] = ctypes.create_string_buffer(enc_arg)
-
-    rc = Fahes.main(argc, argv)
-    if rc != 0:
-        err = ctypes.get_errno()
-        err_msg = os.strerror(err) if err else "Unknown C error"
-        raise RuntimeError(f"Fahes.main failed (rc={rc}, errno={err}: {err_msg})")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"FAHES failed: {e.stderr.decode()}")
 
 
 # Based on https://github.com/qcri/Fahes_Demo.git
