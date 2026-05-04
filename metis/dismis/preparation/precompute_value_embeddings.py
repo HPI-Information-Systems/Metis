@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 
 from metis.dismis.preparation.openai_LLM import OpenAIEmbedding
+from metis.dismis.utils.types import COLUMN_TYPES
 from metis.utils.logging import logger as main_logger
 
 logger = main_logger.getChild(__name__)
@@ -17,6 +18,7 @@ def precompute_value_embeddings(
     llm_api_key: str,
     datasets_and_types: Tuple[str, str] | List[Tuple[str, str]],
     cached_embeddings: Dict[str, Dict[str, List[float]]] | None = None,
+    column_types: List[COLUMN_TYPES] = ["text", "categorical"],
 ):
     trunc = 512
     model = OpenAIEmbedding(
@@ -45,26 +47,26 @@ def precompute_value_embeddings(
         with open(types_file, "r") as f:
             types = json.load(f)
 
-        text_columns = [col for col in types if types[col] in ["text", "categorical"]]
-        if len(text_columns) == 0:
-            logger.debug(f"No text or categorical columns found in {dataset}")
+        columns = [col for col in types if types[col] in column_types]
+        if len(columns) == 0:
+            logger.debug(f"No columns of specified types found in {dataset}")
             continue
 
-        logger.info(f"Text columns: {text_columns}")
-        unique_values = {col: set() for col in text_columns}
+        logger.info(f"Columns to process: {columns}")
+        unique_values = {}
 
         df = pd.read_csv(dataset_file, keep_default_na=False, na_values=[""])
-        for col in text_columns:
+        for col in columns:
             unique_column_values = [
                 str(val) for val in df[col].dropna().unique().tolist()
             ]
 
-            unique_values[col].update(unique_column_values)
+            unique_values.setdefault(col, set()).update(unique_column_values)
 
         for col in unique_values.keys():
             logger.debug(f"Column '{col}' has {len(unique_values[col])} unique values.")
 
-        embeddings = {col: {} for col in text_columns}
+        embeddings = {}
         for col in unique_values:
             values_to_embed = unique_values[col]
             if cached_embeddings and col in cached_embeddings:
@@ -74,12 +76,12 @@ def precompute_value_embeddings(
                 values_from_cache = unique_values[col].intersection(
                     cached_embeddings[col].keys()
                 )
-                embeddings[col].update(
+                embeddings.setdefault(col, {}).update(
                     {val: cached_embeddings[col][val] for val in values_from_cache}
                 )
 
             outputs = model.embed(list(values_to_embed), col)
-            embeddings[col].update(
+            embeddings.setdefault(col, {}).update(
                 {val: o[:trunc] for val, o in zip(values_to_embed, outputs)}
             )
 
