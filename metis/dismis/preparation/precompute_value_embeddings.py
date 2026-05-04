@@ -80,6 +80,9 @@ def precompute_value_embeddings(
                     {val: cached_embeddings[col][val] for val in values_from_cache}
                 )
 
+            if len(values_to_embed) == 0:
+                continue
+
             outputs = model.embed(list(values_to_embed), col)
             embeddings.setdefault(col, {}).update(
                 {val: o[:trunc] for val, o in zip(values_to_embed, outputs)}

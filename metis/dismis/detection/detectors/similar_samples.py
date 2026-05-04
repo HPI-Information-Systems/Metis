@@ -573,9 +573,7 @@ class MultiSimilarSamplesDetector(DMVDetector):
                 continue
 
             encoded_target_columns = [
-                col
-                for col in df_detect.columns
-                if col.startswith(target_column + "_")
+                col for col in df_detect.columns if col.startswith(target_column + "_")
             ]
             idx = dataset.columns.tolist().index(target_column)
 
