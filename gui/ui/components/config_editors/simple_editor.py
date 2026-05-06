@@ -63,6 +63,7 @@ def _render_field(field: Field, annotation: Any, default: Any, key: str) -> Any:
     :param key: Streamlit widget key.
     :return: The widget's current value.
     """
+    is_optional = _is_optional(annotation)
     annotation = _unwrap_optional(annotation)
     origin = get_origin(annotation)
     args = get_args(annotation)
@@ -107,7 +108,9 @@ def _render_field(field: Field, annotation: Any, default: Any, key: str) -> Any:
             value=str(default) if default is not None else "",
             key=key,
         )
-        return val if val else None
+        if val:
+            return val
+        return None if is_optional else ""
 
     val = st.text_input(
         name,
@@ -116,6 +119,24 @@ def _render_field(field: Field, annotation: Any, default: Any, key: str) -> Any:
         help=f"Type: {annotation}",
     )
     return val if val else default
+
+
+def _is_optional(annotation: Any) -> bool:
+    """
+    Return whether ``annotation`` admits ``None``.
+
+    Recognises ``Optional[X]``, ``Union[X, None]`` and the ``X | None``
+    PEP 604 form.
+
+    :param annotation: The type annotation to inspect.
+    :return: ``True`` if ``None`` is part of the union, ``False`` otherwise.
+    """
+    origin = get_origin(annotation)
+    if origin is typing.Union:
+        return type(None) in get_args(annotation)
+    if hasattr(types, "UnionType") and isinstance(annotation, types.UnionType):
+        return type(None) in get_args(annotation)
+    return False
 
 
 def _unwrap_optional(annotation: Any) -> Any:
