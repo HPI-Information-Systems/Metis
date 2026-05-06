@@ -10,6 +10,14 @@ from metis.utils.result import DQResult
 
 
 class minimality_duplicateCount(Metric):
+    _gui_requires_reference: bool = False
+    _gui_config_required: bool = False
+    _gui_callable_config: bool = False
+    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.COLUMN})
+    _gui_description: str = (
+        "Per column, the share of values that appear exactly once. A score of "
+        "1.0 marks the column as a candidate key."
+    )
     def assess(
         self,
         data: pd.DataFrame,

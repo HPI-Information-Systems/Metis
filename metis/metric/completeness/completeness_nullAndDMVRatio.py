@@ -22,6 +22,17 @@ IS_DMV_MARKER = 2
 
 
 class completeness_nullAndDMVRatio(Metric):
+    _gui_requires_reference: bool = False
+    _gui_config_required: bool = False
+    _gui_callable_config: bool = False
+    _gui_recommended_granularities: frozenset = frozenset({
+        DQGranularity.ROW, DQGranularity.COLUMN, DQGranularity.TABLE,
+    })
+    _gui_description: str = (
+        "Completeness as the ratio of non-null and non-disguised-missing values. "
+        "Disguised missing values (e.g., '?', 'N/A') are detected with the FAHES "
+        "algorithm (Qahtan et al., 2018). Configurable granularity."
+    )
     def assess(
         self,
         data: pd.DataFrame,
