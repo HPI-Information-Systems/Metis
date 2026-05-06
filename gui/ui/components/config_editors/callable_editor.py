@@ -130,6 +130,12 @@ def render(metric_name: str, config_class, key_prefix: str):
         f"Rules return {template.return_type}. "
         "Define `attribute_rules` (per-column) and/or `tuple_rules` (per-row), then click **Apply**."
     )
+    st.warning(
+        "The code below is executed with full access to your machine when "
+        "you click Apply. Only run rules that you wrote or trust. This "
+        "editor is intended for local use, not multi user hosting.",
+        icon="⚠️",
+    )
 
     code_key = f"_callable_code_{key_prefix}"
     if code_key not in st.session_state:
