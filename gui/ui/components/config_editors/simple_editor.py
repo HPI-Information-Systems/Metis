@@ -40,7 +40,7 @@ def render(
         if f.name in overrides:
             default = overrides[f.name]
         else:
-            default = f.default if not isinstance(f.default, dataclasses._MISSING_TYPE) else None
+            default = f.default if f.default is not dataclasses.MISSING else None
         widget_key = f"{key_prefix}__{f.name}"
         values[f.name] = _render_field(f, annotation, default, widget_key)
 
