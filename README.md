@@ -27,11 +27,11 @@ to surface interesting completeness findings.
 
 ## How to implement new metrics
 
-To extend the Metis framework and add new data quality metrics, please check our interface for easy integration. 
+To extend the Metis framework and add new data quality metrics, please check our interface for easy integration.
 ````python
-def assess(self, 
-            data: pd.DataFrame, 
-            reference: Union[pd.DataFrame, None] = None, 
+def assess(self,
+            data: pd.DataFrame,
+            reference: Union[pd.DataFrame, None] = None,
             metric_config: Union[str, None] = None) -> List[DQResult]:
 ````
 Each metric should be a subclass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes three arguments:
@@ -45,14 +45,79 @@ The metric should return a list of ```metis.utils.result.DQResult```. This can b
 
 ### Metric naming convention
 
-Metrics are organized by dimension (e.g., `completeness`, `minimality`), where one folder exists for each. 
+Metrics are organized by dimension (e.g., `completeness`, `minimality`), where one folder exists for each.
 New metrics should follow the naming format: `{DimensionName}_{Technique}`
 
 - **DimensionName**: The quality dimension being measured (e.g., `Completeness`, `Minimality`)
 - **Technique**: The calculation or method used (e.g., `NullRatio`, `DuplicateCount`)
+
+Examples: `completeness_nullRatio`, `minimality_duplicateCount`
+
+The file name and class name of each metric should be equal. If a metric has a specific config class, the name of the config class should be `{MetricName}_config` (e.g., `completeness_missingRatio_config`).
+
 - **Granularity**: The level of analysis (e.g., `cell`, `row`, `column`, `table`) should be passed as a parameter through the metric config file if the metric can be applied at different granularity levels.
 
-Examples: `completeness_NullRatio`, `minimality_DuplicateCount`
+### Config conventions
+
+These conventions are required for a metric to be picked up correctly by the
+GUI catalog (`gui/core/metric_catalog.py`) and rendered with the right
+editor and badges.
+
+#### Config file and class
+
+- Config file lives in the same package as its metric and is named
+  `{MetricName}_config.py`.
+- The config class name equals the file stem (e.g.
+  `completeness_nullRatio_config`).
+- The class inherits from `metis.metric.config.MetricConfig` (a dataclass
+  with a `validate()` hook) and is itself a `@dataclass`.
+- Every field should have a default so the GUI can render the metric
+  without forcing the user to fill anything in. Use the `aggregation_axis`
+  + `aggregate_all` pattern for metrics that can be summarized at multiple
+  granularities:
+
+  ```python
+  @dataclass
+  class completeness_nullRatio_config(MetricConfig):
+      aggregation_axis: Literal["index", "columns", None] = None
+      aggregate_all: bool = False
+  ```
+
+#### Three config types
+
+The GUI dispatches to one of three editors based on metadata declared on
+the metric class:
+
+| Type             | Marker on metric class                  | Editor                          |
+|------------------|-----------------------------------------|---------------------------------|
+| Dataclass config | (default — just provide a config class) | `simple_editor`                 |
+| Callable rules   | `_gui_callable_config = True`           | `callable_editor` (Python rules)|
+| FD JSON config   | `name == "consistency_countFDViolations"` (handled specially) | inline FD-rule editor |
+
+`timeliness_heinrich` uses a dedicated `timeliness_editor` (selected by
+metric name) because its config nests per-column settings.
+
+#### GUI metadata class attributes
+
+Declare these as class attributes on the `Metric` subclass. All are
+optional and default to safe values; see existing metrics for examples.
+
+| Attribute                        | Type           | Purpose                                                                                          |
+|----------------------------------|----------------|--------------------------------------------------------------------------------------------------|
+| `_gui_description`               | `str`          | Short summary of how the metric is calculated. Shown under the metric name in the GUI.           |
+| `_gui_requires_reference`        | `bool`         | The metric needs a reference DataFrame (e.g. `correctness_heinrich`).                            |
+| `_gui_config_required`           | `bool`         | The metric refuses to run without a config; the GUI blocks **Compute** until one is provided.    |
+| `_gui_callable_config`           | `bool`         | The config carries Python callables (rules) and must be edited via the callable editor.          |
+| `_gui_cell_granularity`          | `bool`         | The metric *can* emit per-cell results, so the GUI offers a row-limit cap.                       |
+| `_gui_recommended_granularities` | `frozenset[DQGranularity]` | Granularities the metric produces meaningful results at. Used by the results page renderers. |
+
+#### Native dependency declarations
+
+Metrics that depend on a native library (e.g. FAHES) must register a check
+in `_NATIVE_LIB_CHECKS` in `gui/core/metric_catalog.py`. The catalog will
+mark the metric as unavailable when the library is missing, the GUI will
+disable its checkbox with a warning, the per-dimension/global "Select all"
+buttons will skip it, and `get_compute_blockers` will refuse to run it.
 
 ## Output: creating a DQResult
 
@@ -61,27 +126,35 @@ class DQResult:
     def __init__(
         self,
         timestamp: pd.Timestamp,
-        DQvalue: float,
-        DQdimension: str,
+        DQdimension: DQDimension,
         DQmetric: str,
+        DQgranularity: str,
+        DQvalue: float,
+        DQexplanation: Union[dict, None] = None,
+        runtime: Union[float, None] = None,
+        tableName: Union[str, None] = None,
         columnNames: Union[List[str], None] = None,
         rowIndex: Union[int, None] = None,
-        DQannotations: Union[dict, None] = None,
+        experimentTag: Union[str, None] = None,
         dataset: Union[str, None] = None,
-        tableName: Union[str, None] = None,
+        configJson: Union[dict, None] = None,
     ):
 ````
 
 To create a new instance of DQResult, one needs to provide at least the following arguments:
 - **timestamp: pd.Timestamp**: The time at which a result was assessed.
-- **DQvalue: float**: The result of the assessment. This currently only supports quantitative assessments.
-- **DQdimension: str**: The name of the data quality dimension that was assessed e.g. completeness, accuracy, etc.
-- **DQmetric: str**: The name of the specific metric inside the given dimension that was assessed.
+- **DQdimension: DQDimension**: Data quality dimension assessed (e.g. `DQDimension.COMPLETENESS`, `DQDimension.ACCURACY`).
+- **DQmetric: str**: Name of the specific metric within the dimension.
+- **DQgranularity: str**: Granularity of the metric (e.g. 'column', 'table', 'cell', 'row').
+- **DQvalue: float**: Numeric outcome of the assessment. This currently only supports quantitative assessments.
 
-Furthermore, there are more optional arguments that might need to be set depending on the nature of different metrics. ```dataset``` and ```tableName``` are automatically set by the ```metis.dq_orchestrator.DQOrchestrator``` class which controles the data quality assessment and takes care of calling the individual metrics and storing the results.
-- **columnNames: Optional[List[str]]**: List of column names associated with the assessed result. For example for column level completeness, this would be a list with a single column name, for table level completeness this would be empty since the result is valid for the whole table.
-- **rowIndex: Optional[int]**: Index of the row this result is associated with. This can either be used together with columnNames to assess data quality on a cell level or for row based metrics.
-- **DQannotations: Optional[dict]**: To allow metrics to save additional information or annotations, this dictionary can store all additional information that might need to be saved. This currently does not need for follow a predefined structure.
+Furthermore, there are more optional arguments that might need to be set depending on the nature of different metrics. ```dataset``` and ```tableName``` are automatically set by the ```metis.dq_orchestrator.DQOrchestrator``` class which controls the data quality assessment and takes care of calling the individual metrics and storing the results.
+- **DQexplanation: Optional[dict]**: Arbitrary additional information produced by the metric (no fixed schema required).
+- **runtime: Optional[float]**: Time taken to compute the metric, in seconds.
+- **columnNames: Optional[List[str]]**: Columns that this result pertains to. For a column-level metric this is typically a single-item list; for a table-level metric this may be `None` or an empty list.
+- **rowIndex: Optional[int]**: Row index associated with the result. Use together with `columnNames` to represent a cell-level result, or for row-based metrics.
+- **experimentTag: Optional[str]**: Tag to identify a specific run.
+- **configJson: Optional[dict]**: Configuration used for the metric as a JSON object.
 
 ## Data Profiling
 
