@@ -56,6 +56,68 @@ The file name and class name of each metric should be equal. If a metric has a s
 
 - **Granularity**: The level of analysis (e.g., `cell`, `row`, `column`, `table`) should be passed as a parameter through the metric config file if the metric can be applied at different granularity levels.
 
+### Config conventions
+
+These conventions are required for a metric to be picked up correctly by the
+GUI catalog (`gui/core/metric_catalog.py`) and rendered with the right
+editor and badges.
+
+#### Config file and class
+
+- Config file lives in the same package as its metric and is named
+  `{MetricName}_config.py`.
+- The config class name equals the file stem (e.g.
+  `completeness_nullRatio_config`).
+- The class inherits from `metis.metric.config.MetricConfig` (a dataclass
+  with a `validate()` hook) and is itself a `@dataclass`.
+- Every field should have a default so the GUI can render the metric
+  without forcing the user to fill anything in. Use the `aggregation_axis`
+  + `aggregate_all` pattern for metrics that can be summarized at multiple
+  granularities:
+
+  ```python
+  @dataclass
+  class completeness_nullRatio_config(MetricConfig):
+      aggregation_axis: Literal["index", "columns", None] = None
+      aggregate_all: bool = False
+  ```
+
+#### Three config types
+
+The GUI dispatches to one of three editors based on metadata declared on
+the metric class:
+
+| Type             | Marker on metric class                  | Editor                          |
+|------------------|-----------------------------------------|---------------------------------|
+| Dataclass config | (default — just provide a config class) | `simple_editor`                 |
+| Callable rules   | `_gui_callable_config = True`           | `callable_editor` (Python rules)|
+| FD JSON config   | `name == "consistency_countFDViolations"` (handled specially) | inline FD-rule editor |
+
+`timeliness_heinrich` uses a dedicated `timeliness_editor` (selected by
+metric name) because its config nests per-column settings.
+
+#### GUI metadata class attributes
+
+Declare these as class attributes on the `Metric` subclass. All are
+optional and default to safe values; see existing metrics for examples.
+
+| Attribute                        | Type           | Purpose                                                                                          |
+|----------------------------------|----------------|--------------------------------------------------------------------------------------------------|
+| `_gui_description`               | `str`          | Short summary of how the metric is calculated. Shown under the metric name in the GUI.           |
+| `_gui_requires_reference`        | `bool`         | The metric needs a reference DataFrame (e.g. `correctness_heinrich`).                            |
+| `_gui_config_required`           | `bool`         | The metric refuses to run without a config; the GUI blocks **Compute** until one is provided.    |
+| `_gui_callable_config`           | `bool`         | The config carries Python callables (rules) and must be edited via the callable editor.          |
+| `_gui_cell_granularity`          | `bool`         | The metric *can* emit per-cell results, so the GUI offers a row-limit cap.                       |
+| `_gui_recommended_granularities` | `frozenset[DQGranularity]` | Granularities the metric produces meaningful results at. Used by the results page renderers. |
+
+#### Native dependency declarations
+
+Metrics that depend on a native library (e.g. FAHES) must register a check
+in `_NATIVE_LIB_CHECKS` in `gui/core/metric_catalog.py`. The catalog will
+mark the metric as unavailable when the library is missing, the GUI will
+disable its checkbox with a warning, the per-dimension/global "Select all"
+buttons will skip it, and `get_compute_blockers` will refuse to run it.
+
 ## Output: creating a DQResult
 
 ````python
