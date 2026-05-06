@@ -174,7 +174,7 @@ Column name: "{column_name}"
                     # Combine both categories
                     new_placeholders = generic + context_specific
                     col_placeholders[col].update(
-                        [val for val in new_placeholders if val]
+                        [jsonify(val) for val in new_placeholders if val]
                     )
 
                 except (json.JSONDecodeError, IndexError, KeyError) as e:
