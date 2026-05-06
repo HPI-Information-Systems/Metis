@@ -43,7 +43,7 @@ def extract_signals(
     :param summary: Output of ``get_metric_summary()`` — has ``count``,
         ``granularities``, ``primary_granularity``, ``explanation_keys``,
         ``mean_score``, ``pct_perfect``.
-    :param hist_df: 21-bin score histogram with columns ``[bin_idx, count]``.
+    :param hist_df: 20-bin score histogram with columns ``[bin_idx, count]``.
     :param col_agg_df: Per-column aggregates for cell metrics (may be ``None``).
     :param col_results_df: Per-column results for column metrics (may be ``None``).
     :return: A :class:`VisualizationSignals` with all derived signals set.
