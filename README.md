@@ -11,19 +11,54 @@ python -m demo.getting_started
 
 ## Full demo (all metrics)
 
-To run every registered metric against the full TripAdvisor European Restaurants dataset, use the extended demo. **Note: this will take some time.**
+To run every registered metric against the demo restaurants dataset, use the extended demo.
 
 ```
 python -m demo.run_demo
 ```
 
-The demo uses `data/restaurants.csv`, a reduced version of the
-[TripAdvisor European Restaurants dataset from Kaggle](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants)
-(~135 K rows, down from the original ~1.08 M; every 8th row was kept to stay
-under 100 MB without Git LFS). The CSV includes 42 original columns (ratings,
-cuisines, location, price level, …) plus two synthetic timestamp columns
-(`first_review_date` and `last_review_date`) with ~10 % intentional nulls
-to surface interesting completeness findings.
+### The demo dataset
+
+The demo uses `data/restaurants.csv` — a small, intentionally messy dataset
+(864 rows) derived from a classic dirty-restaurants benchmark used for
+duplicate detection. The source columns are `id`, `name`, `address`, `city`,
+`phone`, and `type`; most rows appear twice in slightly different forms (mixed
+phone separators, abbreviated city names, divergent cuisine labels), which
+gives the duplicate-detection and FD-violation metrics natural raw material to
+flag.
+
+The committed CSV is built from `data/restaurants_source.csv` by
+`gui/scripts/build_demo_dataset.py`, which appends four synthetic columns and
+sprinkles deterministic noise:
+
+```
+python gui/scripts/build_demo_dataset.py \
+    --source data/restaurants_source.csv \
+    --output data/restaurants.csv
+```
+
+Synthetic columns (seeded; defaults to `--seed 42`):
+
+| Column                | Distribution                                     |
+|-----------------------|--------------------------------------------------|
+| `avg_rating`          | beta-distributed in `[1.0, 5.0]`, skewed high    |
+| `total_reviews_count` | exponential (mean ≈ 60), integer                 |
+| `first_review_date`   | uniform in `2010-01-01` … `2022-01-01`           |
+| `last_review_date`    | `first_review_date + uniform(30, 1825)` days     |
+
+Injected noise (also seeded):
+
+- ~10% nulls in the four synthetic columns
+- ~3%  nulls in (`name`, `address`, `city`, `phone`, `type`)
+- ~2% of date pairs are inverted (`last_review_date < first_review_date`)
+- ~2% of `avg_rating` values are pushed outside `[1, 5]`
+- ~2% of `total_reviews_count` values are made negative
+
+The deliberate violations exist so the rule-based consistency metrics
+(`ruleBasedHinrichs`, `ruleBasedPipino`) and the timeliness/range checks have
+something to flag. Tweak the constants at the top of
+`gui/scripts/build_demo_dataset.py` (or pass a different `--seed`) to
+regenerate.
 
 ## How to implement new metrics
 

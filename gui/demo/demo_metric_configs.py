@@ -29,10 +29,9 @@ DEMO_METRICS: list[str] = [
 
 # FD config — used as the consistency_countFDViolations config dict.
 FD_CONFIG: dict[str, list[str]] = {
-    "restaurant_link": ["restaurant_name", "city", "country"],
-    "city":            ["country", "region"],
-    "region":          ["country"],
-    "price_level":     ["price_range"],
+    "phone":   ["city", "type"],
+    "address": ["city"],
+    "name":    ["phone"],
 }
 
 
@@ -108,18 +107,6 @@ def get_timeliness_config():
                 to_datetime_kwargs=date_kwargs,
                 simulated_timestamp_precision="day",
             ),
-            "food": timeliness_heinrich_column_config(
-                decline_rate=1.0,
-                ingestion_date_column="last_review_date",
-                to_datetime_kwargs=date_kwargs,
-                simulated_timestamp_precision="day",
-            ),
-            "service": timeliness_heinrich_column_config(
-                decline_rate=1.0,
-                ingestion_date_column="last_review_date",
-                to_datetime_kwargs=date_kwargs,
-                simulated_timestamp_precision="day",
-            ),
         }
     )
 
@@ -133,20 +120,18 @@ DEMO_CONFIG_DISPLAY: dict[str, dict] = {
     "consistency_ruleBasedHinrichs": {
         "type": "callable",
         "source_file": str(_DATA_DIR / "restaurants_consistency_ruleBasedHinrichs.py"),
-        "description": "Attribute rules check numeric ranges (lat/lon, ratings). Tuple rule checks that rating bucket sums don't exceed total_reviews_count.",
+        "description": "Attribute rules grade phone-format, type-vocabulary, rating-range and review-count violations. Tuple rule penalises rows where last_review_date precedes first_review_date.",
     },
     "consistency_ruleBasedPipino": {
         "type": "callable",
         "source_file": str(_DATA_DIR / "restaurants_consistency_ruleBasedPipino.py"),
-        "description": "Attribute rules validate coordinate and rating ranges. Tuple rule checks open_hours_per_week ≤ open_days_per_week × 24.",
+        "description": "Attribute rules check phone format, type vocabulary, rating range, and non-negative review counts. Tuple rules check date ordering and that rows with reviews carry a last_review_date.",
     },
     "timeliness_heinrich": {
         "type": "timeliness",
         "columns": {
             "avg_rating":          {"decline_rate": 1.0, "ingestion_date_column": "last_review_date", "precision": "day"},
             "total_reviews_count": {"decline_rate": 0.5, "ingestion_date_column": "last_review_date", "precision": "day"},
-            "food":                {"decline_rate": 1.0, "ingestion_date_column": "last_review_date", "precision": "day"},
-            "service":             {"decline_rate": 1.0, "ingestion_date_column": "last_review_date", "precision": "day"},
         },
     },
 }
