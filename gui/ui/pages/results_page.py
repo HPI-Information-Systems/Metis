@@ -730,7 +730,7 @@ def _render_table_comparison(
 
 
 @st.dialog("Export JSON")
-def _export_confirm_dialog(tag: str, result_count: int) -> None:
+def _export_confirm_dialog(tag: str, result_count: int, key_prefix: str = "") -> None:
     """
     Render the warning dialog shown for large exports.
 
@@ -739,6 +739,8 @@ def _export_confirm_dialog(tag: str, result_count: int) -> None:
 
     :param tag: The experiment tag being exported.
     :param result_count: The total number of results in the run.
+    :param key_prefix: Widget key prefix used by the calling fragment so the
+        state transition lands on the same session key the fragment reads.
     :return: None.
     """
     st.warning(
@@ -748,11 +750,11 @@ def _export_confirm_dialog(tag: str, result_count: int) -> None:
     )
     col_cancel, col_confirm = st.columns(2)
     with col_cancel:
-        if st.button("Cancel", width="stretch", key="export_dlg_cancel"):
+        if st.button("Cancel", width="stretch", key=f"export_dlg_cancel_{key_prefix}{tag}"):
             st.rerun()
     with col_confirm:
-        if st.button("Export JSON", type="primary", width="stretch", key="export_dlg_confirm"):
-            st.session_state[f"_export_state_{tag}"] = "queued"
+        if st.button("Export JSON", type="primary", width="stretch", key=f"export_dlg_confirm_{key_prefix}{tag}"):
+            st.session_state[f"_export_state_{key_prefix}{tag}"] = "queued"
             st.rerun()
 
 
@@ -781,7 +783,7 @@ def _render_export_fragment(
     if state == "idle":
         if st.button("Export JSON", width="stretch", key=f"export_btn_{key_prefix}{tag}"):
             if result_count > _EXPORT_WARN_THRESHOLD:
-                _export_confirm_dialog(tag, result_count)
+                _export_confirm_dialog(tag, result_count, key_prefix)
             else:
                 st.session_state[state_key] = "queued"
                 st.rerun(scope="fragment")
