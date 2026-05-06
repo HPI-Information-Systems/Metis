@@ -847,8 +847,13 @@ def _render_import(key_prefix: str = "") -> None:
         if uploaded and st.button("Import", key=f"{key_prefix}do_import"):
             try:
                 raw = json.loads(uploaded.read())
+                if isinstance(raw, dict) and isinstance(raw.get("results"), list):
+                    raw = raw["results"]
                 if not isinstance(raw, list):
-                    st.error("Expected a JSON array of result objects.")
+                    st.error(
+                        "Expected a JSON array of result objects, or an "
+                        "object with a 'results' array."
+                    )
                     return
                 tag = tag_override.strip() or (raw[0].get("experimentTag") if raw else "imported")
                 dq_results = [
