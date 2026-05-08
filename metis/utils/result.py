@@ -14,6 +14,8 @@ class DQResult:
             DQvalue: float,
             DQexplanation: Union[dict, None] = None,
             runtime: Union[float, None] = None,
+            memory_end: Union[float, None] = None,
+            memory_peak: Union[float, None] = None,
             tableName: Union[str, None] = None,
             columnNames: Union[List[str], None] = None,
             rowIndex: Union[int, None] = None,
@@ -34,6 +36,8 @@ class DQResult:
         - `DQexplanation: Optional[dict]`: Arbitrary additional information
             produced by the metric (no fixed schema required).
         - `runtime: Optional[float]`: Time taken to compute the metric, in seconds.
+        - `memory_end: Optional[float]`: Memory usage at the end of the metric computation, in bytes.
+        - `memory_peak: Optional[float]`: Peak memory usage during the metric computation, in bytes.
         - `tableName: Optional[str]`: Table name within the dataset. Also
             typically set by the `metis.dq_orchestrator.DQOrchestrator`.
         - `columnNames: Optional[List[str]]`: Columns that this result pertains to.
@@ -62,6 +66,8 @@ class DQResult:
         self._DQvalue = DQvalue
         self._DQexplanation = DQexplanation
         self._runtime = runtime
+        self._memory_end = memory_end
+        self._memory_peak = memory_peak
         self._tableName = tableName
         self._columnNames = columnNames
         self._rowIndex = rowIndex
@@ -134,6 +140,22 @@ class DQResult:
         self._tableName = value
 
     @property
+    def memory_end(self):
+        return self._memory_end
+
+    @memory_end.setter
+    def memory_end(self, value):
+        self._memory_end = value
+
+    @property
+    def memory_peak(self):
+        return self._memory_peak
+
+    @memory_peak.setter
+    def memory_peak(self, value):
+        self._memory_peak = value
+
+    @property
     def columnNames(self):
         return self._columnNames
 
@@ -182,6 +204,8 @@ class DQResult:
             "DQvalue": self._DQvalue,
             "DQexplanation": self._DQexplanation,
             "runtime": self._runtime,
+            "memory_end": self._memory_end,
+            "memory_peak": self._memory_peak,
             "tableName": self._tableName,
             "columnNames": self._columnNames,
             "rowIndex": self._rowIndex,

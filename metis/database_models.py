@@ -25,6 +25,8 @@ def register_models(results_table_name: str):
         dq_value: Mapped[float] = mapped_column(Double)
         dq_explanation: Mapped[dict | None] = mapped_column(JSON)
         runtime: Mapped[float | None] = mapped_column(Double)
+        memory_end: Mapped[float | None] = mapped_column(Double)
+        memory_peak: Mapped[float | None] = mapped_column(Double)
         table_name: Mapped[str | None]
         column_names: Mapped[List[str] | None] = mapped_column(JSON)
         row_index: Mapped[int | None]

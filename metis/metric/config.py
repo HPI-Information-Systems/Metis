@@ -10,6 +10,9 @@ class MetricConfig:
     All metric configuration classes should inherit from this class.
     """
 
+    measure_runtime: bool
+    measure_memory: bool
+
     @classmethod
     def from_dict(cls, config_dict: dict):
         """

@@ -1,5 +1,4 @@
 import json
-import time
 import traceback
 from typing import Dict, List, Type
 
@@ -11,7 +10,9 @@ from metis.metric import Metric
 from metis.metric.config import DatasetDependentMetricConfig, MetricConfig
 from metis.profiling.data_profile_manager import DataProfileManager
 from metis.profiling.importers import get_importer
+from metis.utils.bench_decorator import BenchmarkResults, benchmark
 from metis.utils.data_config import DataConfig
+from metis.utils.json_loading import load_json_string_or_path
 from metis.utils.logging import logger
 from metis.utils.result import DQResult
 from metis.writer.console_writer import ConsoleWriter
@@ -96,16 +97,9 @@ class DQOrchestrator:
                 measure_runtime = self._should_measure_runtime(
                     metric_config_for_dataset
                 )
-                if measure_runtime:
-                    start = time.perf_counter()
-                    incomplete_metric_results = metric_instance.assess(
-                        data=df,
-                        metric_config=metric_config_for_dataset,
-                    )
-                    elapsed = time.perf_counter() - start
-                    for result in incomplete_metric_results:
-                        result.runtime = elapsed
-                else:
+                measure_memory = self._should_measure_memory(metric_config_for_dataset)
+                benchmark_results = BenchmarkResults()
+                with benchmark(measure_runtime, measure_memory, benchmark_results):
                     incomplete_metric_results = metric_instance.assess(
                         data=df,
                         metric_config=metric_config_for_dataset,
@@ -113,6 +107,12 @@ class DQOrchestrator:
                 for result in incomplete_metric_results:
                     result.tableName = df_name
                     result.dataset = self.data_paths[df_name]
+                    if benchmark_results.runtime is not None:
+                        result.runtime = benchmark_results.runtime
+                    if benchmark_results.memory_end is not None:
+                        result.memory_end = benchmark_results.memory_end
+                    if benchmark_results.memory_peak is not None:
+                        result.memory_peak = benchmark_results.memory_peak
                     results.append(result)
 
         try:
@@ -138,21 +138,28 @@ class DQOrchestrator:
             return False
 
         if isinstance(metric_config, MetricConfig):
-            return getattr(metric_config, "measure_runtime", False)
+            return metric_config.measure_runtime or False
 
-        try:
-            parsed = json.loads(metric_config)
-        except Exception:
-            try:
-                with open(metric_config, "r") as f:
-                    parsed = json.load(f)
-            except Exception:
-                return False
+        config = load_json_string_or_path(metric_config)
 
-        if not isinstance(parsed, dict):
+        if not isinstance(config, dict):
             return False
 
-        return bool(parsed.get("measure_runtime", False))
+        return bool(config.get("measure_runtime", False))
+
+    def _should_measure_memory(self, metric_config: MetricConfig | str | None) -> bool:
+        if metric_config is None:
+            return False
+
+        if isinstance(metric_config, MetricConfig):
+            return metric_config.measure_memory or False
+
+        config = load_json_string_or_path(metric_config)
+
+        if not isinstance(config, dict):
+            return False
+
+        return bool(config.get("measure_memory", False))
 
     def _import_data_profiles(self, profiles: dict, dataset: str, table: str) -> None:
         """Import pre-computed data profiles from config.

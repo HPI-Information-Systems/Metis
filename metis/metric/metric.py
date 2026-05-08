@@ -1,14 +1,14 @@
-import json
 from abc import ABC, abstractmethod
 from typing import Any, List, TypeVar
 
 import pandas as pd
 
 from metis.metric.config import MetricConfig
+from metis.utils.json_loading import load_json_string_or_path
 from metis.utils.logging import logger as main_logger
 from metis.utils.result import DQResult
 
-C = TypeVar("C", bound=MetricConfig)
+CONF = TypeVar("CONF", bound=MetricConfig)
 
 
 class Metric(ABC):
@@ -71,7 +71,7 @@ class Metric(ABC):
         """
         raise NotImplementedError()
 
-    def load_config(self, config: Any, model: type[C]) -> C:
+    def load_config(self, config: Any, model: type[CONF]) -> CONF:
         """
         Load metric-specific configuration from a JSON file path, JSON string or the correct config model instance. Also validates the configuration using its validate method.
 
@@ -83,19 +83,7 @@ class Metric(ABC):
             return config
 
         if isinstance(config, str):
-            try:
-                if config.endswith(".json"):
-                    with open(config, "r") as f:
-                        config_dict = json.load(f)
-                else:
-                    config_dict = json.loads(config) if len(config) > 0 else {}
-
-                parsed_config = model.from_dict(config_dict)
-            except Exception as e:
-                raise ValueError(
-                    f"Failed to load metric configuration from {config}: {e}"
-                ) from e
-
+            parsed_config = model.from_dict(load_json_string_or_path(config))
             parsed_config.validate()
             return parsed_config
 
