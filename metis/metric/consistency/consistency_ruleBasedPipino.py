@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 import pandas as pd
 
@@ -58,20 +58,31 @@ class consistency_ruleBasedPipino(Metric):
             )
 
             dq_measurements = fulfilled_rules_mask.mean(axis=1)
-            certainties = self.certainties(fulfilled_rules_mask)
-            rule_fulfillment_percentages = fulfilled_rules_mask.mean(axis=0)
-            for row_index, (dq_value, certainty) in enumerate(
-                zip(dq_measurements.values, certainties.values)
-            ):
-                results.append(
-                    self.create_result(
-                        dq_value,
-                        data.columns.tolist(),
-                        row_index,
-                        float(certainty),
-                        rule_fulfillment_percentages,
+            if metric_config.disable_dq_explanations:
+                for row_index, dq_value in enumerate(dq_measurements.values):
+                    results.append(
+                        self.create_result(
+                            dq_value,
+                            data.columns.tolist(),
+                            row_index,
+                        )
                     )
-                )
+            else:
+                certainties = self.certainties(fulfilled_rules_mask)
+                rule_fulfillment_percentages = fulfilled_rules_mask.mean(axis=0)
+                for row_index, (dq_value, certainty) in enumerate(
+                    zip(dq_measurements.values, certainties.values)
+                ):
+                    results.append(
+                        self.create_result(
+                            dq_value,
+                            data.columns.tolist(),
+                            row_index,
+                            self.create_dq_explanation(
+                                float(certainty), rule_fulfillment_percentages
+                            ),
+                        )
+                    )
 
         warn_unconfigured_columns(
             self.logger,
@@ -95,21 +106,32 @@ class consistency_ruleBasedPipino(Metric):
             )
 
             dq_measurements = fulfilled_rules_mask.mean(axis=1)
-            certainties = self.certainties(fulfilled_rules_mask)
-            rule_fulfillment_percentages = fulfilled_rules_mask.mean(axis=0)
-
-            for row_index, (dq_value, certainty) in enumerate(
-                zip(dq_measurements.values, certainties.values)
-            ):
-                results.append(
-                    self.create_result(
-                        dq_value,
-                        [col_name],
-                        row_index,
-                        float(certainty),
-                        rule_fulfillment_percentages,
+            if metric_config.disable_dq_explanations:
+                for row_index, dq_value in enumerate(dq_measurements.values):
+                    results.append(
+                        self.create_result(
+                            dq_value,
+                            [col_name],
+                            row_index,
+                        )
                     )
-                )
+            else:
+                certainties = self.certainties(fulfilled_rules_mask)
+                rule_fulfillment_percentages = fulfilled_rules_mask.mean(axis=0)
+
+                for row_index, (dq_value, certainty) in enumerate(
+                    zip(dq_measurements.values, certainties.values)
+                ):
+                    results.append(
+                        self.create_result(
+                            dq_value,
+                            [col_name],
+                            row_index,
+                            self.create_dq_explanation(
+                                float(certainty), rule_fulfillment_percentages
+                            ),
+                        )
+                    )
 
         return results
 
@@ -119,13 +141,22 @@ class consistency_ruleBasedPipino(Metric):
             (1 - fulfilled_rules_mask - rule_fulfillment_percentage).abs().mean(axis=1)
         )
 
+    def create_dq_explanation(
+        self,
+        certainty: float,
+        rule_fulfillment_percentages: pd.Series,
+    ) -> Dict[str, Any]:
+        return {
+            "certainty": certainty,
+            "rule_fulfillment_percentages": rule_fulfillment_percentages.to_dict(),
+        }
+
     def create_result(
         self,
         dq_value: float,
         col_names: List[str],
         row_index: int,
-        certainty: float,
-        rule_fulfillment_percentages: pd.Series,
+        dq_explanation: Dict[str, Any] | None = None,
     ) -> DQResult:
         return DQResult(
             timestamp=pd.Timestamp.now(),
@@ -134,10 +165,7 @@ class consistency_ruleBasedPipino(Metric):
             DQmetric=self.__class__.__name__,
             columnNames=col_names,
             rowIndex=row_index,
-            DQexplanation={
-                "certainty": certainty,
-                "rule_fulfillment_percentages": rule_fulfillment_percentages.to_dict(),
-            },
+            DQexplanation=dq_explanation,
             DQgranularity=(
                 DQGranularity.CELL if len(col_names) == 1 else DQGranularity.ROW
             ),

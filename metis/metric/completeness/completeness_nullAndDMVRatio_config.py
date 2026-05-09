@@ -35,6 +35,9 @@ class completeness_nullAndDMVRatio_config(MetricConfig):
             aggregation_axis=config_dict.get("aggregation_axis", None),
             aggregate_all=config_dict.get("aggregate_all", False),
             dismis_config=dismis_config,
+            measure_runtime=config_dict.get("measure_runtime", False),
+            measure_memory=config_dict.get("measure_memory", False),
+            disable_dq_explanations=config_dict.get("disable_dq_explanations", False),
         )
 
     def to_json(self):
@@ -45,6 +48,9 @@ class completeness_nullAndDMVRatio_config(MetricConfig):
             "dismis_config": (
                 dataclasses.asdict(self.dismis_config) if self.dismis_config else None
             ),
+            "measure_runtime": self.measure_runtime,
+            "measure_memory": self.measure_memory,
+            "disable_dq_explanations": self.disable_dq_explanations,
         }
 
     def validate(self):

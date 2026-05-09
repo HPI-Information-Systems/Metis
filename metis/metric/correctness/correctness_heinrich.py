@@ -40,7 +40,7 @@ class correctness_heinrich(Metric):
             )
 
         representativeness = None
-        if config.superset_file_path is not None:
+        if config.superset_file_path is not None and not config.disable_dq_explanations:
             superset_data = pd.read_csv(config.superset_file_path)
             representativeness = self.measure_representativeness(
                 reference_data, superset_data
@@ -68,6 +68,7 @@ class correctness_heinrich(Metric):
                     DQexplanation=(
                         {"certainty": float(representativeness)}
                         if representativeness is not None
+                        and not config.disable_dq_explanations
                         else None
                     ),
                 )

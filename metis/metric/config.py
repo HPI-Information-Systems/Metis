@@ -12,6 +12,7 @@ class MetricConfig:
 
     measure_runtime: bool
     measure_memory: bool
+    disable_dq_explanations: bool
 
     @classmethod
     def from_dict(cls, config_dict: dict):

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from typing import Dict
 
 from metis.metric.config import MetricConfig
-from metis.utils.datetime.datetime_precision import DTPrecision
 
 
 @dataclass

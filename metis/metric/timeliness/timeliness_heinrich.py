@@ -66,41 +66,58 @@ class timeliness_heinrich(Metric):
             ages_in_days = (
                 (assessment_date - ingestion_dates).dt.total_seconds() / 60 / 60 / 24
             )
-            precision_of_dates = data[ingestion_date_column].apply(
-                determine_datetime_precision
-            )
-            age_and_precision = pd.DataFrame(
-                {"age": ages_in_days, "precision": precision_of_dates}
-            )
 
             decline_rate = col_config.decline_rate
             timeliness = pd.Series(np.exp(-decline_rate * ages_in_days))
-            certainty = age_and_precision.apply(
-                lambda row: self.certainty(
-                    row["age"],
-                    decline_rate or 0,
-                    row["precision"],
-                ),
-                axis=1,
-            )
-            for row_index, (timeliness_value, certainty_value, age_and_precision_value) in enumerate(
-                zip(timeliness.values, certainty.values, age_and_precision.values)
-            ):
-                result = DQResult(
-                    timestamp=pd.Timestamp.now(),
-                    DQvalue=timeliness_value,
-                    DQdimension=DQDimension.TIMELINESS,
-                    DQmetric=self.__class__.__name__,
-                    columnNames=[col_name],
-                    rowIndex=row_index,
-                    DQexplanation={
-                        "certainty": float(certainty_value),
-                        "age_in_days": float(age_and_precision_value[0]),
-                        "precision": age_and_precision_value[1],
-                    },
-                    DQgranularity=DQGranularity.CELL,
+            if config.disable_dq_explanations:
+                for row_index, timeliness_value in enumerate(timeliness.values):
+                    result = DQResult(
+                        timestamp=pd.Timestamp.now(),
+                        DQvalue=timeliness_value,
+                        DQdimension=DQDimension.TIMELINESS,
+                        DQmetric=self.__class__.__name__,
+                        columnNames=[col_name],
+                        rowIndex=row_index,
+                        DQgranularity=DQGranularity.CELL,
+                    )
+                    results.append(result)
+            else:
+                precision_of_dates = data[ingestion_date_column].apply(
+                    determine_datetime_precision
                 )
-                results.append(result)
+                age_and_precision = pd.DataFrame(
+                    {"age": ages_in_days, "precision": precision_of_dates}
+                )
+                certainty = age_and_precision.apply(
+                    lambda row: self.certainty(
+                        row["age"],
+                        decline_rate or 0,
+                        row["precision"],
+                    ),
+                    axis=1,
+                )
+                for row_index, (
+                    timeliness_value,
+                    certainty_value,
+                    age_and_precision_value,
+                ) in enumerate(
+                    zip(timeliness.values, certainty.values, age_and_precision.values)
+                ):
+                    result = DQResult(
+                        timestamp=pd.Timestamp.now(),
+                        DQvalue=timeliness_value,
+                        DQdimension=DQDimension.TIMELINESS,
+                        DQmetric=self.__class__.__name__,
+                        columnNames=[col_name],
+                        rowIndex=row_index,
+                        DQexplanation={
+                            "certainty": float(certainty_value),
+                            "age_in_days": float(age_and_precision_value[0]),
+                            "precision": age_and_precision_value[1],
+                        },
+                        DQgranularity=DQGranularity.CELL,
+                    )
+                    results.append(result)
 
         return results
 
