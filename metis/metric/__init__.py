@@ -1,5 +1,6 @@
 from .accuracy.accuracy_dataRange import accuracy_dataRange
 from .accuracy.accuracy_outlierRisk import accuracy_outlierRisk
+from .accuracy.accuracy_semanticReference import accuracy_semanticReference
 from .accuracy.accuracy_syntacticDomain import accuracy_syntacticDomain
 from .completeness.completeness_nullAndDMVRatio import completeness_nullAndDMVRatio
 from .completeness.completeness_nullRatio import completeness_nullRatio
