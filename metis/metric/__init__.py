@@ -1,4 +1,5 @@
 from .accuracy.accuracy_dataRange import accuracy_dataRange
+from .accuracy.accuracy_outlierRisk import accuracy_outlierRisk
 from .completeness.completeness_nullAndDMVRatio import completeness_nullAndDMVRatio
 from .completeness.completeness_nullRatio import completeness_nullRatio
 from .consistency.consistency_countFDViolations import consistency_countFDViolations
