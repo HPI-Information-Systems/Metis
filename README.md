@@ -9,6 +9,14 @@ Metis is a framework to automatically assess the quality of tabular data across 
 python -m demo.getting_started
 ```
 
+> **Note on the Acc-I-2 reference.** The getting-started demo exercises
+> `accuracy_semanticReference` against `data/adult_gold_sample.csv`, which is a
+> synthetic stub built by copying the first 100 rows of `adult.csv` and
+> manually injecting two mismatches (row 0 `education`, row 5 `workclass`). It
+> is not a real gold standard. It exists only to show the metric mechanically
+> detecting the known-planted differences. A real Acc-I-2 run requires an
+> external authoritative source for the column(s) under inspection.
+
 ## Full demo (all metrics)
 
 To run every registered metric against the demo restaurants dataset, use the extended demo.
