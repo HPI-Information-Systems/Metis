@@ -30,6 +30,7 @@ from .single_column.value_distribution.histogram import (
 )
 from .single_column.value_distribution.constancy import constancy, most_frequent_value
 from .single_column.value_distribution.quartiles import quartiles, interquartile_range
+from .single_column.value_distribution.range import value_range
 
 # --- Patterns & Data Types ---
 from .single_column.patterns_and_data_types.basic_type import basic_type
