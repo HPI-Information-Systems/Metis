@@ -46,20 +46,20 @@ class validity_outOfVocabulary(Metric):
             col_values = data[column].dropna().astype(str)
             total_not_null_values = len(col_values)
 
-            if total_not_null_values == 0:
-                dq_value = 0.0
-                in_vocab_count = 0
-            else:
-                def is_valid(text: str) -> bool:
-                    tokens = tokenize(text)
-                    if not tokens:
-                        return True  # empty or numeric-like strings are treated as valid
-                    # valid if *all* tokens are in vocabulary
-                    return all(token in vocab_set for token in tokens)
+            # if total_not_null_values == 0:
+            #     dq_value = 0.0
+            #     in_vocab_count = 0
+            # else:
+            def is_valid(text: str) -> bool:
+                tokens = tokenize(text)
+                if not tokens:
+                    return True  # empty or numeric-like strings are treated as valid
+                # valid if *all* tokens are in vocabulary
+                return all(token in vocab_set for token in tokens)
 
-                in_vocab_flags = col_values.map(is_valid)
-                in_vocab_count = int(in_vocab_flags.sum())
-                dq_value = in_vocab_count / total_not_null_values
+            in_vocab_flags = col_values.map(is_valid)
+            in_vocab_count = int(in_vocab_flags.sum())
+            dq_value = in_vocab_count / total_not_null_values
 
             annotations = {}
             if dq_value < 1.0:
