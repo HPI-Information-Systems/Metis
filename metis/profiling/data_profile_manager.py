@@ -293,6 +293,40 @@ class DataProfileManager:
         """Return all stored FDs for a dataset/table."""
         return self._query_by_task("fd", dataset, table)
 
+    def store_pfd(
+        self,
+        lhs: List[str],
+        rhs: str,
+        partial: float,
+        gpdep: float,
+        dataset: Optional[str] = None,
+        table: Optional[str] = None,
+        source: str = "imported",
+    ) -> None:
+        """Store a partial functional dependency  lhs -> rhs with rho and gpdep."""
+        self.store(
+            column_names=sorted(lhs + [rhs]),
+            dp_task_name="pfd",
+            value={
+                "lhs": lhs,
+                "rhs": rhs,
+                "partial": float(partial),
+                "gpdep": float(gpdep),
+            },
+            profile_type="dependency",
+            source=source,
+            dataset=dataset,
+            table=table,
+        )
+
+    def get_pfds(
+        self,
+        dataset: Optional[str] = None,
+        table: Optional[str] = None,
+    ) -> List[dict]:
+        """Return all stored partial FDs for a dataset/table."""
+        return self._query_by_task("pfd", dataset, table)
+
     def get_uccs(
         self,
         dataset: Optional[str] = None,
