@@ -29,6 +29,7 @@ class DataConfig:
         self.parse_dates: bool = config.get("parse_dates", False)
         self.decimals: str = config.get("decimals", ".")
         self.thousands: str | None = config.get("thousands")
+        self.keep_default_na: bool = config.get("keep_default_na", False)
 
         # Data profiling imports
         self.data_profiles: Dict[str, Dict[str, Any]] | None = config.get(

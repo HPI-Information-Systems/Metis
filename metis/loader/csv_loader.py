@@ -22,5 +22,6 @@ class CSVLoader(DataLoader):
             usecols=config.usecols,
             parse_dates=config.parse_dates,
             decimal=config.decimals,
-            thousands=config.thousands
+            thousands=config.thousands,
+            keep_default_na=config.keep_default_na,
         )
