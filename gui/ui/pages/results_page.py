@@ -274,6 +274,21 @@ def _render_overview_tab(
 
     st.markdown("**Column × metric heatmap**")
     heatmap_data = _cached_get_heatmap(store, tag)
+    heatmap_metrics = {row["dq_metric"] for row in heatmap_data}
+    excluded_by_dim: dict[str, list[str]] = {}
+    for name in metrics:
+        if name in heatmap_metrics:
+            continue
+        excluded_by_dim.setdefault(_dimension_for(name), []).append(name)
+    if excluded_by_dim:
+        text = (
+            "Not column-level, so not shown in the heatmap — see the matching "
+            "dimension tab:"
+        )
+        for dim in sorted(excluded_by_dim):
+            names = ", ".join(f"`{n}`" for n in sorted(excluded_by_dim[dim]))
+            text += f"  \n&nbsp;&nbsp;&nbsp;&nbsp;• {dim} ({names})"
+        st.caption(text)
     heatmap.render(pd.DataFrame(heatmap_data), dataset_cols)
 
 
