@@ -6,3 +6,4 @@ nltk==3.9.2
 tqdm
 numpy
 datasketch
+streamlit
