@@ -1,0 +1,15 @@
+{
+  "features": [
+    "frequency_outlier",
+    "semantic_comments",
+    "semantic_outlier_10_new",
+    "semantic_placeholder"
+  ],
+  "samples": 7584401,
+  "scale_pos_weight": 7.2394735833876105,
+  "target_type": "text",
+  "threshold": 0.5,
+  "train_f1": 0.6305810500176178,
+  "train_precision": 0.5609588632157144,
+  "train_recall": 0.7199341021416804
+}

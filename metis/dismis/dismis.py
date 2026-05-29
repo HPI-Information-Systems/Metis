@@ -1,12 +1,12 @@
 import json
-import pickle
 import time
 import warnings
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+from joblib import load
 from tqdm import tqdm
 
 from metis.dismis.detection.detection import DETECTORS_LITERAL, run_detection_algorithms
@@ -16,23 +16,95 @@ from metis.dismis.utils.types import COLUMN_TYPES
 
 warnings.filterwarnings("ignore")
 
+SHORTCUT_TEXT_FEATURES = [
+    "semantic_placeholder",
+    "semantic_comments",
+    "semantic_unsure",
+]
 # Type mapping
 type_mapping = {"numeric": 0, "date": 1, "categorical": 2, "text": 3}
 target_type_str_map = {v: k for k, v in type_mapping.items()}
 
 
-def load_trained_models(model_path: Path | str | None):
-    """Load pretrained xgboost, random_forest, and mlp models."""
-    # These imports are needed to load the trained models, which include xgboost and sklearn models. Without these imports, python throws a segfault
-    import sklearn
-    import xgboost
+def _load_trained_model_and_features_for_column_type(
+    models_dir: Path | str | None, column_type: COLUMN_TYPES
+) -> Tuple[Any, List[str]]:
+    models_dir = require_exists(models_dir, "Models directory")
 
-    with require_exists(model_path, "Model").open("rb") as f:
-        return pickle.load(f)
+    model_dir = models_dir / column_type
+    metadata = json.load(open(model_dir / "metadata.json", "r", encoding="utf-8"))
+
+    if column_type in {"numeric", "date"}:
+        return load(model_dir / "parsable_model.joblib"), metadata["parsable_features"]
+
+    if column_type in {"categorical", "text"}:
+        return load(model_dir / "model.joblib"), metadata["features"]
+
+    raise ValueError(f"Unsupported type '{column_type}' for model loading.")
+
+
+def _load_trained_models_and_features(
+    models_dir: Path | str | None,
+) -> Dict[COLUMN_TYPES, Tuple[Any, List[str]]]:
+    return {
+        "numeric": _load_trained_model_and_features_for_column_type(
+            models_dir, "numeric"
+        ),
+        "date": _load_trained_model_and_features_for_column_type(models_dir, "date"),
+        "categorical": _load_trained_model_and_features_for_column_type(
+            models_dir, "categorical"
+        ),
+        "text": _load_trained_model_and_features_for_column_type(models_dir, "text"),
+    }
+
+
+def _create_column_feature_matrix(
+    column_scores_per_detector: Dict[str, pd.Series],
+    features: List[str],
+    length: int,
+):
+    feature_data: Dict[str, np.ndarray] = {}
+    for feature in features:
+        if feature == "type":
+            continue
+        feature_name = feature.replace("_30b8b", "")
+        feature_data[feature_name] = column_scores_per_detector.get(
+            feature_name, pd.Series(np.zeros(length, dtype=float))
+        ).to_numpy()
+        if "semantic_valid" in feature_name:
+            feature_data[feature_name] = 1 - feature_data[feature_name]
+    return pd.DataFrame(feature_data)
+
+
+def _parse_numeric(series: pd.Series) -> np.ndarray:
+    parsed = pd.to_numeric(series, errors="coerce")
+    raw = series.astype(str).str.strip()
+    invalid = parsed.isna() & series.notna() & (raw != "")
+    return invalid.to_numpy()
+
+
+def _parse_date(series: pd.Series) -> np.ndarray:
+    parsed = pd.to_datetime(series, errors="coerce")
+    raw = series.astype(str).str.strip()
+    invalid = parsed.isna() & series.notna() & (raw != "")
+    return invalid.to_numpy()
+
+
+def _shortcut_text_flags(column_scores_per_detector: Dict[str, pd.Series], length: int):
+    flags = np.zeros(length, dtype=bool)
+    for feature_name in SHORTCUT_TEXT_FEATURES:
+        scores = column_scores_per_detector.get(
+            feature_name, pd.Series(np.zeros(length, dtype=float))
+        ).to_numpy()
+        flags |= scores > 0.95
+    return flags
 
 
 def predict_with_ensemble(
-    detection_results, column_types: Dict[str, COLUMN_TYPES], trained_models
+    detection_results,
+    dataset: pd.DataFrame,
+    column_types: Dict[str, COLUMN_TYPES],
+    trained_models: Dict[COLUMN_TYPES, Tuple[Any, List[str]]],
 ):
     """
     Use trained models to predict DMVs and create ensemble predictions.
@@ -51,83 +123,42 @@ def predict_with_ensemble(
     print("Running Ensemble Predictions")
     print("=" * 80)
 
-    # Get the shape of the dataset from the first detector's df_score
-    first_detector = list(detection_results.keys())[0]
-    df_score_sample, _ = detection_results[first_detector]
-    n_rows, n_cols = df_score_sample.shape
-    column_names = df_score_sample.columns.tolist()
-
-    print(f"Dataset shape: {n_rows} rows x {n_cols} columns")
-
-    df_xgboost_scores = pd.DataFrame(index=range(n_rows), columns=column_names)
-    df_xgboost_predictions = pd.DataFrame(index=range(n_rows), columns=column_names)
-
-    # Process each column
-    for col in tqdm(column_names, desc="Predicting DMVs"):
-        if col not in column_types:
-            print(f"Warning: Column '{col}' not found in column_types, skipping...")
-            continue
-
-        col_type = column_types[col]
-        type_id = type_mapping.get(col_type)
-
-        # Build feature matrix for this column
-        # Each row in the feature matrix corresponds to a row in the dataset
-        # Each column in the feature matrix is a feature from detection_results
-        available_features = list(detection_results.keys())
-        feature_data = []
-
-        for detector_name in available_features:
-            df_score, _ = detection_results[detector_name]
-            feature_data.append(df_score[col].values)
-
-        feature_data = pd.DataFrame(
-            np.column_stack(feature_data), columns=available_features
+    pred_df = pd.DataFrame(index=dataset.index)
+    proba_df = pd.DataFrame(index=dataset.index)
+    for column, col_type in column_types.items():
+        column_data = dataset[column]
+        model, features = trained_models[col_type]
+        column_scores_per_detector = {
+            detector: scores[column]
+            for detector, (scores, _) in detection_results.items()
+        }
+        input_features = _create_column_feature_matrix(
+            column_scores_per_detector,
+            features,
+            len(column_data),
         )
+        proba = model.predict_proba(input_features.fillna(0))[:, 1]
+        pred = (proba >= 0.5).astype(int)
 
-        model_info = trained_models[type_id]
-        model = model_info["model"]
-        required_features = model_info["features"]
-
-        missing_features = []
-        mapped_features = []
-
-        for feat_name in required_features:
-            if any(feat_name.startswith(prefix) for prefix in available_features):
-                mapped_feature = [
-                    prefix
-                    for prefix in sorted(
-                        available_features, key=lambda x: len(x), reverse=True
-                    )
-                    if feat_name.startswith(prefix)
-                ][0]
-                # print(f"Mapped {feat_name} to {mapped_feature}")
-                mapped_features.append(mapped_feature)
-            elif feat_name == "type":
-                feature_data["type"] = [type_mapping[column_types[col]]] * n_rows
-                mapped_features.append("type")
-            else:
-                missing_features.append(feat_name)
-
-        if len(missing_features) > 0 and len(missing_features) < 5:
-            dismis_logger.warning(
-                f"Warning: Column '{col}' missing {len(missing_features)} features: {missing_features[:5]}"
+        if col_type in {"numeric", "date"}:
+            invalid = (
+                _parse_date(column_data)
+                if col_type == "date"
+                else _parse_numeric(column_data)
             )
-        elif len(missing_features) >= 5:
-            dismis_logger.warning(
-                f"Warning: Column '{col}' missing {len(missing_features)} features"
+            pred[invalid] = 1
+            proba[invalid] = 1.0
+        elif col_type in {"categorical", "text"}:
+            shortcut = _shortcut_text_flags(
+                column_scores_per_detector, len(column_data)
             )
+            pred[shortcut] = 1
+            proba[shortcut] = np.maximum(proba[shortcut], 1.0)
 
-        preds = model.predict(feature_data[mapped_features].values)
-        probas = model.predict_proba(feature_data[mapped_features].values)[:, 1]
+        pred_df[column] = pred
+        proba_df[column] = proba
 
-        df_xgboost_scores[col] = probas
-        df_xgboost_predictions[col] = preds
-
-    # Add to detection_results
-    detection_results["DISMIS"] = (df_xgboost_scores, df_xgboost_predictions)
-
-    return (df_xgboost_scores, df_xgboost_predictions)
+    return (proba_df, pred_df)
 
 
 def run_dismis_detection(
@@ -135,14 +166,14 @@ def run_dismis_detection(
     detectors: List[DETECTORS_LITERAL],
     dataset: pd.DataFrame,
     column_types: Dict[str, COLUMN_TYPES],
-    model_path: Path | str,
+    models_dir: Path | str,
     value_embeddings_path: Path | str,
     example_dmvs_path: Path | str,
     example_embeddings_path: Path | str,
     results_path: Path | str | None = None,
     embedding_dim=128,
 ):
-    trained_models = load_trained_models(model_path)
+    trained_models = _load_trained_models_and_features(models_dir)
     all_embeddings = None
 
     with require_exists(value_embeddings_path, "Value embeddings").open("r") as f:
@@ -228,7 +259,7 @@ def run_dismis_detection(
     # 3. Use trained models to create ensemble predictions
     prediction_starttime = time.time()
     scores, predictions = predict_with_ensemble(
-        detection_results, column_types, trained_models
+        detection_results, dataset, column_types, trained_models
     )
     time_measurements["prediction"] = time.time() - prediction_starttime
 

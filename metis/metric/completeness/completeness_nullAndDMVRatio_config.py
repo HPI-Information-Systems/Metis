@@ -100,4 +100,4 @@ class completeness_nullAndDMVRatio_config_dismis(MetricConfig):
             "semantic_valid",
         ]
     )
-    model_path: str = "metis/dismis/dismis.pkl"
+    models_dir: str = "metis/dismis/models"

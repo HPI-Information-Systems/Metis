@@ -76,7 +76,7 @@ class completeness_nullAndDMVRatio(Metric):
                 example_dmvs_path=dismis_config.example_dmvs_path,
                 example_embeddings_path=dismis_config.example_embeddings_path,
                 embedding_dim=dismis_config.embedding_dim,
-                model_path=dismis_config.model_path,
+                models_dir=dismis_config.models_dir,
                 results_path=(
                     Path(config.explanatory_results_path) / "dismis"
                     if config.explanatory_results_path

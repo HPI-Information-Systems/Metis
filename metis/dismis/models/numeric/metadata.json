@@ -1,0 +1,32 @@
+{
+  "date_unparsable_threshold": 0.95,
+  "parsable_features": [
+    "BucketPDFGoF",
+    "bucket_knn_square",
+    "frequent_values_1",
+    "frequent_values_10",
+    "key_distance_outlier_distribution",
+    "length_outlier_distribution",
+    "nan_row_outlier",
+    "no_duplicate_similar_samples_25",
+    "non_alphanumerical_outlier_distribution"
+  ],
+  "parsable_samples": 10959521,
+  "parsable_scale_pos_weight": 9.375317971006535,
+  "parsable_train_f1": 0.7251477527470575,
+  "parsable_train_precision": 0.5841365928836468,
+  "parsable_train_recall": 0.9559039180844205,
+  "target_type": "numeric",
+  "threshold": 0.5,
+  "unparsable_features": [
+    "semantic_placeholder",
+    "semantic_comments",
+    "semantic_valid"
+  ],
+  "unparsable_model": "logistic_regression",
+  "unparsable_samples": 306207,
+  "unparsable_scale_pos_weight": 0.011532261261380303,
+  "unparsable_train_f1": 0.9892109406893336,
+  "unparsable_train_precision": 0.9980028847220681,
+  "unparsable_train_recall": 0.9805725498487031
+}
