@@ -1,3 +1,5 @@
+import traceback
+
 from metis.dq_orchestrator import DQOrchestrator
 from metis.metric import Metric
 
@@ -16,3 +18,4 @@ for metric_name in Metric.registry:
         )
     except Exception as exc:
         print(f"Metric {metric_name} failed: {exc}")
+        traceback.print_exc()
