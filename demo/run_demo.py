@@ -1,4 +1,8 @@
+import os
 import traceback
+from pathlib import Path
+
+os.chdir(Path(__file__).resolve().parent.parent)
 
 from metis.dq_orchestrator import DQOrchestrator
 from metis.metric import Metric
