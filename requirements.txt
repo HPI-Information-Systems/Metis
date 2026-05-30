@@ -7,3 +7,4 @@ tqdm
 numpy
 datasketch
 streamlit
+semhash

@@ -62,11 +62,18 @@ class consistency_countFDViolations(Metric):
                 # group by determinant and count unique dependent values
                 grouped = data.groupby(determinant)[dependent].nunique()
 
-                # find groups where there's more than one dependent value
-                # for the same determinant (FD violation)
-                violations = grouped[grouped > 1].index.tolist()
+                # determinant values that violate FD 
+                determinant_violating = grouped[grouped > 1].index
 
-                consistency = 1 - (len(violations) / len(data[determinant]))
+                # tuples that have a determinant that violates FD
+                violating_tuples = data[data[determinant].isin(determinant_violating)]
+                
+                num_violating_tuples = violating_tuples.shape[0]
+                total_rows = len(data[determinant])
+
+                consistency = 1 - (num_violating_tuples / total_rows)
+
+                violations = violating_tuples.to_json(orient="records") # returns json list like: [{"determinant":"value","dependent":"value"},..}]
 
                 result = DQResult(
                     timestamp=pd.Timestamp.now(),
@@ -74,8 +81,8 @@ class consistency_countFDViolations(Metric):
                     DQmetric=self.__class__.__name__,
                     DQgranularity=DQGranularity.TABLE,
                     DQvalue=consistency,
-                    DQexplanation={f"{determinant}:{dependent}": violations},  # FD
-                    columnNames=[determinant],
+                    DQexplanation={f"{determinant}:{dependent}": violations}, 
+                    columnNames=[determinant], # TODO: add determinant, dependent
                     configJson=metric_conf,
                 )
                 results.append(result)

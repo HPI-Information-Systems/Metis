@@ -16,3 +16,12 @@ def levenshtein_distance(s1: str, s2: str) -> int:
                 )
         distances = distances_
     return distances[-1]
+
+def normalized_levenshtein_distance(a: str, b: str) -> float:
+    """Normalized Levenshtein distance between two strings."""
+    if not a and not b:
+        return 1.0
+    if not a or not b:
+        return 0.0
+    distance = levenshtein_distance(a.lower(), b.lower())
+    return 1.0 - distance / max(len(a), len(b))

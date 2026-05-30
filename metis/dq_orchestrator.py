@@ -79,8 +79,8 @@ class DQOrchestrator:
 
     def assess(
         self, metrics: List[str], metric_configs: List[str | MetricConfig | None]
-    ) -> None:
-        results = []
+    ) -> List[DQResult]:
+        results: List[DQResult] = []
 
         for metric, metric_config in zip(metrics, metric_configs):
             metric_class: Type[Metric] | None = Metric.registry.get(metric)
@@ -129,6 +129,7 @@ class DQOrchestrator:
             except Exception as e:
                 logger.error(f"Failed to save results to csv: {e}")
                 raise e
+        return results
 
     def get_dq_result(self, query: str) -> List[DQResult]:
         return []

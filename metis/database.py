@@ -1,9 +1,6 @@
 from __future__ import annotations
-
 from typing import Dict, Literal
-
 from sqlalchemy import create_engine
-
 from metis.database_models import register_models
 
 

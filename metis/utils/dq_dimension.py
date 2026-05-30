@@ -10,3 +10,4 @@ class DQDimension(StrEnum):
     TIMELINESS = "Timeliness"
     MINIMALITY = "Minimality"
     VALIDITY = "Validity"
+    READABILITY = "Readability"
