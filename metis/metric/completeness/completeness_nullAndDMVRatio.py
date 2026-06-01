@@ -3,7 +3,11 @@ from typing import List, Literal
 
 import pandas as pd
 
-from metis.dismis.dismis import run_dismis_detection
+from metis.dismis.dismis import (
+    DISMIS_EMPIRIC_PRECISION,
+    DISMIS_EMPIRIC_RECALL,
+    run_dismis_detection,
+)
 from metis.metric.completeness.completeness_nullAndDMVRatio_config import (
     completeness_nullAndDMVRatio_config,
 )
@@ -85,7 +89,7 @@ class completeness_nullAndDMVRatio(Metric):
             )
             marked_cells[predictions == 1] = IS_DMV_MARKER
             if not config.disable_dq_explanations:
-                certainty = self.dismis_certainty(marked_cells, scores)
+                certainty = self.dismis_certainty(marked_cells)
 
         completeness = (marked_cells == IS_VALID_MARKER).astype(int)
 
@@ -148,10 +152,12 @@ class completeness_nullAndDMVRatio(Metric):
             .replace(IS_DMV_MARKER, FAHES_PRECISION)
         )
 
-    def dismis_certainty(self, marks: pd.DataFrame, scores: pd.DataFrame):
-        certainty = 1 - (marks - scores).abs()
-        certainty[marks == IS_NULL_MARKER] = 1
-        return certainty
+    def dismis_certainty(self, marks: pd.DataFrame):
+        return (
+            marks.replace(IS_VALID_MARKER, DISMIS_EMPIRIC_RECALL)
+            .replace(IS_NULL_MARKER, 1)
+            .replace(IS_DMV_MARKER, DISMIS_EMPIRIC_PRECISION)
+        )
 
     def create_aggregated_results(
         self,

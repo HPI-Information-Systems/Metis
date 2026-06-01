@@ -7,10 +7,8 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 from joblib import load
-from tqdm import tqdm
 
 from metis.dismis.detection.detection import DETECTORS_LITERAL, run_detection_algorithms
-from metis.dismis.utils.logging import dismis_logger
 from metis.dismis.utils.pathutils import require_exists
 from metis.dismis.utils.types import COLUMN_TYPES
 
@@ -21,9 +19,9 @@ SHORTCUT_TEXT_FEATURES = [
     "semantic_comments",
     "semantic_unsure",
 ]
-# Type mapping
-type_mapping = {"numeric": 0, "date": 1, "categorical": 2, "text": 3}
-target_type_str_map = {v: k for k, v in type_mapping.items()}
+
+DISMIS_EMPIRIC_PRECISION = 0.977
+DISMIS_EMPIRIC_RECALL = 0.673
 
 
 def _load_trained_model_and_features_for_column_type(
