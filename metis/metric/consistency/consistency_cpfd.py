@@ -3,14 +3,16 @@ from typing import List, Union
 import pandas as pd
 
 from metis.metric.config import MetricConfig
-from metis.metric.consistency.consistency_cpfd_config import (
-    consistency_cpfd_config,
-)
 from metis.metric.metric import Metric
 from metis.profiling.data_profile_manager import DataProfileManager
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
+
+# Data-profile task under which partial FDs (with rho and gpdep) are stored
+# in the DataProfileManager. The matching importer lives in
+# metis/profiling/importers/pfd_importer.py.
+PFD_TASK_NAME = "pfd"
 
 
 class consistency_cpfd(Metric):
@@ -24,8 +26,9 @@ class consistency_cpfd(Metric):
     iff the partial threshold rho equals 1 (i.e., the FD holds exactly).
 
     The pFDs together with their rho and gpdep weights are expected to be
-    pre-computed (e.g., by the Java HyFD extension from cpfd-reproducibility)
-    and loaded into the DataProfileManager via the "pfd" importer.
+    pre-computed (e.g., by the Partial HyFD extension from
+    cpfd-reproducibility) and loaded into the DataProfileManager via the
+    "pfd" importer. The metric itself takes no configuration.
     """
 
     def assess(
@@ -34,11 +37,9 @@ class consistency_cpfd(Metric):
         reference: Union[pd.DataFrame, None] = None,
         metric_config: Union[MetricConfig, str, None] = None,
     ) -> List[DQResult]:
-        config = self.load_config(metric_config or "{}", consistency_cpfd_config)
-
         manager = DataProfileManager.get_instance()
         pfds = manager._query_by_task(
-            config.pfd_task_name,
+            PFD_TASK_NAME,
             dataset=manager.dataset,
             table=manager.table,
         )
@@ -47,7 +48,7 @@ class consistency_cpfd(Metric):
             self.logger.warning(
                 "No partial FDs found under task '%s' for dataset=%s table=%s. "
                 "Import pFDs via the 'pfd' data-profile importer before running this metric.",
-                config.pfd_task_name,
+                PFD_TASK_NAME,
                 manager.dataset,
                 manager.table,
             )
@@ -89,6 +90,5 @@ class consistency_cpfd(Metric):
                     "pfds": breakdown,
                 },
                 columnNames=column_names,
-                configJson=config.to_json(),
             )
         ]

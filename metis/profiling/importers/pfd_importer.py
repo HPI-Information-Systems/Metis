@@ -29,8 +29,10 @@ class PFDImporter(BaseImporter):
     """
 
     # Partial HyFD: [table.csv.col1, table.csv.col2]->table.csv.col3#0.95#0.87
+    # The LHS may be empty (e.g. "[]->table.csv.col#1.0#0.0") for constant-column
+    # claims emitted by the discoverer; those are kept as pFDs with lhs=[].
     PFD_PATTERN = re.compile(
-        r"\[([^\]]+)\]->([^\s#]+)#([\d.]+)#([\d.]+)"
+        r"\[([^\]]*)\]->([^\s#]+)#([\d.]+)#([\d.]+)"
     )
 
     @property
@@ -51,7 +53,11 @@ class PFDImporter(BaseImporter):
             if not match:
                 continue
             lhs_raw, rhs_raw, partial, gpdep = match.groups()
-            lhs = FDImporter._parse_columns(lhs_raw, table_name)
+            lhs = (
+                FDImporter._parse_columns(lhs_raw, table_name)
+                if lhs_raw.strip()
+                else []
+            )
             rhs = FDImporter._parse_column(rhs_raw, table_name)
             pfds.append(
                 {
