@@ -64100,7 +64100,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.4027535795986564e-223,
+      "DQvalue": 5.924353966859844e-239,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -64252,7 +64252,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 7.942784014030877e-260,
+      "DQvalue": 1.9584140621401027e-275,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -64271,7 +64271,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 4.71954461009357e-136,
+      "DQvalue": 1.1636754209831103e-151,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -65734,7 +65734,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 8.518076639525728e-171,
+      "DQvalue": 2.1002611985629646e-186,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -65791,7 +65791,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 3.109818929687208e-52,
+      "DQvalue": 7.667731001939427e-68,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -66095,7 +66095,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 7.320055585792393e-35,
+      "DQvalue": 1.8048709079260028e-50,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -66513,7 +66513,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 5.511395697238408e-196,
+      "DQvalue": 1.3589183359920089e-211,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -67045,7 +67045,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 7.569257044098192e-164,
+      "DQvalue": 1.8663153132364834e-179,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -67900,7 +67900,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 3.8933443175898625e-255,
+      "DQvalue": 6.1134829430605904e-263,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -67957,7 +67957,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.0714469942306968e-243,
+      "DQvalue": 3.252667843804493e-251,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -67976,7 +67976,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 1.2358870814e-314,
+      "DQvalue": 1.93e-322,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68071,7 +68071,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.0150217672212475e-271,
+      "DQvalue": 3.164066724884158e-279,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68109,7 +68109,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 8.342064618292386e-279,
+      "DQvalue": 1.3099039179100975e-286,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68128,7 +68128,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.271617459800346e-240,
+      "DQvalue": 3.5669834108700054e-248,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68242,7 +68242,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.7318568891394035e-234,
+      "DQvalue": 4.289669531456957e-242,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68261,7 +68261,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 1.0620662991882109e-178,
+      "DQvalue": 1.6676984296384106e-186,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68413,7 +68413,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 4.901788859585116e-112,
+      "DQvalue": 7.696982372754899e-120,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68489,7 +68489,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 1.5082806654005862e-275,
+      "DQvalue": 2.3683618424436294e-283,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68508,7 +68508,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 7.606978280911245e-282,
+      "DQvalue": 1.1944777593514212e-289,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68546,7 +68546,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.3697902342611568e-179,
+      "DQvalue": 3.721138176845035e-187,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68565,7 +68565,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.8182944183050764e-130,
+      "DQvalue": 4.425397152002936e-138,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68584,7 +68584,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.1724512105055643e-68,
+      "DQvalue": 3.4112686514910755e-76,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68660,7 +68660,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 9.885887674307763e-306,
+      "DQvalue": 1.5523211086e-313,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -68793,7 +68793,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.0946917213693923e-286,
+      "DQvalue": 3.289167631977989e-294,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -69078,7 +69078,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 9.180561748013775e-200,
+      "DQvalue": 1.4415680473115028e-207,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -69192,7 +69192,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.556368677339515e-247,
+      "DQvalue": 4.014111013629549e-255,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -69401,7 +69401,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 3.371379234815397e-238,
+      "DQvalue": 5.293872764737015e-246,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -69534,7 +69534,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.2464093933924794e-197,
+      "DQvalue": 3.527400709870107e-205,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -69705,7 +69705,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 1.547779463916405e-285,
+      "DQvalue": 2.430384415147224e-293,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -69743,7 +69743,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 4.1532694148006185e-280,
+      "DQvalue": 6.521627591632286e-288,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -69800,7 +69800,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 3.4596687900494824e-248,
+      "DQvalue": 5.432508509727615e-256,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -69819,7 +69819,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.29e-321,
+      "DQvalue": 0.0,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70028,7 +70028,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.6527522733739034e-300,
+      "DQvalue": 4.165456341008658e-308,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70047,7 +70047,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 9.229342344564416e-86,
+      "DQvalue": 1.4492277691504911e-93,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70104,7 +70104,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 1.7634678053024005e-26,
+      "DQvalue": 2.7690667634105306e-34,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70237,7 +70237,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.04123591052295e-276,
+      "DQvalue": 3.205229207538945e-284,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70389,7 +70389,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 4.512033881558025e-196,
+      "DQvalue": 7.084973720097442e-204,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70408,7 +70408,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 8.555732023584192e-18,
+      "DQvalue": 1.3434548173728159e-25,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70465,7 +70465,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 8.22039951502e-312,
+      "DQvalue": 1.2908e-319,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70807,7 +70807,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 9.667698289572842e-220,
+      "DQvalue": 1.5180601501113468e-227,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70826,7 +70826,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.3476361069749692e-98,
+      "DQvalue": 3.686350891612798e-106,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -70845,7 +70845,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.952151855479258e-264,
+      "DQvalue": 4.6355853840765655e-272,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -71016,7 +71016,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 9.046667557031855e-233,
+      "DQvalue": 1.4205434528762903e-240,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -71168,7 +71168,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.9852794057104403e-307,
+      "DQvalue": 4.68760357e-315,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -71358,7 +71358,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.7512281777171724e-82,
+      "DQvalue": 4.320087093491823e-90,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -71396,7 +71396,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 1.1144770449577382e-274,
+      "DQvalue": 1.7499958516382732e-282,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -71415,7 +71415,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 1.2086100728071011e-228,
+      "DQvalue": 1.897807248009189e-236,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -71567,7 +71567,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 7.949760595629568e-183,
+      "DQvalue": 1.2483027915927973e-190,
       "DQexplanation": {
         "certainty": 1.0
       },
@@ -72099,7 +72099,7 @@
       "DQdimension": "Timeliness",
       "DQmetric": "timeliness_heinrich",
       "DQgranularity": "cell",
-      "DQvalue": 2.04123591052295e-276,
+      "DQvalue": 3.205229207538945e-284,
       "DQexplanation": {
         "certainty": 1.0
       },

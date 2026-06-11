@@ -139,12 +139,16 @@ DEMO_CONFIG_DISPLAY: dict[str, dict] = {
 
 def preprocess_heinrich(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Drop rows with NaN ``last_review_date`` so ``timeliness_heinrich`` doesn't crash.
+    Drop rows ``timeliness_heinrich`` cannot handle: NaN ``last_review_date``
+    crashes the certainty computation, and future-dated values make
+    ``exp(-decline_rate * age)`` exceed 1 because the age turns negative.
 
     :param df: The raw restaurant dataframe.
-    :return: A filtered dataframe with all timestamp values present.
+    :return: A filtered dataframe with valid, non-future timestamp values.
     """
-    return df.dropna(subset=["last_review_date"])
+    df = df.dropna(subset=["last_review_date"])
+    dates = pd.to_datetime(df["last_review_date"], errors="coerce")
+    return df[dates.notna() & (dates <= pd.Timestamp.now())]
 
 
 # Aliases used by run_demo_pipeline._get_metric_config() — the pipeline strips
