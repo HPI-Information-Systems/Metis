@@ -174,7 +174,7 @@ are resolved relative to the `data/` directory:
 `reference_file_name` is optional; when set, the orchestrator loads it as the
 reference DataFrame and passes it to every metric run on that dataset.
 Further optional fields control CSV parsing (`delimiter`, `encoding`,
-`header`, `nrows`, `usecols`, `parse_dates`, `decimal`, `thousands`) and
+`header`, `nrows`, `usecols`, `parse_dates`, `decimals`, `thousands`) and
 profile imports (`data_profiles`, see [Data Profiling](#data-profiling)). The
 full field reference lives in [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
@@ -186,7 +186,7 @@ writer config:
 | Writer     | `writer_name` | Output                                          |
 |------------|---------------|--------------------------------------------------|
 | Console    | *(default)*   | Prints each result as JSON to stdout             |
-| CSV        | `csv`         | Appends results to a CSV file (`path`)           |
+| CSV        | `csv`         | Writes results to a CSV file (`path`)            |
 | SQLite     | `sqlite`      | Local SQLite database (`db_name`, `table_name`)  |
 | PostgreSQL | `postgres`    | PostgreSQL database (`db_user`, `db_pass`, …)    |
 
