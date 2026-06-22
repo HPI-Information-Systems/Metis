@@ -227,7 +227,7 @@ def _render_demo_dataset_info(df: pd.DataFrame | None) -> None:
 
     st.success(
         f"**restaurant_sample.csv** — {len(df):,} rows × {len(df.columns)} columns  "
-        f"(TripAdvisor restaurant metadata)"
+        f"(dirty-restaurants duplicate-detection benchmark)"
     )
     _render_preview_fragment(df)
 

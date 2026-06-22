@@ -1,4 +1,5 @@
 {
-    "province": ["region"],
-    "country": ["default_language"]
+    "phone": ["city", "type"],
+    "address": ["city"],
+    "name": ["phone"]
 }

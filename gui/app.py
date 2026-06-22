@@ -386,7 +386,7 @@ def _render_landing(store) -> None:
             f"<div style='border:1px solid {LANDING_CARD_BORDER}; border-radius:8px; padding:24px; height:{LANDING_CARD_HEIGHT_PX}px;'>"
             "<h3 style='margin-top:0'>🍽️ Load Demo</h3>"
             "<p>Explore pre-computed DQ results on a restaurant dataset "
-            "(1,000 rows, multiple metrics). No upload needed.</p>"
+            "(288 rows, multiple metrics). No upload needed.</p>"
             "</div>",
             unsafe_allow_html=True,
         )

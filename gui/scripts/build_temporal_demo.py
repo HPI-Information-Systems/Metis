@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate two extra precomputed demo runs for the Comparison-over-time tab.
 
-Slices the next two 1k-row chunks out of ``data/restaurants.csv`` (rows
-1000-2000 and 2000-3000), runs every demo metric on each chunk, and writes two
+Slices the next two 288-row chunks out of ``data/restaurants.csv`` (rows
+288-576 and 576-864), runs every demo metric on each chunk, and writes two
 backdated JSON snapshots into ``gui/demo/precomputed/`` alongside the existing
 ``restaurant_results.json``. All three snapshots share the same ``dataset``
 name (``restaurant_sample``) so the temporal chart groups them into a single
@@ -55,7 +55,7 @@ DATASET_NAME: str = "restaurant_sample"
 # The existing restaurant_results.json (current) carries no noise.
 SNAPSHOTS: list[tuple] = [
     (
-        1000, 2000,
+        288, 576,
         "demo-2026-03-08",
         datetime(2026, 3, 8, 9, 0, 0),
         "restaurant_sample_t1.csv",
@@ -63,7 +63,7 @@ SNAPSHOTS: list[tuple] = [
         0.20, 0.05, 11,
     ),
     (
-        2000, 3000,
+        576, 864,
         "demo-2026-03-22",
         datetime(2026, 3, 22, 9, 0, 0),
         "restaurant_sample_t2.csv",
