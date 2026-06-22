@@ -3,6 +3,7 @@ from __future__ import annotations
 DEFAULT_DIMENSION_ICON: str = ":material/analytics:"
 
 DIMENSION_ICONS: dict[str, str] = {
+    "Accuracy":     ":material/target:",
     "Completeness": ":material/water_drop:",
     "Consistency":  ":material/link:",
     "Correctness":  ":material/check_circle:",
