@@ -95,14 +95,17 @@ def get_timeliness_config():
     date_kwargs = {"errors": "coerce"}
     return timeliness_heinrich_config(
         timeliness_config_per_column={
+            # Decline rate is applied per day, and the review dates span up to
+            # ~16 years, so rates near 1.0 would decay every cell to 0. These
+            # gentler rates give a meaningful spread over that age range.
             "avg_rating": timeliness_heinrich_column_config(
-                decline_rate=1.0,
+                decline_rate=0.0006,
                 ingestion_date_column="last_review_date",
                 to_datetime_kwargs=date_kwargs,
                 simulated_timestamp_precision="day",
             ),
             "total_reviews_count": timeliness_heinrich_column_config(
-                decline_rate=0.5,
+                decline_rate=0.0003,
                 ingestion_date_column="last_review_date",
                 to_datetime_kwargs=date_kwargs,
                 simulated_timestamp_precision="day",
@@ -130,8 +133,8 @@ DEMO_CONFIG_DISPLAY: dict[str, dict] = {
     "timeliness_heinrich": {
         "type": "timeliness",
         "columns": {
-            "avg_rating":          {"decline_rate": 1.0, "ingestion_date_column": "last_review_date", "precision": "day"},
-            "total_reviews_count": {"decline_rate": 0.5, "ingestion_date_column": "last_review_date", "precision": "day"},
+            "avg_rating":          {"decline_rate": 0.0006, "ingestion_date_column": "last_review_date", "precision": "day"},
+            "total_reviews_count": {"decline_rate": 0.0003, "ingestion_date_column": "last_review_date", "precision": "day"},
         },
     },
 }
