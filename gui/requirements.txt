@@ -1,0 +1,4 @@
+streamlit==1.55.0
+altair==6.0.0
+streamlit-ace==0.1.1
+orjson

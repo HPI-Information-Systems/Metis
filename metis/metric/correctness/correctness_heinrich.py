@@ -12,6 +12,17 @@ from metis.utils.similarity_measures.string import levenshtein_distance
 
 
 class correctness_heinrich(Metric):
+    _gui_requires_reference: bool = True
+    _gui_config_required: bool = False
+    _gui_callable_config: bool = False
+    _gui_cell_granularity: bool = True
+    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.CELL})
+    _gui_description: str = (
+        "Compares each cell against a reference DataFrame of the same shape. "
+        "Numeric values use a normalized relative-distance score; strings use "
+        "a normalized Levenshtein similarity. Produces a per-cell correctness "
+        "value in `[0, 1]`."
+    )
     def assess(
         self,
         data: pd.DataFrame,

@@ -1,0 +1,3 @@
+[theme]
+# HPI red for Streamlit's primary buttons, focus rings, sliders, etc.
+primaryColor = "#B2143C"

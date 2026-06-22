@@ -13,6 +13,15 @@ from metis.utils.result import DQResult
 
 
 class validity_outOfVocabulary(Metric):
+    _gui_requires_reference: bool = False
+    _gui_config_required: bool = False
+    _gui_callable_config: bool = False
+    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.COLUMN})
+    _gui_description: str = (
+        "Per column, the share of non-null string values whose alphabetic "
+        "tokens all appear in a reference vocabulary. Defaults to NLTK's "
+        "English word list when no custom reference is supplied."
+    )
     def __init__(self) -> None:
         super().__init__()
         nltk.download("words", quiet=True)

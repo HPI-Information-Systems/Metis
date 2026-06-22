@@ -10,3 +10,6 @@ out/
 *.pyc
 __pycache__/
 .venv/
+
+gui/db/
+gui/demo/precomputed/

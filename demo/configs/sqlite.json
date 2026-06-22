@@ -1,5 +1,5 @@
 {
     "writer_name": "sqlite",
     "table_name": "dq_results",
-    "db_name": "dq_repository/dq_repository.db"
+    "db_name": "dq_repository/demo.db"
 }

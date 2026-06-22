@@ -1,0 +1,9 @@
+{
+    "loader": "CSV",
+    "name": "Restaurants",
+    "file_name": "restaurants.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": null
+}

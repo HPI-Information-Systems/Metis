@@ -15,6 +15,19 @@ from metis.utils.result import DQResult
 
 
 class consistency_ruleBasedHinrichs(Metric):
+    _gui_requires_reference: bool = False
+    _gui_config_required: bool = True
+    _gui_callable_config: bool = True
+    _gui_cell_granularity: bool = True
+    _gui_recommended_granularities: frozenset = frozenset({
+        DQGranularity.CELL, DQGranularity.ROW,
+    })
+    _gui_description: str = (
+        "Scores cells and rows against user-defined attribute and tuple rules "
+        "using Hinrichs' formula `1 / (1 + degree_of_violation)`. A certainty "
+        "value is reported alongside each result based on the dataset's "
+        "minimum quality."
+    )
     def assess(
         self,
         data: pd.DataFrame,

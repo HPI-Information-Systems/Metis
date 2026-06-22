@@ -17,6 +17,17 @@ from metis.utils.result import DQResult
 
 
 class timeliness_heinrich(Metric):
+    _gui_requires_reference: bool = False
+    _gui_config_required: bool = True
+    _gui_callable_config: bool = False
+    _gui_cell_granularity: bool = True
+    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.CELL})
+    _gui_description: str = (
+        "Per cell, computes `exp(−decline_rate · age)` where age is measured "
+        "from the configured ingestion-date column to a reference date "
+        "(defaults to now). Reports a certainty bounded by the precision of "
+        "the timestamp."
+    )
     def assess(
         self,
         data: pd.DataFrame,

@@ -14,6 +14,19 @@ from metis.utils.result import DQResult
 
 
 class consistency_ruleBasedPipino(Metric):
+    _gui_requires_reference: bool = False
+    _gui_config_required: bool = True
+    _gui_callable_config: bool = True
+    _gui_cell_granularity: bool = True
+    _gui_recommended_granularities: frozenset = frozenset({
+        DQGranularity.CELL, DQGranularity.ROW,
+    })
+    _gui_description: str = (
+        "Scores cells and rows against user-defined attribute and tuple rules "
+        "using Pipino's formula `1 − violations / total_rules`. A certainty "
+        "value derived from rule fulfillment rates is reported alongside each "
+        "result."
+    )
     def assess(
         self,
         data: pd.DataFrame,
