@@ -21,6 +21,8 @@ DEMO_METRICS: list[str] = [
     "completeness_nullRatio",
     "minimality_duplicateCount",
     "validity_outOfVocabulary",
+    "accuracy_dataRange",
+    "accuracy_outlierRisk",
     "consistency_countFDViolations",
     "consistency_ruleBasedHinrichs",
     "consistency_ruleBasedPipino",
@@ -114,8 +116,35 @@ def get_timeliness_config():
     )
 
 
+def get_dataRange_config():
+    """
+    Return the demo config for ``accuracy_dataRange``.
+
+    Intervals match the value ranges the demo deliberately violates: ratings
+    must lie in [1, 5] and review counts must be non-negative.
+
+    :return: An ``accuracy_dataRange_config`` instance.
+    """
+    from metis.metric.accuracy.accuracy_dataRange_config import (
+        accuracy_dataRange_config,
+    )
+    return accuracy_dataRange_config(
+        intervals={
+            "avg_rating": (1.0, 5.0),
+            "total_reviews_count": (0.0, 1000.0),
+        }
+    )
+
+
 # Human-readable config display data for read-only rendering in metrics_page.
 DEMO_CONFIG_DISPLAY: dict[str, dict] = {
+    "accuracy_dataRange": {
+        "type": "datarange",
+        "intervals": {
+            "avg_rating": (1.0, 5.0),
+            "total_reviews_count": (0.0, 1000.0),
+        },
+    },
     "consistency_countFDViolations": {
         "type": "fd",
         "rules": FD_CONFIG,
