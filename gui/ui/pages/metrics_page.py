@@ -513,6 +513,11 @@ def _render_demo_config_display(config_info: dict) -> None:
                 f"ingestion date from `{cfg['ingestion_date_column']}`"
             )
 
+    elif config_type == "datarange":
+        st.caption("**Expected value ranges (pre-configured):**")
+        for col, (low, high) in config_info.get("intervals", {}).items():
+            st.write(f"`{col}`: between **{low}** and **{high}**")
+
 
 def _apply_filters(metrics: list, search: str, active_filter: str) -> list:
     """
