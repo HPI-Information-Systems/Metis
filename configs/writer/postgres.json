@@ -1,6 +1,6 @@
 {
     "writer_name": "postgres",
-    "table_name": "dqresults",
+    "table_name": "dq_results",
     "db_user": "postgres",
     "db_pass": "postgres",
     "db_name": "metis_db",

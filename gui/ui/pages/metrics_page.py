@@ -95,47 +95,57 @@ def render(demo_mode: bool = False) -> None:
         AppState.set_selected_metrics(selected)
         return
 
-    if is_searching:
-        selectable = [m.name for m in all_filtered if not m.unavailable_reason]
+    overview_label = ":material/list: Overview"
+    tab_labels = [overview_label] + [_tab_label(dim) for dim in by_dim]
+    _inject_tab_count_badges("metrics_tabs", by_dim, filtered_by_dim, selected, overview_offset=1)
+    with st.container(key="metrics_tabs"):
+        tabs = st.tabs(tab_labels)
+
+    with tabs[0]:
+        selectable_all = [m.name for m in all_filtered if not m.unavailable_reason]
         _render_select_controls(
             scope_id="all",
-            selectable_names=selectable,
+            selectable_names=selectable_all,
             selected=selected,
             select_label="Select all visible",
             deselect_label="Deselect all visible",
             select_icon=":material/check_box:",
             deselect_icon=":material/check_box_outline_blank:",
             button_type="secondary",
+            peer_key_prefixes=("chk_", "chk_ov_"),
         )
-        st.caption(f"{len(all_filtered)} metric(s) match")
-        for info in all_filtered:
-            _render_metric_card(info, selected, df)
-    else:
-        tab_labels = [_tab_label(dim) for dim in by_dim]
-        _inject_tab_count_badges("metrics_tabs", by_dim, filtered_by_dim, selected)
-        with st.container(key="metrics_tabs"):
-            tabs = st.tabs(tab_labels)
-        for tab, dimension in zip(tabs, by_dim):
-            with tab:
-                metrics = filtered_by_dim.get(dimension, [])
-                if not metrics:
-                    st.caption("No metrics match the current filter.")
-                    continue
+        if is_searching:
+            st.caption(f"{len(all_filtered)} metric(s) match")
+        else:
+            st.caption(f"{len(all_filtered)} metric(s) across {len(by_dim)} dimension(s)")
+        _render_overview_list(all_filtered, selected, df)
 
-                selectable = [m.name for m in metrics if not m.unavailable_reason]
-                _render_select_controls(
-                    scope_id=dimension,
-                    selectable_names=selectable,
-                    selected=selected,
-                    select_label="All",
-                    deselect_label="None",
-                    select_icon=":material/select_all:",
-                    deselect_icon=":material/deselect:",
-                    button_type="tertiary",
+    for tab, dimension in zip(tabs[1:], by_dim):
+        with tab:
+            metrics = filtered_by_dim.get(dimension, [])
+            if not metrics:
+                st.caption("No metrics match the current filter.")
+                continue
+
+            selectable = [m.name for m in metrics if not m.unavailable_reason]
+            _render_select_controls(
+                scope_id=dimension,
+                selectable_names=selectable,
+                selected=selected,
+                select_label="All",
+                deselect_label="None",
+                select_icon=":material/select_all:",
+                deselect_icon=":material/deselect:",
+                button_type="tertiary",
+                peer_key_prefixes=("chk_", "chk_ov_"),
+            )
+
+            for info in metrics:
+                _render_metric_card(
+                    info, selected, df,
+                    key_prefix="chk_",
+                    peer_prefix="chk_ov_",
                 )
-
-                for info in metrics:
-                    _render_metric_card(info, selected, df)
 
     AppState.set_selected_metrics(selected)
     blockers = get_compute_blockers(selected, AppState.get_metric_configs())
@@ -161,6 +171,7 @@ def _render_select_controls(
     select_icon: str,
     deselect_icon: str,
     button_type: str,
+    peer_key_prefixes: tuple[str, ...] = ("chk_",),
 ) -> None:
     """
     Render a Select-all / Deselect-all button pair scoped to a list of metric names.
@@ -190,7 +201,8 @@ def _render_select_controls(
             for name in selectable_names:
                 if name not in selected:
                     selected.append(name)
-                st.session_state[f"chk_{name}"] = True
+                for prefix in peer_key_prefixes:
+                    st.session_state[f"{prefix}{name}"] = True
             AppState.set_selected_metrics(selected)
             st.rerun()
 
@@ -205,7 +217,8 @@ def _render_select_controls(
             for name in selectable_names:
                 if name in selected:
                     selected.remove(name)
-                st.session_state[f"chk_{name}"] = False
+                for prefix in peer_key_prefixes:
+                    st.session_state[f"{prefix}{name}"] = False
             AppState.set_selected_metrics(selected)
             st.rerun()
 
@@ -231,6 +244,7 @@ def _inject_tab_count_badges(
     by_dim: dict[str, list[MetricInfo]],
     visible_by_dim: dict[str, list[MetricInfo]],
     selected: list[str],
+    overview_offset: int = 0,
 ) -> None:
     """
     Inject a ``(n_sel/n_total)`` badge after each dimension tab via CSS ``::after``.
@@ -252,7 +266,23 @@ def _inject_tab_count_badges(
     :return: None.
     """
     rules: list[str] = []
-    for i, (dim, all_metrics) in enumerate(by_dim.items(), start=1):
+    if overview_offset:
+        n_total = sum(len(ms) for ms in visible_by_dim.values()) or sum(
+            len(ms) for ms in by_dim.values()
+        )
+        n_sel = sum(
+            1
+            for dim, ms in (visible_by_dim or by_dim).items()
+            for m in ms
+            if m.name in selected
+        )
+        rules.append(
+            f'.st-key-{container_key} [data-baseweb="tab-list"] '
+            f'button[data-testid="stTab"]:nth-of-type(1)::after '
+            f'{{ content: " ({n_sel}/{n_total})"; opacity: 0.6; '
+            f'margin-left: 4px; font-weight: 400; }}'
+        )
+    for i, (dim, all_metrics) in enumerate(by_dim.items(), start=1 + overview_offset):
         visible = visible_by_dim.get(dim, [])
         n_sel = sum(1 for m in visible if m.name in selected)
         n_total = len(visible) if visible else len(all_metrics)
@@ -263,6 +293,34 @@ def _inject_tab_count_badges(
             f'margin-left: 4px; font-weight: 400; }}'
         )
     st.markdown("<style>" + "".join(rules) + "</style>", unsafe_allow_html=True)
+
+
+def _render_overview_list(metrics: list[MetricInfo], selected: list[str], df) -> None:
+    """
+    Render every metric grouped by dimension with interactive checkboxes that
+    stay in sync with the dimension-tab checkboxes via ``_sync_widget_state``.
+
+    Inline config editors and the row-cap input are hidden here (``show_config
+    =False``) — they live in the dimension tab so their widget keys don't
+    collide with the Overview tab in the same render pass.
+
+    :param metrics: Metrics to render (already filtered).
+    :param selected: Mutable list of currently selected metric names.
+    :param df: The active dataframe.
+    :return: None.
+    """
+    by_dim: dict[str, list[MetricInfo]] = {}
+    for info in metrics:
+        by_dim.setdefault(info.dimension, []).append(info)
+    for dimension in sorted(by_dim.keys()):
+        st.markdown(f"##### {icon_for(dimension)} {dimension}")
+        for info in by_dim[dimension]:
+            _render_metric_card(
+                info, selected, df,
+                key_prefix="chk_ov_",
+                peer_prefix="chk_",
+                show_config=False,
+            )
 
 
 def _reconcile_selected_with_widgets(
@@ -317,19 +375,44 @@ def _render_demo_metrics() -> None:
     n_available = sum(1 for m in all_metrics_flat if m.name in DEMO_METRICS)
     st.caption(f"{len(demo_selected)} / {n_available} selected")
 
-    tab_labels = [_tab_label(dim) for dim in by_dim]
+    overview_label = ":material/list: Overview"
+    tab_labels = [overview_label] + [_tab_label(dim) for dim in by_dim]
     _inject_tab_count_badges(
         "demo_metrics_tabs",
         by_dim,
         {dim: list(ms) for dim, ms in by_dim.items()},
         demo_selected,
+        overview_offset=1,
     )
     with st.container(key="demo_metrics_tabs"):
         tabs = st.tabs(tab_labels)
-    for tab, (dimension, metrics) in zip(tabs, by_dim.items()):
+
+    with tabs[0]:
+        st.caption(f"{len(all_metrics_flat)} metric(s) across {len(by_dim)} dimension(s)")
+        for dimension in sorted(by_dim.keys()):
+            st.markdown(f"##### {icon_for(dimension)} {dimension}")
+            for info in by_dim[dimension]:
+                _render_demo_metric_card(
+                    info,
+                    demo_selected,
+                    DEMO_METRICS,
+                    DEMO_CONFIG_DISPLAY,
+                    key_prefix="demo_chk_ov_",
+                    peer_prefix="demo_chk_",
+                    show_config=False,
+                )
+
+    for tab, (dimension, metrics) in zip(tabs[1:], by_dim.items()):
         with tab:
             for info in metrics:
-                _render_demo_metric_card(info, demo_selected, DEMO_METRICS, DEMO_CONFIG_DISPLAY)
+                _render_demo_metric_card(
+                    info,
+                    demo_selected,
+                    DEMO_METRICS,
+                    DEMO_CONFIG_DISPLAY,
+                    key_prefix="demo_chk_",
+                    peer_prefix="demo_chk_ov_",
+                )
 
     AppState.set_demo_selected_metrics(demo_selected)
 
@@ -347,6 +430,10 @@ def _render_demo_metric_card(
     demo_selected: list[str],
     available_metrics: list[str],
     config_display: dict,
+    *,
+    key_prefix: str = "demo_chk_",
+    peer_prefix: str | None = None,
+    show_config: bool = True,
 ) -> None:
     is_available = info.name in available_metrics
     border_color = _card_border_color(info) if is_available else CARD_BORDER_NEUTRAL
@@ -359,12 +446,19 @@ def _render_demo_metric_card(
         )
         col_check, col_badges = st.columns([3, 2])
 
+        primary_key = f"{key_prefix}{info.name}"
+        cb_kwargs: dict = {}
+        if peer_prefix is not None:
+            cb_kwargs["on_change"] = _sync_widget_state
+            cb_kwargs["args"] = (primary_key, f"{peer_prefix}{info.name}")
+
         with col_check:
             new_val = st.checkbox(
                 _format_name(info.name),
                 value=info.name in demo_selected,
-                key=f"demo_chk_{info.name}",
+                key=primary_key,
                 disabled=not is_available,
+                **cb_kwargs,
             )
             if is_available:
                 if new_val and info.name not in demo_selected:
@@ -381,7 +475,7 @@ def _render_demo_metric_card(
             if is_available:
                 st.badge("Precomputed", color="green", icon=":material/bolt:")
 
-        if new_val and is_available and info.name in config_display:
+        if show_config and new_val and is_available and info.name in config_display:
             st.divider()
             _render_demo_config_display(config_display[info.name])
 
@@ -459,13 +553,47 @@ def _card_border_color(info: MetricInfo) -> str:
     return CARD_BORDER_NEUTRAL
 
 
-def _render_metric_card(info: MetricInfo, selected: list[str], df) -> None:
+def _sync_widget_state(source_key: str, peer_key: str) -> None:
+    """
+    Mirror a checkbox's new value to its peer in another tab.
+
+    Streamlit renders every tab in the same script run, so the Overview tab
+    and the dimension tabs each create their own checkbox per metric. This
+    callback keeps both widgets' session_state in sync so a click in either
+    place takes effect immediately on the next render.
+
+    :param source_key: The widget key that just changed.
+    :param peer_key: The peer widget key that should mirror the new value.
+    :return: None.
+    """
+    if source_key in st.session_state:
+        st.session_state[peer_key] = st.session_state[source_key]
+
+
+def _render_metric_card(
+    info: MetricInfo,
+    selected: list[str],
+    df,
+    *,
+    key_prefix: str = "chk_",
+    peer_prefix: str | None = None,
+    show_config: bool = True,
+) -> None:
     """
     Render a single metric card (checkbox + badges + optional inline config).
 
     :param info: The metric metadata.
     :param selected: Mutable list of currently selected metric names.
     :param df: The active dataframe (passed to inline config editors).
+    :param key_prefix: Prefix for the checkbox session_state key. The Overview
+        tab uses ``chk_ov_`` and the dimension tabs use ``chk_`` so both can
+        coexist in the same render pass without colliding.
+    :param peer_prefix: When set, the checkbox writes its new value to
+        ``{peer_prefix}{info.name}`` via an ``on_change`` callback so the peer
+        widget reflects the toggle on the next render.
+    :param show_config: When False, skip the inline config editor and the
+        row-cap input. The Overview tab uses ``False`` to avoid creating
+        duplicate config-widget keys; configuration stays in the dimension tab.
     :return: None.
     """
     border_color = _card_border_color(info)
@@ -477,13 +605,20 @@ def _render_metric_card(info: MetricInfo, selected: list[str], df) -> None:
         )
         col_check, col_badges = st.columns([3, 2])
 
+        primary_key = f"{key_prefix}{info.name}"
+        cb_kwargs: dict = {}
+        if peer_prefix is not None:
+            cb_kwargs["on_change"] = _sync_widget_state
+            cb_kwargs["args"] = (primary_key, f"{peer_prefix}{info.name}")
+
         with col_check:
             label = _format_name(info.name)
             new_val = st.checkbox(
                 label,
                 value=info.name in selected,
-                key=f"chk_{info.name}",
+                key=primary_key,
                 disabled=info.unavailable_reason is not None,
+                **cb_kwargs,
             )
             if not info.unavailable_reason:
                 if new_val and info.name not in selected:
@@ -498,11 +633,11 @@ def _render_metric_card(info: MetricInfo, selected: list[str], df) -> None:
         with col_badges:
             _render_badges(info)
 
-        if new_val and (info.config_class or info.fd_json_config or info.callable_config):
+        if show_config and new_val and (info.config_class or info.fd_json_config or info.callable_config):
             st.divider()
             _render_inline_config(info, df)
 
-        if new_val and info.cell_granularity:
+        if show_config and new_val and info.cell_granularity:
             _render_max_rows(info.name)
 
 

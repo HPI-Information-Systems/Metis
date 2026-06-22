@@ -11,7 +11,26 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from core.metric_catalog import get_catalog
 from visualization.metric_palette import metric_colors, short_name
+
+
+def _dimension_for(metric_name: str) -> str:
+    """
+    Resolve the dimension for a metric, falling back to the registry name prefix.
+
+    :param metric_name: Full metric name like ``completeness_nullRatio``.
+    :return: The dimension string (e.g. ``"Completeness"``).
+    """
+    info = get_catalog().get(metric_name)
+    if info:
+        return info.dimension
+    return metric_name.split("_", 1)[0].capitalize() or "Other"
+
+
+def _labelled(metric_name: str) -> str:
+    """Format a metric for chart legends as ``Dimension · shortName``."""
+    return f"{_dimension_for(metric_name)} · {short_name(metric_name)}"
 
 _MAX_COLUMNS_DEFAULT: int = 8
 _CHART_HEIGHT_PX: int = 280
@@ -104,8 +123,9 @@ def render_multi_metric(
             df.groupby(["tag", "timestamp"], as_index=False)["DQvalue"]
             .mean()
         )
-        agg["metric"] = short_name(metric_name)
+        agg["metric"] = _labelled(metric_name)
         agg["metric_full"] = metric_name
+        agg["dimension"] = _dimension_for(metric_name)
         frames.append(agg)
 
     if not frames:
@@ -117,7 +137,7 @@ def render_multi_metric(
 
     metric_names = sorted(per_metric_results.keys())
     color_map = metric_colors(metric_names)
-    domain = [short_name(m) for m in metric_names]
+    domain = [_labelled(m) for m in metric_names]
     color_range = [color_map[m] for m in metric_names]
 
     chart = (
@@ -138,9 +158,11 @@ def render_multi_metric(
             color=alt.Color(
                 "metric:N",
                 scale=alt.Scale(domain=domain, range=color_range),
-                title="Metric",
+                title="Metric (Dimension · name)",
+                legend=alt.Legend(labelLimit=260),
             ),
             tooltip=[
+                alt.Tooltip("dimension:N", title="Dimension"),
                 alt.Tooltip("metric_full:N", title="Metric"),
                 alt.Tooltip("tag:N", title="Run tag"),
                 alt.Tooltip("timestamp:T", title="Timestamp", format="%Y-%m-%d %H:%M"),

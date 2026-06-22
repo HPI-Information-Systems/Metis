@@ -88,7 +88,7 @@ def render(
     :param key_prefix: Stable cache key prefix.
     :return: None.
     """
-    if not tag or not metric_name:
+    if tag is None or not metric_name:
         st.warning(f"No results for **{metric_name}**.")
         return
 

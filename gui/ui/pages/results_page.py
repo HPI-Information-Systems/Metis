@@ -162,13 +162,14 @@ def _render_run_subheader(runs: list[dict], selected_tag: str) -> None:
     :return: None.
     """
     run_summary = next((r for r in runs if r["experiment_tag"] == selected_tag), None)
+    tag_display = f"`{selected_tag}`" if selected_tag else "(no tag)"
     if run_summary:
         st.subheader(
-            f"Run: `{selected_tag}` — {run_summary['result_count']:,} DQ Measurement Results"
+            f"Run: {tag_display} — {run_summary['result_count']:,} DQ Measurement Results"
             f"  ·  {run_summary['dataset_name']}"
         )
     else:
-        st.subheader(f"Run: `{selected_tag}`")
+        st.subheader(f"Run: {tag_display}")
 
 
 def _render_results_tabs(
@@ -274,6 +275,21 @@ def _render_overview_tab(
 
     st.markdown("**Column × metric heatmap**")
     heatmap_data = _cached_get_heatmap(store, tag)
+    heatmap_metrics = {row["dq_metric"] for row in heatmap_data}
+    excluded_by_dim: dict[str, list[str]] = {}
+    for name in metrics:
+        if name in heatmap_metrics:
+            continue
+        excluded_by_dim.setdefault(_dimension_for(name), []).append(name)
+    if excluded_by_dim:
+        text = (
+            "Not column-level, so not shown in the heatmap — see the matching "
+            "dimension tab:"
+        )
+        for dim in sorted(excluded_by_dim):
+            names = ", ".join(f"`{n}`" for n in sorted(excluded_by_dim[dim]))
+            text += f"  \n&nbsp;&nbsp;&nbsp;&nbsp;• {dim} ({names})"
+        st.caption(text)
     heatmap.render(pd.DataFrame(heatmap_data), dataset_cols)
 
 
@@ -347,7 +363,7 @@ def _render_temporal_run_picker(runs: list[dict], current_tag: str, key_prefix: 
     all_tags = [r["experiment_tag"] for r in runs]
     tag_labels = {
         r["experiment_tag"]: (
-            f"{r['experiment_tag']}  ·  {r.get('dataset_name', '?')}  ·  "
+            f"{r['experiment_tag'] or '(no tag)'}  ·  {r.get('dataset_name', '?')}  ·  "
             f"{(r.get('timestamp') or '')[:19]}"
         )
         for r in runs
@@ -900,7 +916,7 @@ def _render_run_selector(runs, key_prefix: str = "") -> str | None:
     options = [r["experiment_tag"] for r in runs]
     labels = {
         r["experiment_tag"]: (
-            f"{r['experiment_tag']}  ·  {r['dataset_name']}  ·  "
+            f"{r['experiment_tag'] or '(no tag)'}  ·  {r['dataset_name']}  ·  "
             f"{r['result_count']:,} results  ·  {r['timestamp'][:19]}"
         )
         for r in runs

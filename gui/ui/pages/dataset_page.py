@@ -192,7 +192,7 @@ def _render_recent_runs_fragment() -> None:
                 f"'>"
                 f"<div style='font-weight:600;font-size:14px;margin-bottom:3px;"
                 f"white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"
-                f"{run.experiment_tag}</div>"
+                f"{run.experiment_tag or '(no tag)'}</div>"
                 f"<div style='color:#555;font-size:12px;margin-bottom:4px;"
                 f"white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"
                 f"{run.dataset_name or '—'}</div>"

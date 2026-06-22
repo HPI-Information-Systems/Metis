@@ -22,7 +22,7 @@ from core.serialization import result_to_dict
 from metis.utils.result import DQResult
 
 try:
-    from sqlalchemy import select, text
+    from sqlalchemy import func, select, text
     from sqlalchemy.orm import Session
 
     from metis.database import Database
@@ -42,7 +42,7 @@ except ImportError:
 
 logger = logging.getLogger("metis").getChild("gui.result_store")
 
-DEFAULT_DB_PATH: str = os.path.join(os.path.dirname(__file__), "..", "db", "gui.db")
+DEFAULT_DB_PATH: str = os.path.join(os.path.dirname(__file__), "..", "..", "dq_repository", "dq_repository.db")
 _BROWSER_RESULTS_DIR: str = "/metis_results"
 
 TABLE_COLUMN_PLACEHOLDER: str = "(table)"
@@ -505,6 +505,8 @@ class SQLiteResultStore(ResultStore):
         self._agg_ready = False
         self._insert_event: threading.Event | None = None
         self._insert_thread: threading.Thread | None = None
+        self._aggregates_built: set[str] = set()
+        self._aggregates_lock = threading.Lock()
         self._ensure_indexes()
 
     def save_run(self, results: list[DQResult], metadata: RunMetadata) -> None:
@@ -784,13 +786,13 @@ class SQLiteResultStore(ResultStore):
         with self.db.engine.connect() as conn:
             rows = conn.execute(text(f"""
                 SELECT
-                    experiment_tag,
+                    COALESCE(experiment_tag, '')     AS experiment_tag,
                     dataset,
                     MIN(timestamp)                   AS min_ts,
                     COUNT(*)                         AS cnt,
                     GROUP_CONCAT(DISTINCT dq_metric) AS metrics_csv
                 FROM {t}
-                GROUP BY experiment_tag, dataset
+                GROUP BY COALESCE(experiment_tag, ''), dataset
                 ORDER BY MIN(timestamp) DESC
             """)).fetchall()
         return self._rows_to_summaries(rows)
@@ -802,7 +804,7 @@ class SQLiteResultStore(ResultStore):
             metrics_csv = row[4] or ""
             metrics = sorted(m for m in metrics_csv.split(",") if m)
             summaries.append(RunSummary(
-                experiment_tag=str(row[0] or "(no tag)"),
+                experiment_tag=str(row[0] or ""),
                 dataset_name=str(row[1] or UNKNOWN_COLUMN_PLACEHOLDER),
                 timestamp=str(row[2]) if row[2] else "",
                 result_count=int(row[3]),
@@ -905,6 +907,7 @@ class SQLiteResultStore(ResultStore):
         ]
 
     def list_metrics_for_run(self, tag: str) -> list[str]:
+        self._ensure_aggregates(tag)
         if self._agg_ready:
             with self.db.engine.connect() as conn:
                 rows = conn.execute(text(
@@ -922,6 +925,7 @@ class SQLiteResultStore(ResultStore):
         return [r[0] for r in rows if r[0]]
 
     def list_columns_for_run(self, tag: str) -> list[str]:
+        self._ensure_aggregates(tag)
         if self._agg_ready:
             with self.db.engine.connect() as conn:
                 rows = conn.execute(text(
@@ -942,6 +946,7 @@ class SQLiteResultStore(ResultStore):
         return [r[0] for r in rows if r[0]]
 
     def count_column_metrics(self, tag: str) -> int:
+        self._ensure_aggregates(tag)
         if self._agg_ready:
             with self.db.engine.connect() as conn:
                 row = conn.execute(text("""
@@ -963,6 +968,7 @@ class SQLiteResultStore(ResultStore):
         return int(row[0]) if row else 0
 
     def get_metric_summary(self, tag: str, metric: str, granularity: str | None = None) -> dict:
+        self._ensure_aggregates(tag)
         if self._agg_ready:
             if granularity is None:
                 with self.db.engine.connect() as conn:
@@ -1055,6 +1061,7 @@ class SQLiteResultStore(ResultStore):
         }
 
     def get_column_aggregates(self, tag: str, metric: str) -> list[dict]:
+        self._ensure_aggregates(tag)
         if self._agg_ready:
             with self.db.engine.connect() as conn:
                 rows = conn.execute(text("""
@@ -1117,7 +1124,7 @@ class SQLiteResultStore(ResultStore):
                     dq_value,
                     dq_explanation
                 FROM {t}
-                WHERE experiment_tag = :tag AND dq_metric = :metric
+                WHERE COALESCE(experiment_tag, '') = :tag AND dq_metric = :metric
                 ORDER BY dq_value ASC
             """), {"tag": tag, "metric": metric}).fetchall()
         result = []
@@ -1136,6 +1143,7 @@ class SQLiteResultStore(ResultStore):
     def get_histogram_data(
         self, tag: str, metric: str, granularity: str | None = None
     ) -> list[dict]:
+        self._ensure_aggregates(tag)
         if self._agg_ready:
             params: dict = {"tag": tag, "metric": metric}
             gran_filter = "AND granularity = :gran" if granularity else ""
@@ -1175,6 +1183,7 @@ class SQLiteResultStore(ResultStore):
     def get_worst_results(
         self, tag: str, metric: str, granularity: str | None = None, n: int = WORST_RESULTS_LIMIT,
     ) -> list[dict]:
+        self._ensure_aggregates(tag)
         if self._agg_ready:
             params: dict = {"tag": tag, "metric": metric, "n": n}
             gran_filter = "AND granularity = :gran" if granularity else ""
@@ -1223,7 +1232,7 @@ class SQLiteResultStore(ResultStore):
             rows = conn.execute(text(f"""
                 SELECT dq_value, dq_explanation, column_names
                 FROM {t}
-                WHERE experiment_tag = :tag AND dq_metric = :metric
+                WHERE COALESCE(experiment_tag, '') = :tag AND dq_metric = :metric
             """), {"tag": tag, "metric": metric}).fetchall()
         result = []
         for r in rows:
@@ -1239,6 +1248,7 @@ class SQLiteResultStore(ResultStore):
         return result
 
     def get_heatmap_data(self, tag: str) -> list[dict]:
+        self._ensure_aggregates(tag)
         if self._agg_ready:
             with self.db.engine.connect() as conn:
                 rows = conn.execute(text("""
@@ -1287,7 +1297,7 @@ class SQLiteResultStore(ResultStore):
         m = self.db.DQResultModel
         with Session(self.db.engine) as session:
             rows = session.execute(
-                select(m).where(m.experiment_tag == experiment_tag)
+                select(m).where(func.coalesce(m.experiment_tag, "") == experiment_tag)
             ).scalars().all()
             for row in rows:
                 session.delete(row)
@@ -1304,7 +1314,6 @@ class SQLiteResultStore(ResultStore):
     def _wait_for_insert(self) -> None:
         """Block until the background main-table insert thread completes, if running."""
         if self._insert_event is not None and not self._insert_event.is_set():
-            logger.info("Waiting for background insert to complete…")
             self._insert_event.wait()
 
     def load_results(self, experiment_tag: str) -> list[dict]:
@@ -1317,7 +1326,7 @@ class SQLiteResultStore(ResultStore):
                 m.column_names, m.row_index, m.experiment_tag, m.dataset,
                 m.config_json,
             )
-            .where(m.experiment_tag == experiment_tag)
+            .where(func.coalesce(m.experiment_tag, "") == experiment_tag)
         )
         with self.db.engine.connect() as conn:
             rows = conn.execute(stmt).fetchall()
@@ -1450,50 +1459,137 @@ class SQLiteResultStore(ResultStore):
         if summary_count and summary_count > 0:
             self._summary_ready = True
 
-        if not self._summary_ready:
-            with self.db.engine.connect() as conn:
-                has_data = conn.execute(
-                    text(f"SELECT 1 FROM {t} LIMIT 1")
-                ).fetchone()
-            if has_data:
-                threading.Thread(
-                    target=self._migrate_summary_background,
-                    daemon=True,
-                ).start()
-            else:
-                self._summary_ready = True
+        with self.db.engine.connect() as conn:
+            has_missing = conn.execute(text(f"""
+                SELECT 1 FROM {t}
+                WHERE COALESCE(experiment_tag, '') NOT IN (
+                    SELECT experiment_tag FROM dq_metric_summary
+                )
+                   OR COALESCE(experiment_tag, '') NOT IN (
+                    SELECT experiment_tag FROM dq_run_summary
+                )
+                LIMIT 1
+            """)).fetchone()
+        if has_missing:
+            threading.Thread(
+                target=self._backfill_background,
+                daemon=True,
+            ).start()
+        else:
+            self._summary_ready = True
+            self._agg_ready = True
 
-    def _migrate_summary_background(self) -> None:
+    def _ensure_aggregates(self, tag: str) -> None:
         """
-        Populate ``dq_run_summary`` from the main table (one-time, background).
+        Make aggregate side-tables and ``dq_run_summary`` consistent for ``tag``.
 
-        Uses ``INSERT OR IGNORE`` so rows already written by
-        ``_update_run_summary_fast`` are not overwritten. Sets ``_summary_ready``
-        to True when done.
+        Cheap PK lookup on subsequent calls. The first call for a tag that has
+        rows in the main table but no aggregates (the CLI-write case) builds
+        them synchronously, then caches the result. Thread-safe via
+        ``_aggregates_lock`` so concurrent reads don't double-build.
+
+        :param tag: The experiment tag (``""`` for untagged runs).
+        :return: None.
+        """
+        if tag in self._aggregates_built:
+            return
+        with self._aggregates_lock:
+            if tag in self._aggregates_built:
+                return
+            with self.db.engine.connect() as conn:
+                agg_exists = conn.execute(text(
+                    "SELECT 1 FROM dq_metric_summary"
+                    " WHERE experiment_tag = :tag LIMIT 1"
+                ), {"tag": tag}).fetchone()
+                summary_exists = conn.execute(text(
+                    "SELECT 1 FROM dq_run_summary"
+                    " WHERE experiment_tag = :tag LIMIT 1"
+                ), {"tag": tag}).fetchone()
+            if not agg_exists or not summary_exists:
+                self._build_aggregates_for_tag(tag)
+            self._aggregates_built.add(tag)
+            self._agg_ready = True
+            self._summary_ready = True
+
+    def _build_aggregates_for_tag(self, tag: str) -> None:
+        """
+        Aggregate ``dq_results`` rows for ``tag`` into the five side-tables and
+        ``dq_run_summary``. Idempotent: ``_write_aggregates_pd`` uses
+        ``DELETE``-then-``INSERT`` per tag, and ``dq_run_summary`` is written
+        with ``INSERT OR REPLACE``.
+
+        Reads with ``COALESCE(experiment_tag, '')`` so untagged runs match
+        whether the writer stored ``NULL`` or ``""``.
+
+        :param tag: The experiment tag.
+        :return: None.
+        """
+        t = self._table
+        with self.db.engine.connect() as conn:
+            rows = conn.execute(text(f"""
+                SELECT dq_metric, dq_granularity, dq_value,
+                       COALESCE(json_extract(column_names, '$[0]'), :placeholder) AS col_label,
+                       row_index, dq_explanation, timestamp, dataset
+                FROM {t}
+                WHERE COALESCE(experiment_tag, '') = :tag
+            """), {"tag": tag, "placeholder": TABLE_COLUMN_PLACEHOLDER}).fetchall()
+        if not rows:
+            return
+
+        metrics    = [r[0] for r in rows]
+        grans      = [r[1] for r in rows]
+        dq_vals    = [r[2] for r in rows]
+        col_labels = [r[3] for r in rows]
+        ridxs      = [r[4] for r in rows]
+        expl_jsons = [r[5] for r in rows]
+
+        frames = _compute_aggregates_pd(
+            metrics, grans, dq_vals, col_labels, ridxs, expl_jsons
+        )
+        self._write_aggregates_pd(tag, frames)
+
+        min_ts = min((r[6] for r in rows if r[6]), default="")
+        dataset = next((r[7] for r in rows if r[7]), "")
+        metrics_csv = ",".join(sorted(set(metrics)))
+        raw = self.db.engine.raw_connection()
+        try:
+            cur = raw.cursor()
+            cur.execute(
+                "INSERT OR REPLACE INTO dq_run_summary"
+                " (experiment_tag, dataset_name, created_at, result_count, metrics_csv)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (tag, dataset, str(min_ts), len(rows), metrics_csv),
+            )
+            raw.commit()
+        finally:
+            raw.close()
+
+    def _backfill_background(self) -> None:
+        """
+        Background thread: ensure every run in ``dq_results`` has aggregates.
+
+        One pass: discover the set of distinct tags in the main table, then
+        call ``_ensure_aggregates`` for each. Cheap when there's nothing to do
+        because ``_ensure_aggregates`` short-circuits on its in-memory cache /
+        PK lookup. Sets ``_summary_ready`` / ``_agg_ready`` at the end so any
+        method gated on them switches to the fast path.
 
         :return: None.
         """
         t = self._table
         try:
             with self.db.engine.connect() as conn:
-                conn.execute(text(f"""
-                    INSERT OR IGNORE INTO dq_run_summary
-                        (experiment_tag, dataset_name, created_at, result_count, metrics_csv)
-                    SELECT
-                        experiment_tag,
-                        dataset,
-                        MIN(timestamp),
-                        COUNT(*),
-                        GROUP_CONCAT(DISTINCT dq_metric)
-                    FROM {t}
-                    GROUP BY experiment_tag, dataset
-                """))
-                conn.commit()
-            logger.info("Background migration of dq_run_summary complete.")
+                rows = conn.execute(text(
+                    f"SELECT DISTINCT COALESCE(experiment_tag, '') FROM {t}"
+                )).fetchall()
+            tags = [r[0] for r in rows]
+            for tag in tags:
+                self._ensure_aggregates(tag)
         except Exception as exc:
-            logger.warning(f"dq_run_summary migration failed: {exc}")
+            logger.warning(f"Background aggregate backfill failed: {exc}")
         finally:
             self._summary_ready = True
+            self._agg_ready = True
 
 
 def _empty_summary() -> dict:

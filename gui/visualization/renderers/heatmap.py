@@ -43,7 +43,7 @@ def render(heatmap_df: pd.DataFrame, dataset_cols: list[str]) -> None:
             tooltip=[
                 alt.Tooltip("column:N", title="Column"),
                 alt.Tooltip("metric:N", title="Metric"),
-                alt.Tooltip("DQvalue:Q", format=".1%", title="Score"),
+                alt.Tooltip("DQvalue:Q", format=".2f", title="Score"),
             ],
         )
         .properties(
@@ -59,7 +59,7 @@ def render(heatmap_df: pd.DataFrame, dataset_cols: list[str]) -> None:
         .encode(
             x=alt.X("metric:N"),
             y=alt.Y("column:N", sort=dataset_cols or None),
-            text=alt.Text("DQvalue:Q", format=".0%"),
+            text=alt.Text("DQvalue:Q", format=".2f"),
             color=alt.condition(
                 "datum.DQvalue > 0.5",
                 alt.value("black"),

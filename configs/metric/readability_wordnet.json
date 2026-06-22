@@ -1,0 +1,11 @@
+{
+  "compute_schema": true,
+  "output_cells": false,
+  "output_columns": true,
+  "output_table": true,
+  "sample_size": 2000,
+  "random_seed": 13,
+  "min_token_length": 2,
+  "ignore_numeric_columns": true,
+  "abbr_csv": null
+}
