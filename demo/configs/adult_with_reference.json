@@ -1,0 +1,30 @@
+{
+    "loader": "CSV",
+    "name": "AdultWithReference",
+    "file_name": "adult.csv",
+    "reference_file_name": "adult_gold_sample.csv",
+    "delimiter": ",",
+    "encoding": "utf-8",
+    "header": 0,
+    "nrows": 100,
+    "usecols": [
+        "age",
+        "workclass",
+        "fnlwgt",
+        "education",
+        "education.num",
+        "marital.status",
+        "occupation",
+        "relationship",
+        "race",
+        "sex",
+        "capital.gain",
+        "capital.loss",
+        "hours.per.week",
+        "native.country",
+        "income"
+    ],
+    "parse_dates": false,
+    "decimal": ".",
+    "thousands": null
+}

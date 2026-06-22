@@ -380,6 +380,16 @@ class DataProfileManager:
                 }
             }, "minhash_dict"
 
+        if (
+            isinstance(value, dict)
+            and value
+            and isinstance(next(iter(value.values())), pd.Series)
+        ):
+            return (
+                {"v": {k: to_json_safe(s.to_dict()) for k, s in value.items()}},
+                "series_dict",
+            )
+
         if isinstance(value, dict):
             return {"v": to_json_safe(value)}, "dict"
         if isinstance(value, list):
@@ -417,4 +427,6 @@ class DataProfileManager:
                 )
                 for k, v in raw.items()
             }
+        if result_type == "series_dict":
+            return {k: pd.Series(v) for k, v in raw.items()}
         return raw
