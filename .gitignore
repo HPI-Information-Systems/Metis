@@ -10,3 +10,6 @@ out/
 *.pyc
 __pycache__/
 .venv/
+*.bak
+.cache/
+hf_cache/

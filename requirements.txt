@@ -1,8 +1,13 @@
 pandas
+numpy
 psycopg2-binary
-sqlite3 ; sys_platform == "win32"  # sqlite3 is included with Python, but this line is for completeness
 sqlalchemy==2.0.44
 nltk==3.9.2
 tqdm
-numpy
 datasketch
+torch
+transformers>=4.51.0,<5
+accelerate
+safetensors
+sentence-transformers
+wn
