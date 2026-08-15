@@ -10,6 +10,25 @@ from typing import Any, get_args, get_origin
 import streamlit as st
 
 from metis.metric.config import MetricConfig
+from metis.utils.reference_loader import ReferenceSource
+
+from ui.components.config_editors import reference_editor
+
+_REFERENCE_ARGS = frozenset(get_args(ReferenceSource))
+
+
+def is_reference_field(annotation: Any) -> bool:
+    """
+    Return whether a config field holds a reference source.
+
+    Matched structurally against the ``ReferenceSource`` union rather than by
+    field name, so any config declaring that annotation gets the uploader.
+
+    :param annotation: The field's type annotation.
+    :return: ``True`` when the annotation is the reference union.
+    """
+    args = get_args(annotation)
+    return bool(args) and frozenset(args) == _REFERENCE_ARGS
 
 
 def render(
@@ -63,6 +82,9 @@ def _render_field(field: Field, annotation: Any, default: Any, key: str) -> Any:
     :param key: Streamlit widget key.
     :return: The widget's current value.
     """
+    if is_reference_field(annotation):
+        return reference_editor.render(field.name, default, key)
+
     is_optional = _is_optional(annotation)
     annotation = _unwrap_optional(annotation)
     origin = get_origin(annotation)

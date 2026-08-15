@@ -27,7 +27,6 @@ class RunError:
 def run_all(
     metric_names: list[str],
     data: pd.DataFrame,
-    reference: pd.DataFrame | None,
     configs: dict,
     on_progress: Callable[[int, int, str], None],
     max_rows_by_metric: dict[str, int] | None = None,
@@ -40,7 +39,6 @@ def run_all(
 
     :param metric_names: Ordered list of metric names to run.
     :param data: Input dataframe.
-    :param reference: Optional reference dataframe (used by reference-based metrics).
     :param configs: Mapping of metric name to config object (or dict for the FD metric).
     :param on_progress: Callback ``on_progress(current_index, total, metric_name)``
         invoked before each metric run.
@@ -62,7 +60,7 @@ def run_all(
                     cap = max_rows_by_metric[name]
                     if cap > 0 and len(data) > cap:
                         metric_data = data.head(cap)
-                batch = Metric.registry[name]().assess(metric_data, reference, metric_config)
+                batch = Metric.registry[name]().assess(metric_data, metric_config)
                 results.extend(batch)
             except Exception as e:
                 errors.append(RunError(

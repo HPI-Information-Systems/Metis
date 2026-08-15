@@ -22,14 +22,6 @@ class AppState:
         st.session_state["df"] = df
 
     @staticmethod
-    def get_reference_df() -> pd.DataFrame | None:
-        return st.session_state.get("reference_df")
-
-    @staticmethod
-    def set_reference_df(df: pd.DataFrame | None) -> None:
-        st.session_state["reference_df"] = df
-
-    @staticmethod
     def get_dataset_name() -> str:
         return st.session_state.get("dataset_name", "")
 
@@ -206,7 +198,7 @@ class AppState:
         :return: None.
         """
         for key in (
-            "df", "reference_df", "dataset_name", "table_name",
+            "df", "dataset_name", "table_name",
             "experiment_tag", "selected_metrics", "metric_configs",
             "last_results", "last_errors", "run_requested",
         ):
