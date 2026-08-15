@@ -144,10 +144,11 @@ def _render_header() -> None:
     :return: None.
     """
     st.markdown(
-        f'<div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:0.5rem;">'
+        f'<h1 style="display:flex;align-items:center;gap:0.85rem;'
+        f'margin:0 0 0.5rem 0;font-size:1.9rem;font-weight:600;">'
         f'{assets.logo_html(36)}'
-        f'<span style="font-size:1.9rem;font-weight:600;"> Metis · Data Quality Assessment</span>'
-        f'</div>',
+        f'<span> Metis · Data Quality Assessment</span>'
+        f'</h1>',
         unsafe_allow_html=True,
     )
 
