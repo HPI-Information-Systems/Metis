@@ -48,7 +48,11 @@ def limits_table(df: pd.DataFrame) -> pd.DataFrame:
             "slowest_ok_seconds": float(ok["seconds"].max()) if not ok.empty else float("nan"),
             "peak_mb": float(ok["peak_mb"].max()) if not ok.empty else float("nan"),
         })
-    return pd.DataFrame(records).sort_values("max_rows_ok", ascending=False)
+    # kind="stable" so metrics tied on max_rows_ok keep their alphabetical
+    # groupby order rather than whatever quicksort happens to leave them in.
+    return pd.DataFrame(records).sort_values(
+        "max_rows_ok", ascending=False, kind="stable"
+    )
 
 
 def render_all(df: pd.DataFrame, outdir: pathlib.Path) -> list[pathlib.Path]:
