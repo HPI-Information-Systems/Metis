@@ -41,6 +41,7 @@ class accuracy_semanticReference(Metric):
     def assess(
         self,
         data: pd.DataFrame,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         config = self.load_config(metric_config or "", accuracy_semanticReference_config)

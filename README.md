@@ -120,9 +120,11 @@ streamlit run gui/app.py
 
 The GUI opens with two flows:
 
-- **Own files**: upload a CSV (plus an optional reference CSV for
-  reference-based metrics), pick metrics, and compute. Results are persisted
-  locally, so previous runs can be reopened and compared over time.
+- **Own files**: upload a CSV, pick metrics, and compute. Reference-based
+  metrics such as `correctness_heinrich` and `accuracy_semanticReference` get
+  their own reference CSV uploader inline on the Metrics step, as part of
+  that metric's config. Results are persisted locally, so previous runs can
+  be reopened and compared over time.
 - **Demo**: a bundled restaurants sample with precomputed results for seven
   metrics across three points in time, so the full results page (including
   the temporal comparison chart) works without computing anything. Set the
@@ -233,6 +235,7 @@ To extend the Metis framework and add new data quality metrics, please check our
 ````python
 def assess(self,
 			data: pd.DataFrame,
+			*,
 			metric_config: str | MetricConfig | None = None) -> List[DQResult]:
 ````
 Each metric should be a subclass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes two arguments:

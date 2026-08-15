@@ -48,6 +48,7 @@ class Metric(ABC):
     def assess(
         self,
         data: pd.DataFrame,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """Assess data using this metric and return the results.

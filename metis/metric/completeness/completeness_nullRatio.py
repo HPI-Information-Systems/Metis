@@ -29,6 +29,7 @@ class completeness_nullRatio(Metric):
     def assess(
         self,
         data: pd.DataFrame,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """

@@ -48,7 +48,7 @@ try:
     baseline_mb = _mb(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
     start = time.perf_counter()
-    results = cls().assess(frame, config)
+    results = cls().assess(frame, metric_config=config)
     seconds = time.perf_counter() - start
 
     peak_mb = _mb(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)

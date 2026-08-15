@@ -40,6 +40,7 @@ class accuracy_syntacticDomain(Metric):
     def assess(
         self,
         data: pd.DataFrame,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         config = self.load_config(metric_config or "", accuracy_syntacticDomain_config)

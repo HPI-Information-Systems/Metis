@@ -195,7 +195,7 @@ def _compute_all(
                 tmp_path = tmp.name
                 cfg = tmp_path
 
-            batch = Metric.registry[name]().assess(run_df, cfg)
+            batch = Metric.registry[name]().assess(run_df, metric_config=cfg)
             for r in batch:
                 d = _result_to_dict(r, tag, DATASET_NAME)
                 d["timestamp"] = ts.isoformat()

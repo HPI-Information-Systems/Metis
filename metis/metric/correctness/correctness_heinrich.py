@@ -33,6 +33,7 @@ class correctness_heinrich(Metric):
     def assess(
         self,
         data: pd.DataFrame,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """

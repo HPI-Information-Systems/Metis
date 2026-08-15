@@ -60,7 +60,7 @@ def run_all(
                     cap = max_rows_by_metric[name]
                     if cap > 0 and len(data) > cap:
                         metric_data = data.head(cap)
-                batch = Metric.registry[name]().assess(metric_data, metric_config)
+                batch = Metric.registry[name]().assess(metric_data, metric_config=metric_config)
                 results.extend(batch)
             except Exception as e:
                 errors.append(RunError(
