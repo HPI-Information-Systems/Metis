@@ -224,7 +224,7 @@ def _run_metrics(
                 tmp.close()
                 tmp_fd_path = tmp.name
                 metric_config = tmp_fd_path
-            batch = Metric.registry[name]().assess(run_df, None, metric_config)
+            batch = Metric.registry[name]().assess(run_df, metric_config)
             serialized = [
                 _result_to_dict(r, args.experiment_tag, dataset_path.stem) for r in batch
             ]
