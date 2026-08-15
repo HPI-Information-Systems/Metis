@@ -18,6 +18,7 @@ try:
 except ImportError:
     BROWSER_MODE = False
 
+import assets
 from core.result_store import (
     JSONResultStore,
     RunMetadata,
@@ -27,6 +28,7 @@ from core.result_store import (
 from core.metric_catalog import get_compute_blockers
 from core.serialization import dict_to_result
 from theme import HPI_RED
+from ui.components import footer
 from ui.pages import compute_page, dataset_page, metrics_page, results_page
 from ui.state import AppState
 
@@ -35,7 +37,7 @@ DEMO_ONLY: bool = os.environ.get("METIS_DEMO_ONLY", "").lower() in ("1", "true",
 
 st.set_page_config(
     page_title="Metis · Data Quality Assessment",
-    page_icon="📊",
+    page_icon=assets.LOGO_DATA_URI,
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -135,36 +137,54 @@ def _load_demo_df() -> pd.DataFrame:
     return pd.read_csv(csv_path, low_memory=False)
 
 
+def _render_header() -> None:
+    """
+    Render the header with the Metis logo and title.
+
+    :return: None.
+    """
+    st.markdown(
+        f'<div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:0.5rem;">'
+        f'{assets.logo_html(36)}'
+        f'<span style="font-size:1.9rem;font-weight:600;"> Metis · Data Quality Assessment</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def main() -> None:
     """
     Entry point: route to the demo wizard, the own-files wizard, or both.
 
     :return: None.
     """
-    st.title("Metis  ·  Data Quality Assessment")
-    store = _get_store()
-    set_active_store(store)
+    try:
+        _render_header()
+        store = _get_store()
+        set_active_store(store)
 
-    if DEMO_ONLY:
-        _render_demo_wizard(store)
-        return
-
-    if BROWSER_MODE:
-        if not AppState.get_demo_mode_chosen():
-            _render_landing(store)
-            return
-        path = AppState.get_browser_path()
-        if path == "demo":
+        if DEMO_ONLY:
             _render_demo_wizard(store)
-        else:
-            _render_own_wizard(store)
-        return
+            return
 
-    tab_demo, tab_own = st.tabs(["Demo", "Own Files"])
-    with tab_demo:
-        _render_demo_wizard(store)
-    with tab_own:
-        _render_own_wizard(store)
+        if BROWSER_MODE:
+            if not AppState.get_demo_mode_chosen():
+                _render_landing(store)
+                return
+            path = AppState.get_browser_path()
+            if path == "demo":
+                _render_demo_wizard(store)
+            else:
+                _render_own_wizard(store)
+            return
+
+        tab_demo, tab_own = st.tabs(["Demo", "Own Files"])
+        with tab_demo:
+            _render_demo_wizard(store)
+        with tab_own:
+            _render_own_wizard(store)
+    finally:
+        footer.render()
 
 
 def _render_own_wizard(store) -> None:
