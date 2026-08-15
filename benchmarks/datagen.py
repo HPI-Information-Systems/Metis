@@ -34,6 +34,32 @@ _CATEGORIES: tuple[str, ...] = ("north", "south", "east", "west", "central")
 NULL_FRACTION: float = 0.05
 DUPLICATE_FRACTION: float = 0.10
 
+INTEGER_RANGE_FLOOR: int = 1_000_000
+INTEGER_RANGE_MULTIPLIER: int = 20
+
+
+def integer_upper_bound(n: int) -> int:
+    """
+    Exclusive upper bound for the integer column's value range.
+
+    Fixtures (``benchmarks/fixtures.py``) use the integer column as a
+    near-key determinant for ``consistency_countFDViolations``: it needs a
+    high fraction of its ``n`` drawn values to be distinct. Drawing ``n``
+    values uniformly from a range of size ``R`` leaves an expected distinct
+    fraction of about ``1 - n / (2R)`` (birthday-paradox approximation, valid
+    for ``n`` not too close to ``R``). A range fixed at ``INTEGER_RANGE_FLOOR``
+    (1,000,000) works fine while ``n`` stays small, but as ``n`` approaches
+    and passes that floor the fraction collapses -- at n=200,000 it measures
+    ~0.82, and at n=1,000,000 documented collisions push consistency down to
+    ~0.41. Scaling ``R`` linearly with ``n`` at ``INTEGER_RANGE_MULTIPLIER``
+    (20) keeps ``1 - n / (2R) == 1 - 1/40 == 0.975`` regardless of ``n``, so
+    the near-key property holds at every sweep size, not just small ones.
+
+    :param n: Number of values to be drawn from the range.
+    :return: The exclusive upper bound to pass to ``rng.integers``.
+    """
+    return max(INTEGER_RANGE_FLOOR, INTEGER_RANGE_MULTIPLIER * n)
+
 
 def make_frame(rows: int, cols: int, seed: int = 13) -> pd.DataFrame:
     """
@@ -79,7 +105,7 @@ def _make_column(kind: str, n: int, rng: np.random.Generator) -> np.ndarray:
     :return: The column values.
     """
     if kind == "integer":
-        return rng.integers(0, 1_000_000, n)
+        return rng.integers(0, integer_upper_bound(n), n)
 
     if kind == "float":
         return rng.normal(100.0, 25.0, n)

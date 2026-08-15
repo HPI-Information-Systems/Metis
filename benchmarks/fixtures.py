@@ -40,7 +40,7 @@ from metis.metric.timeliness.timeliness_heinrich_config import (
     timeliness_heinrich_config,
 )
 
-from benchmarks.datagen import _CATEGORIES
+from benchmarks.datagen import _CATEGORIES, integer_upper_bound
 
 SKIPPED: dict[str, str] = {
     "readability_llm": (
@@ -209,13 +209,22 @@ def _data_range_config(frame: pd.DataFrame) -> accuracy_dataRange_config:
     explicit interval per numeric column the metric would time the cost of
     skipping rather than the cost of the range check itself.
 
+    The integer interval is derived from
+    :func:`benchmarks.datagen.integer_upper_bound` rather than a fixed
+    ``(0, 1_000_000)``: the generator widens the integer column's range as
+    the row count grows (to keep the FD fixture's determinant near-unique at
+    scale), so a fixed interval would go stale and mark a growing share of
+    genuinely in-range values as violations for reasons that have nothing to
+    do with the metric's own behavior.
+
     :param frame: The frame the metric will be run on.
     :return: A config with an interval for every ``integer_*``/``float_*``
-        column, wide enough to cover the generator's ranges.
+        column, wide enough to cover the generator's ranges at this frame's
+        size.
     """
     intervals: dict[str, tuple[float, float]] = {}
     for column in _columns_of_kind(frame, "integer"):
-        intervals[column] = (0, 1_000_000)
+        intervals[column] = (0, integer_upper_bound(len(frame)))
     for column in _columns_of_kind(frame, "float"):
         intervals[column] = (0.0, 200.0)
     return accuracy_dataRange_config(intervals=intervals, fallback="skip")
@@ -247,16 +256,25 @@ def _perturbed_reference(frame: pd.DataFrame, seed: int = _PERTURB_SEED) -> pd.D
     sparse column already contains ``None`` gaps and its category strings
     would just duplicate the categorical column's perturbation.
 
+    Each numeric column keeps its original dtype (an integer column stays
+    ``int64``). Widening a whole column to ``float64`` because a fraction of
+    its cells were perturbed is harmless to the metric -- dispatch is keyed
+    off the *data* frame's dtype, and ``500000 == 500000.0`` -- but it would
+    make every untouched cell's string form differ from the data's
+    (``"500000"`` vs ``"500000.0"``), defeating any test that compares cell
+    strings to measure the true perturbation fraction.
+
     :param frame: The frame being assessed.
     :param seed: Seed controlling which cells are perturbed and by how much.
     :return: A reference frame of the same shape, ~30% of eligible cells
-        modified.
+        modified, with every column's original dtype preserved.
     """
     rng = np.random.default_rng(seed)
     reference = frame.copy()
 
     for column in _columns_of_kind(frame, "integer") + _columns_of_kind(frame, "float"):
         series = reference[column]
+        original_dtype = series.dtype
         mask = rng.random(len(series)) < _PERTURB_FRACTION
         if not mask.any():
             continue
@@ -264,6 +282,10 @@ def _perturbed_reference(frame: pd.DataFrame, seed: int = _PERTURB_SEED) -> pd.D
         delta = rng.normal(0.0, max(scale * 0.5, 1.0), int(mask.sum()))
         values = series.to_numpy(dtype="float64", copy=True)
         values[mask] = values[mask] + delta
+        if pd.api.types.is_integer_dtype(original_dtype):
+            values = np.rint(values).astype(original_dtype)
+        else:
+            values = values.astype(original_dtype)
         reference[column] = values
 
     for column in _columns_of_kind(frame, "categorical") + _columns_of_kind(frame, "text"):
