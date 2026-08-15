@@ -1,10 +1,11 @@
 import json
 from abc import ABC, abstractmethod
-from typing import Any, List, TypeVar
+from typing import Any, ClassVar, List, TypeVar
 
 import pandas as pd
 
 from metis.metric.config import MetricConfig
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.logging import logger as main_logger
 from metis.utils.result import DQResult
 
@@ -25,6 +26,23 @@ class Metric(ABC):
 
     def __init__(self) -> None:
         self.logger = main_logger.getChild(self.__class__.__name__)
+
+    meta: ClassVar[MetricMeta | None] = None
+    """Declarative metadata for this metric. Every concrete metric sets it."""
+
+    @classmethod
+    def describe(cls) -> MetricMeta:
+        """Return this metric's declared metadata.
+
+        :raises NotImplementedError: If the metric does not declare ``meta``.
+        :return: The metric's :class:`MetricMeta`.
+        """
+        if cls.meta is None:
+            raise NotImplementedError(
+                f"{cls.__name__} does not declare a MetricMeta. Add a `meta` "
+                f"class attribute. See metis/metric/metric_meta.py."
+            )
+        return cls.meta
 
     @abstractmethod
     def assess(
