@@ -203,4 +203,15 @@ class AppState:
             "last_results", "last_errors", "run_requested",
         ):
             st.session_state.pop(key, None)
+
+        # Per-metric reference state is keyed by metric name, not by dataset,
+        # so it outlives a reset unless it is swept explicitly. Leaving it
+        # would silently score a new dataset against the old dataset's
+        # reference.
+        for key in [
+            k for k in st.session_state
+            if k.startswith("_ref_cache__") or k.endswith("__reference")
+        ]:
+            st.session_state.pop(key, None)
+
         st.session_state["wizard_step"] = 0
