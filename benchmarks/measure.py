@@ -8,6 +8,7 @@ failures are the data.
 from __future__ import annotations
 
 import json
+import signal
 import subprocess
 import sys
 from dataclasses import asdict, dataclass, fields
@@ -21,35 +22,52 @@ from benchmarks import datagen, fixtures
 
 metric, rows, cols, seed = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
 
+
+def _mb(raw):
+    # Linux reports kilobytes, macOS reports bytes.
+    return raw / 1024 if sys.platform.startswith("linux") else raw / (1024 * 1024)
+
+
 try:
     cls = Metric.registry.get(metric)
     if cls is None:
         raise KeyError(f"{metric} is not a registered metric")
+
+    gen_start = time.perf_counter()
     frame = datagen.make_frame(rows=rows, cols=cols, seed=seed)
     work = pathlib.Path(tempfile.mkdtemp())
     config = fixtures.config_for(metric, frame, work)
+    generation_seconds = time.perf_counter() - gen_start
+
+    # Captured right before assess() runs, so it reads as interpreter
+    # startup plus generation, not as metric cost. peak_mb below is a
+    # high-water mark over the whole process, so it is reported alongside
+    # rather than replaced by a peak-minus-baseline delta: ru_maxrss never
+    # falls, so a naive subtraction reads zero whenever generation peaked
+    # higher than the metric itself.
+    baseline_mb = _mb(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
     start = time.perf_counter()
     results = cls().assess(frame, config)
     seconds = time.perf_counter() - start
 
-    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    # Linux reports kilobytes, macOS reports bytes.
-    peak_mb = peak / 1024 if sys.platform.startswith("linux") else peak / (1024 * 1024)
+    peak_mb = _mb(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
     print("METIS_BENCH " + json.dumps({
-        "status": "ok", "seconds": seconds,
-        "peak_mb": peak_mb, "n_results": len(results), "error": None,
+        "status": "ok", "seconds": seconds, "generation_seconds": generation_seconds,
+        "baseline_mb": baseline_mb, "peak_mb": peak_mb,
+        "n_results": len(results), "error": None,
     }))
 except MemoryError as e:
     print("METIS_BENCH " + json.dumps({
-        "status": "memory", "seconds": None, "peak_mb": None,
-        "n_results": None, "error": str(e),
+        "status": "memory", "seconds": None, "generation_seconds": None,
+        "baseline_mb": None, "peak_mb": None, "n_results": None, "error": str(e),
     }))
 except BaseException as e:
     print("METIS_BENCH " + json.dumps({
-        "status": "error", "seconds": None, "peak_mb": None,
-        "n_results": None, "error": f"{type(e).__name__}: {e}",
+        "status": "error", "seconds": None, "generation_seconds": None,
+        "baseline_mb": None, "peak_mb": None, "n_results": None,
+        "error": f"{type(e).__name__}: {e}",
     }))
 """
 
@@ -64,6 +82,8 @@ class Measurement:
     cols: int
     status: str
     seconds: float | None
+    generation_seconds: float | None
+    baseline_mb: float | None
     peak_mb: float | None
     n_results: int | None
     error: str | None
@@ -106,22 +126,52 @@ def run_one(
         )
     except subprocess.TimeoutExpired:
         return Measurement(
-            **base, status="timeout", seconds=None, peak_mb=None,
-            n_results=None, error=f"exceeded {timeout_s}s",
+            **base, status="timeout", seconds=None, generation_seconds=None,
+            baseline_mb=None, peak_mb=None, n_results=None,
+            error=f"exceeded {timeout_s}s",
         )
 
     payload = _parse(proc.stdout)
     if payload is None:
-        # Killed by a signal (an OOM kill is the common case) or crashed before
-        # it could report.
-        status = "memory" if proc.returncode and proc.returncode < 0 else "error"
-        detail = (proc.stderr or "").strip()[-500:] or f"exit code {proc.returncode}"
+        status, detail = _classify_signal_death(proc.returncode, proc.stderr)
         return Measurement(
-            **base, status=status, seconds=None, peak_mb=None,
-            n_results=None, error=detail,
+            **base, status=status, seconds=None, generation_seconds=None,
+            baseline_mb=None, peak_mb=None, n_results=None, error=detail,
         )
 
     return Measurement(**base, **payload)
+
+
+def _classify_signal_death(returncode: int | None, stderr: str | None) -> tuple[str, str]:
+    """
+    Classify a child that exited without printing a payload.
+
+    Only SIGKILL (return code -9) is the signature of an OOM kill, so only
+    that signal is reported as ``memory``. Any other signal (SIGSEGV,
+    SIGABRT, ...) is a crash, not evidence of a memory limit, so it is
+    reported as ``error`` with the signal named -- misfiling e.g. a native
+    library's SIGSEGV as "memory" would corrupt the sweep's headline finding.
+
+    :param returncode: The child's exit code, negative when killed by a signal.
+    :param stderr: The child's captured stderr, used for extra detail.
+    :return: A ``(status, error_detail)`` pair.
+    """
+    tail = (stderr or "").strip()[-500:]
+
+    if returncode is not None and returncode < 0:
+        sig = -returncode
+        if sig == signal.SIGKILL:
+            return "memory", tail or "killed by SIGKILL (likely an OOM kill)"
+        try:
+            sig_name = signal.Signals(sig).name
+        except ValueError:
+            sig_name = f"signal {sig}"
+        detail = f"killed by {sig_name}"
+        if tail:
+            detail = f"{detail}: {tail}"
+        return "error", detail
+
+    return "error", tail or f"exit code {returncode}"
 
 
 def _parse(stdout: str) -> dict | None:

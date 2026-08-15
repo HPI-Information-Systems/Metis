@@ -27,6 +27,8 @@ DEFAULT_SEED: int = 13
 
 _BREACH = ("timeout", "memory", "error")
 
+VALID_AXES: tuple[str, ...] = ("rows", "cols")
+
 
 def run_sweep(
     metrics: list[str],
@@ -47,7 +49,15 @@ def run_sweep(
     :param seed: Seed for data generation.
     :param on_result: Optional callback invoked with each Measurement.
     :return: Every measurement taken, in order.
+    :raises ValueError: If any entry in ``axes`` is not ``rows`` or ``cols``.
+        An unrecognised axis would silently fall through to the column
+        ladder while the result is still labelled with the given axis,
+        which produces mislabelled data with no visible error.
     """
+    bad = [a for a in axes if a not in VALID_AXES]
+    if bad:
+        raise ValueError(f"axes must be one of {VALID_AXES}, got {bad!r}")
+
     out: list[measure.Measurement] = []
 
     for metric in metrics:
@@ -103,6 +113,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    axes = tuple(a.strip() for a in args.axes.split(",") if a.strip())
+    bad_axes = [a for a in axes if a not in VALID_AXES]
+    if bad_axes:
+        parser.error(f"--axes accepts only {VALID_AXES}, got {bad_axes!r}")
+
     if args.metric:
         metrics = args.metric
     else:
@@ -113,12 +128,19 @@ def main() -> None:
             metrics = [m for m in metrics if m not in fixtures.SKIPPED]
 
     def report(m: measure.Measurement) -> None:
-        detail = f"{m.seconds:.2f}s {m.peak_mb:.0f}MB" if m.status == "ok" else m.error
-        print(f"{m.status:<8} {m.metric:<32} {m.axis}={m.rows if m.axis == 'rows' else m.cols:<9} {detail}")
+        if m.status == "ok":
+            detail = (
+                f"gen={m.generation_seconds:.2f}s assess={m.seconds:.2f}s "
+                f"baseline={m.baseline_mb:.0f}MB peak={m.peak_mb:.0f}MB"
+            )
+        else:
+            detail = m.error
+        size = m.rows if m.axis == "rows" else m.cols
+        print(f"{m.status:<8} {m.metric:<32} {m.axis}={size:<9} {detail}")
 
     results = run_sweep(
         metrics=metrics,
-        axes=tuple(a.strip() for a in args.axes.split(",") if a.strip()),
+        axes=axes,
         timeout_s=args.timeout,
         seed=args.seed,
         on_result=report,
