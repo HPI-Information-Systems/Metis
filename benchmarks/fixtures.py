@@ -15,8 +15,12 @@ import pandas as pd
 
 import metis.metric  # noqa: F401 - populates Metric.registry
 from metis.metric.metric import Metric
+from metis.metric.accuracy.accuracy_dataRange_config import accuracy_dataRange_config
 from metis.metric.accuracy.accuracy_semanticReference_config import (
     accuracy_semanticReference_config,
+)
+from metis.metric.accuracy.accuracy_syntacticDomain_config import (
+    accuracy_syntacticDomain_config,
 )
 from metis.metric.consistency.consistency_ruleBasedHinrichs_config import (
     consistency_ruleBasedHinrichs_config,
@@ -34,6 +38,8 @@ from metis.metric.timeliness.timeliness_heinrich_config import (
     timeliness_heinrich_column_config,
     timeliness_heinrich_config,
 )
+
+from benchmarks.datagen import _CATEGORIES
 
 SKIPPED: dict[str, str] = {
     "readability_llm": (
@@ -66,6 +72,12 @@ def config_for(metric_name: str, frame: pd.DataFrame, workdir: pathlib.Path) -> 
 
     if metric_name == "timeliness_heinrich":
         return _timeliness_config(frame)
+
+    if metric_name == "accuracy_dataRange":
+        return _data_range_config(frame)
+
+    if metric_name == "accuracy_syntacticDomain":
+        return _syntactic_domain_config(frame)
 
     if metric_name == "minimality_clustering":
         return minimality_clustering_config(use_semhash=False, similarity_threshold=0.85)
@@ -118,6 +130,11 @@ def _first_column_of_kind(frame: pd.DataFrame, prefix: str) -> str | None:
     return None
 
 
+def _columns_of_kind(frame: pd.DataFrame, prefix: str) -> list[str]:
+    """Return every generated column whose name starts with ``prefix``."""
+    return [str(col) for col in frame.columns if str(col).startswith(prefix)]
+
+
 def _fd_config_path(frame: pd.DataFrame, workdir: pathlib.Path) -> str:
     """Write a functional dependency spec over two generated columns."""
     determinant = _first_column_of_kind(frame, "categorical") or str(frame.columns[0])
@@ -164,3 +181,42 @@ def _timeliness_config(frame: pd.DataFrame):
             )
         }
     )
+
+
+def _data_range_config(frame: pd.DataFrame) -> accuracy_dataRange_config:
+    """
+    Give every generated numeric column an interval so the metric actually
+    checks cells instead of skipping them for want of a range.
+
+    The default config (``intervals=None``) skips every column: numeric
+    columns for lack of an interval, non-numeric columns by type. Without an
+    explicit interval per numeric column the metric would time the cost of
+    skipping rather than the cost of the range check itself.
+
+    :param frame: The frame the metric will be run on.
+    :return: A config with an interval for every ``integer_*``/``float_*``
+        column, wide enough to cover the generator's ranges.
+    """
+    intervals: dict[str, tuple[float, float]] = {}
+    for column in _columns_of_kind(frame, "integer"):
+        intervals[column] = (0, 1_000_000)
+    for column in _columns_of_kind(frame, "float"):
+        intervals[column] = (0.0, 200.0)
+    return accuracy_dataRange_config(intervals=intervals, fallback="skip")
+
+
+def _syntactic_domain_config(frame: pd.DataFrame) -> accuracy_syntacticDomain_config:
+    """
+    Give every generated categorical column a domain so the metric actually
+    checks cells instead of reporting "no domain available".
+
+    :param frame: The frame the metric will be run on.
+    :return: A config with a domain for every ``categorical_*`` column, set
+        to :data:`benchmarks.datagen._CATEGORIES` so it cannot drift from the
+        values the generator actually produces.
+    """
+    domains = {
+        column: list(_CATEGORIES)
+        for column in _columns_of_kind(frame, "categorical")
+    }
+    return accuracy_syntacticDomain_config(domains=domains)
