@@ -50,6 +50,7 @@ class readability_wordnet(Metric):
             DQGranularity.CELL, DQGranularity.COLUMN,
             DQGranularity.TABLE, DQGranularity.SCHEMA,
         }),
+        config_required=True,
     )
 
     def assess(

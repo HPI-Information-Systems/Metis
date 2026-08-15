@@ -74,6 +74,7 @@ class readability_llm(Metric):
             DQGranularity.CELL, DQGranularity.COLUMN,
             DQGranularity.TABLE, DQGranularity.SCHEMA,
         }),
+        config_required=True,
     )
 
     def assess(
