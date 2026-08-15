@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Optional
 
 import pandas as pd
 
@@ -11,6 +11,7 @@ from metis.metric.metric import Metric
 from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
+from metis.utils.reference_loader import load_reference_frame
 from metis.utils.result import DQResult
 
 
@@ -39,10 +40,10 @@ class accuracy_syntacticDomain(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, set, None] = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         config = self.load_config(metric_config or "", accuracy_syntacticDomain_config)
+        reference = load_reference_frame(config.reference)
         strategy = DOMAIN_STRATEGIES[config.method]
         params = config.method_params or {}
         results: List[DQResult] = []
@@ -87,7 +88,7 @@ class accuracy_syntacticDomain(Metric):
         self,
         col: str,
         config: accuracy_syntacticDomain_config,
-        reference: Union[pd.DataFrame, set, None],
+        reference: Optional[pd.DataFrame],
     ) -> tuple[Optional[Iterable], str]:
         if config.domains and col in config.domains:
             return list(config.domains[col]), "config"
@@ -96,8 +97,6 @@ class accuracy_syntacticDomain(Metric):
                 return reference[col].dropna().unique().tolist(), "reference"
             if reference.shape[1] == 1:
                 return reference.iloc[:, 0].dropna().unique().tolist(), "reference"
-        if isinstance(reference, set):
-            return list(reference), "reference"
         if config.method == "wordnet":
             return None, "wordnet"   # strategy has its own internal source
         return None, "none"

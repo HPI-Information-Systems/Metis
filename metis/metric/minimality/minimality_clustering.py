@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
-from typing import List, Union
+from typing import List
 
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial.distance import squareform
 
 from semhash import SemHash
 
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.metric.metric_meta import MetricMeta
 from metis.metric.minimality.minimality_clustering_config import minimality_clustering_config
@@ -41,8 +42,7 @@ class minimality_clustering(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
 
         if metric_config is None:

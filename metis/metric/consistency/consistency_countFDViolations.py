@@ -1,5 +1,5 @@
 import json
-from typing import List, Union
+from typing import List
 
 import pandas as pd
 
@@ -27,8 +27,7 @@ class consistency_countFDViolations(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[MetricConfig, str, None] = None,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the consistency of a dataset by checking the compliance of a functional dependency specified in the metric_config.

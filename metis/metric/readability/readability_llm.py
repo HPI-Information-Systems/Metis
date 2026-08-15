@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import random
 from collections import Counter
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.metric.metric_meta import MetricMeta
 from metis.utils.result import DQResult
@@ -80,8 +81,7 @@ class readability_llm(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the readability of a tabular dataset using the hybrid readability metric.
@@ -95,11 +95,6 @@ class readability_llm(Metric):
         - data: pd.DataFrame
                 The DataFrame to assess. This is the primary dataset whose schema labels
                 and textual cell values are evaluated for readability.
-
-        - reference: Optional[pd.DataFrame]
-                Optional reference DataFrame. This metric does not use a reference
-                dataset and accepts this parameter only to conform to the framework-wide
-                metric interface.
 
         - metric_config: Optional[str]
                 Optional path or JSON string containing readability-specific

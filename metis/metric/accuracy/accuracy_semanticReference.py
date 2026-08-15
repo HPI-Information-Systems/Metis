@@ -10,6 +10,7 @@ from metis.metric.metric import Metric
 from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
+from metis.utils.reference_loader import load_reference_frame
 from metis.utils.result import DQResult
 
 
@@ -40,15 +41,10 @@ class accuracy_semanticReference(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
-        if reference is None:
-            raise ValueError(
-                "accuracy_semanticReference requires a reference DataFrame."
-            )
-
         config = self.load_config(metric_config or "", accuracy_semanticReference_config)
+        reference = load_reference_frame(config.reference)
 
         if config.key_column is not None:
             if config.key_column not in data.columns:

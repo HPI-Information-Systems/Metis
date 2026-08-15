@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 
 import pandas as pd
 
@@ -24,8 +24,7 @@ class minimality_duplicateCount(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[MetricConfig, str, None] = None,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the minimality for each attribute of a dataset by checking for unique values.

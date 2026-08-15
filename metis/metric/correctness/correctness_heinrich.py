@@ -3,11 +3,15 @@ from typing import List
 import pandas as pd
 
 from metis.metric.config import MetricConfig
+from metis.metric.correctness.correctness_heinrich_config import (
+    correctness_heinrich_config,
+)
 from metis.metric.metric import Metric
 from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.numbers import clamp
+from metis.utils.reference_loader import load_reference_frame
 from metis.utils.result import DQResult
 from metis.utils.similarity_measures.string import levenshtein_distance
 
@@ -29,7 +33,6 @@ class correctness_heinrich(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
@@ -39,10 +42,8 @@ class correctness_heinrich(Metric):
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing correctness results.
         """
-        if reference is None:
-            raise ValueError(
-                "Reference DataFrame is required for correctness assessment."
-            )
+        config = self.load_config(metric_config or correctness_heinrich_config(), correctness_heinrich_config)
+        reference = load_reference_frame(config.reference)
 
         if data.shape != reference.shape:
             raise ValueError(
