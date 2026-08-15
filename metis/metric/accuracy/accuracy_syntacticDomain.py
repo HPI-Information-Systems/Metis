@@ -8,6 +8,7 @@ from metis.metric.accuracy.accuracy_syntacticDomain_config import (
 )
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
@@ -23,14 +24,16 @@ class accuracy_syntacticDomain(Metric):
       3. The strategy's own source. Only ``method="wordnet"`` has one.
     """
 
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.COLUMN})
-    _gui_description: str = (
-        "Per column, share of values that belong to a configurable reference "
-        "domain. Domain can be a per-column list (metric_config.domains), a "
-        "reference DataFrame, or NLTK WordNet."
+    meta = MetricMeta(
+        label="Syntactic Domain",
+        description=(
+            "Per column, share of values that belong to a configurable reference "
+            "domain. Domain can be a per-column list (metric_config.domains), a "
+            "reference DataFrame, or NLTK WordNet."
+        ),
+        dimension=DQDimension.ACCURACY,
+        granularities=frozenset({DQGranularity.COLUMN}),
+        standard="ISO/IEC 25024:2015 Acc-I-1",
     )
 
     def assess(

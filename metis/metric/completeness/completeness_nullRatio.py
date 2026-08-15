@@ -7,22 +7,25 @@ from metis.metric.completeness.completeness_nullRatio_config import (
 )
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
 class completeness_nullRatio(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({
-        DQGranularity.ROW, DQGranularity.COLUMN, DQGranularity.TABLE,
-    })
-    _gui_description: str = (
-        "Completeness as the ratio of non-null values. Configurable to report "
-        "per cell, per row, per column, or as a single table-level score."
+    meta = MetricMeta(
+        label="Null Ratio",
+        description=(
+            "Completeness as the ratio of non-null values. Configurable to report "
+            "per cell, per row, per column, or as a single table-level score."
+        ),
+        dimension=DQDimension.COMPLETENESS,
+        granularities=frozenset({
+            DQGranularity.ROW, DQGranularity.COLUMN, DQGranularity.TABLE,
+        }),
     )
+
     def assess(
         self,
         data: pd.DataFrame,

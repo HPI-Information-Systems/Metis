@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.result import DQResult
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
@@ -57,6 +58,23 @@ def _sample_df(df: pd.DataFrame, sample_size: Optional[int], rng: random.Random)
 
 class readability_llm(Metric):
     """Hybrid readability metric: WordNet-first with LLM fallback (lazy backend loading)."""
+
+    meta = MetricMeta(
+        label="LLM Assisted",
+        description=(
+            "Readability of schema labels and text content, scored by splitting "
+            "identifiers into words and checking them against WordNet and an "
+            "abbreviation list, with a local HuggingFace language model as "
+            "fallback for tokens WordNet cannot resolve. Requires the optional "
+            "transformers dependency and downloads a model on first use "
+            "(default Qwen/Qwen2.5-3B-Instruct)."
+        ),
+        dimension=DQDimension.READABILITY,
+        granularities=frozenset({
+            DQGranularity.CELL, DQGranularity.COLUMN,
+            DQGranularity.TABLE, DQGranularity.SCHEMA,
+        }),
+    )
 
     def assess(
         self,

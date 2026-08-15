@@ -4,20 +4,23 @@ import pandas as pd
 
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
 class minimality_duplicateCount(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.COLUMN})
-    _gui_description: str = (
-        "Per column, the share of values that appear exactly once. A score of "
-        "1.0 marks the column as a candidate key."
+    meta = MetricMeta(
+        label="Duplicate Count",
+        description=(
+            "Per column, the share of values that appear exactly once. A score of "
+            "1.0 marks the column as a candidate key."
+        ),
+        dimension=DQDimension.MINIMALITY,
+        granularities=frozenset({DQGranularity.COLUMN}),
     )
+
     def assess(
         self,
         data: pd.DataFrame,

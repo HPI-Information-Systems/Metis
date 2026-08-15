@@ -8,6 +8,7 @@ from scipy.spatial.distance import squareform
 from semhash import SemHash
 
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.metric.minimality.minimality_clustering_config import minimality_clustering_config
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
@@ -22,6 +23,20 @@ class minimality_clustering(Metric):
     - Default: SemHash-based semantic deduplication
     - Optional: custom type-aware similarity + clustering
     """
+
+    meta = MetricMeta(
+        label="Clustering",
+        description=(
+            "Table-level minimality. Groups near-duplicate rows into clusters and "
+            "reports `(clusters - 1) / (rows - 1)`, so 1.0 means every row is its "
+            "own cluster and lower values mean more redundancy. The default "
+            "backend is a type-aware row similarity with hierarchical clustering. "
+            "Setting use_semhash switches to SemHash semantic deduplication."
+        ),
+        dimension=DQDimension.MINIMALITY,
+        granularities=frozenset({DQGranularity.TABLE}),
+        config_required=True,
+    )
 
     def assess(
         self,

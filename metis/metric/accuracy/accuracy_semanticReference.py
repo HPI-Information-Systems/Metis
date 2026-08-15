@@ -7,6 +7,7 @@ from metis.metric.accuracy.accuracy_semanticReference_config import (
 )
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
@@ -23,14 +24,17 @@ class accuracy_semanticReference(Metric):
     (or align via ``key_column``) so denominators reflect the sample, not the full table.
     """
 
-    _gui_requires_reference: bool = True
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.COLUMN})
-    _gui_description: str = (
-        "Per column, share of values that exactly match the corresponding value "
-        "in a gold-standard reference DataFrame. Alignment is positional by "
-        "default, or by metric_config.key_column."
+    meta = MetricMeta(
+        label="Semantic Reference",
+        description=(
+            "Per column, share of values that exactly match the corresponding value "
+            "in a gold-standard reference DataFrame. Alignment is positional by "
+            "default, or by metric_config.key_column."
+        ),
+        dimension=DQDimension.ACCURACY,
+        granularities=frozenset({DQGranularity.COLUMN}),
+        requires_reference=True,
+        standard="ISO/IEC 25024:2015 Acc-I-2",
     )
 
     def assess(

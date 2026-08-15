@@ -7,6 +7,7 @@ from metis.metric.consistency.consistency_ruleBasedPipino_config import (
     consistency_ruleBasedPipino_config,
 )
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.logging import warn_unconfigured_columns
@@ -14,19 +15,20 @@ from metis.utils.result import DQResult
 
 
 class consistency_ruleBasedPipino(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = True
-    _gui_callable_config: bool = True
-    _gui_cell_granularity: bool = True
-    _gui_recommended_granularities: frozenset = frozenset({
-        DQGranularity.CELL, DQGranularity.ROW,
-    })
-    _gui_description: str = (
-        "Scores cells and rows against user-defined attribute and tuple rules "
-        "using Pipino's formula `1 − violations / total_rules`. A certainty "
-        "value derived from rule fulfillment rates is reported alongside each "
-        "result."
+    meta = MetricMeta(
+        label="Rule Based (Pipino)",
+        description=(
+            "Scores cells and rows against user-defined attribute and tuple rules "
+            "using Pipino's formula `1 − violations / total_rules`. A certainty "
+            "value derived from rule fulfillment rates is reported alongside each "
+            "result."
+        ),
+        dimension=DQDimension.CONSISTENCY,
+        granularities=frozenset({DQGranularity.CELL, DQGranularity.ROW}),
+        config_required=True,
+        callable_config=True,
     )
+
     def assess(
         self,
         data: pd.DataFrame,

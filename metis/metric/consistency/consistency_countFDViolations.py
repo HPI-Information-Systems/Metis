@@ -5,21 +5,25 @@ import pandas as pd
 
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
 class consistency_countFDViolations(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = True
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.TABLE})
-    _gui_description: str = (
-        "Counts violations of user-defined functional dependencies. For each "
-        "FD `A → B`, consistency is `1 − (violating A-groups / total A-values)`, "
-        "where a group violates the FD if it maps to more than one distinct `B`."
+    meta = MetricMeta(
+        label="FD Violations",
+        description=(
+            "Counts violations of user-defined functional dependencies. For each "
+            "FD `A → B`, consistency is `1 − (violating A-groups / total A-values)`, "
+            "where a group violates the FD if it maps to more than one distinct `B`."
+        ),
+        dimension=DQDimension.CONSISTENCY,
+        granularities=frozenset({DQGranularity.TABLE}),
+        config_required=True,
     )
+
     def assess(
         self,
         data: pd.DataFrame,
