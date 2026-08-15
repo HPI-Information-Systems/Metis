@@ -104,6 +104,9 @@ metric is selected and no blockers remain.
 
 `gui/ui/pages/results_page.py`
 
+- Every score runs from 0 to 1, where 0 is the worst possible quality and 1 is
+  the best. Charts use a red to green scale over that fixed range, so colours
+  are comparable across metrics and across runs.
 - A run selector lists all stored experiments. Runs can be exported to JSON
   and imported back, which also makes results portable between desktop and
   browser mode.
@@ -221,7 +224,7 @@ gui/
 
 | Module              | Purpose                                                                 |
 |---------------------|--------------------------------------------------------------------------|
-| `metric_catalog.py` | Introspects `Metric.registry` into `MetricInfo` objects (config class, required fields, `_gui_*` metadata) and computes compute blockers. Also home of `_NATIVE_LIB_CHECKS` for native dependencies. |
+| `metric_catalog.py` | Builds `MetricInfo` objects from each metric's `MetricMeta` (config class, required fields, declared metadata) and computes compute blockers. Also home of `_NATIVE_LIB_CHECKS` for native dependencies. |
 | `metric_runner.py`  | Executes the selected metrics with per-metric error isolation            |
 | `result_store.py`   | Persistence behind the GUI. `SQLiteResultStore` for desktop, `JSONResultStore` for the browser. Serves pre-aggregated queries for the results page. |
 | `serialization.py`  | Converts `DQResult` objects to and from JSON-safe dicts                  |
@@ -248,5 +251,5 @@ runs.
 The GUI discovers metrics automatically through `Metric.registry`. A new
 metric appears in the Metrics step without any GUI changes, as long as it
 follows the config conventions documented in the
-[README](../README.md#config-conventions). The `_gui_*` class attributes
-control its description, badges, editor type and renderer choice.
+[README](../README.md#config-conventions). The `meta` attribute and its
+`MetricMeta` control its description, badges, editor type and renderer choice.
