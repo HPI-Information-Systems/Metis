@@ -171,8 +171,11 @@ are resolved relative to the `data/` directory:
 }
 ```
 
-`reference_file_name` is optional. When set, the orchestrator loads it as the
-reference DataFrame and passes it to every metric run on that dataset.
+`reference_file_name` is optional. When set, the orchestrator still loads it
+into memory, but no longer passes it to metrics automatically. Setting
+`reference_file_name` alone does not feed any metric. A metric that needs
+reference data declares its own `reference` field on its config class, as
+described in [How to implement new metrics](#how-to-implement-new-metrics).
 Further optional fields control CSV parsing (`delimiter`, `encoding`,
 `header`, `nrows`, `usecols`, `parse_dates`, `decimals`, `thousands`) and
 profile imports (`data_profiles`, see [Data Profiling](#data-profiling)). The
@@ -318,7 +321,7 @@ the metric class:
 | Type             | Marker on metric class                  | Editor                          |
 |------------------|-----------------------------------------|---------------------------------|
 | Dataclass config | (default, just provide a config class)  | `simple_editor`                 |
-| Callable rules   | `meta.callable_config = True`           | `callable_editor` (Python rules)|
+| Callable rules   | `MetricMeta(callable_config=True, ...)` | `callable_editor` (Python rules)|
 | FD JSON config   | `name == "consistency_countFDViolations"` (handled specially) | inline FD-rule editor |
 
 `timeliness_heinrich` uses a dedicated `timeliness_editor` (selected by
