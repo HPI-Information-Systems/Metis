@@ -8,3 +8,4 @@ numpy
 datasketch
 streamlit
 semhash
+scipy==1.18.0
