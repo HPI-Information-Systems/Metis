@@ -1,4 +1,7 @@
 from metis.dq_orchestrator import DQOrchestrator
+from metis.metric.accuracy.accuracy_semanticReference_config import (
+    accuracy_semanticReference_config,
+)
 from metis.metric.accuracy.accuracy_syntacticDomain_config import (
     accuracy_syntacticDomain_config,
 )
@@ -45,5 +48,7 @@ ref_orchestrator = DQOrchestrator()
 ref_orchestrator.load(data_loader_configs=["demo/configs/adult_with_reference.json"])
 ref_orchestrator.assess(
     metrics=["accuracy_semanticReference"],
-    metric_configs=[None],
+    metric_configs=[accuracy_semanticReference_config(
+        reference="adult_gold_sample.csv",
+    )],
 )
