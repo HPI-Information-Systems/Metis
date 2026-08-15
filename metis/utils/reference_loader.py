@@ -82,7 +82,15 @@ def load_reference_vocabulary(source: ReferenceSource) -> set[str] | None:
         return None
 
     if isinstance(source, (list, set, tuple)):
-        return {str(v).strip().lower() for v in source}
+        # Drop missing values so an inline list behaves like the frame path,
+        # which calls dropna(). A config loaded from JSON can legitimately
+        # contain null, and stringifying that would put "none" in the
+        # vocabulary.
+        return {
+            str(v).strip().lower()
+            for v in source
+            if v is not None and not (isinstance(v, float) and pd.isna(v))
+        }
 
     frame = load_reference_frame(source)
     if frame is None:
