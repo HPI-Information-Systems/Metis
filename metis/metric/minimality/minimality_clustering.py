@@ -57,14 +57,14 @@ class minimality_clustering(Metric):
         result = DQResult(
             timestamp=pd.Timestamp.now(),
             DQdimension=DQDimension.MINIMALITY,
-            DQmetric="Clustering",
+            DQmetric=self.__class__.__name__,
             DQgranularity=DQGranularity.TABLE,
             DQvalue=float(minimality),
             DQexplanation={
                 "total_rows": n_rows,
                 "clusters": num_clusters,
-                "use_semhash": config["use_semhash"],
-                "similarity_threshold": config["similarity_threshold"],
+                "use_semhash": config.use_semhash,
+                "similarity_threshold": config.similarity_threshold,
             },
             columnNames=None,
             rowIndex=None,

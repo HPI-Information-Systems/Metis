@@ -222,10 +222,10 @@ class readability_llm(Metric):
                 if cfg.output_cells:
                     cell_results.append(
                         DQResult(
-                            mesTime=pd.Timestamp.now(),
+                            timestamp=pd.Timestamp.now(),
                             DQvalue=float(z_hybrid),
                             DQdimension="Readability",
-                            DQmetric="LLM",
+                            DQmetric=self.__class__.__name__,
                             columnNames=[col],
                             rowIndex=row_pos,  # ✅ stable int position (never crashes)
                             DQgranularity="cell",
@@ -284,7 +284,7 @@ class readability_llm(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(content_hybrid),
                     DQdimension=DQDimension.READABILITY,
-                    DQmetric="LLM",
+                    DQmetric=self.__class__.__name__,
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity=DQGranularity.TABLE,
@@ -316,7 +316,7 @@ class readability_llm(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(schema_hybrid),
                     DQdimension=DQDimension.READABILITY,
-                    DQmetric="LLM",
+                    DQmetric=self.__class__.__name__,
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity=DQGranularity.SCHEMA,
@@ -340,7 +340,7 @@ class readability_llm(Metric):
                         timestamp=pd.Timestamp.now(),
                         DQvalue=float(col_combined.get(col, 0.0)),
                         DQdimension=DQDimension.READABILITY,
-                        DQmetric="LLM",
+                        DQmetric=self.__class__.__name__,
                         columnNames=[col],
                         rowIndex=None,
                         DQgranularity=DQGranularity.COLUMN,

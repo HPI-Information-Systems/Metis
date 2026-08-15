@@ -138,9 +138,9 @@ class readability_wordnet(Metric):
                 if cfg.output_cells:
                     cell_results.append(
                         DQResult(
-                            mesTime=pd.Timestamp.now(),
+                            timestamp=pd.Timestamp.now(),
                             DQdimension=DQDimension.READABILITY,
-                            DQmetric="WordNet",
+                            DQmetric=self.__class__.__name__,
                             DQgranularity="cell",
                             DQvalue=z,
                             columnNames=[col],
@@ -177,7 +177,7 @@ class readability_wordnet(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(content_wordnet),
                     DQdimension=DQDimension.READABILITY,
-                    DQmetric="WordNet",
+                    DQmetric=self.__class__.__name__,
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity=DQGranularity.TABLE,
@@ -196,7 +196,7 @@ class readability_wordnet(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(schema_wordnet),
                     DQdimension=DQDimension.READABILITY,
-                    DQmetric="WordNet",
+                    DQmetric=self.__class__.__name__,
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity=DQGranularity.SCHEMA,
@@ -217,7 +217,7 @@ class readability_wordnet(Metric):
                         timestamp=pd.Timestamp.now(),
                         DQvalue=float(col_scores.get(col, 0.0)),
                         DQdimension=DQDimension.READABILITY,
-                        DQmetric="WordNet",
+                        DQmetric=self.__class__.__name__,
                         columnNames=[col],
                         rowIndex=None,
                         DQgranularity=DQGranularity.COLUMN,
