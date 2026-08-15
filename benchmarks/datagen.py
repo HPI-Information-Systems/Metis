@@ -7,6 +7,8 @@ different days remain comparable.
 """
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -23,6 +25,9 @@ _WORDS: tuple[str, ...] = (
     "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel",
     "india", "juliet", "kilo", "lima", "mike", "november", "oscar", "papa",
 )
+
+_CONSONANTS: str = "bcdfghjklmnpqrstvwxyz"
+_VOWELS: str = "aeiou"
 
 _CATEGORIES: tuple[str, ...] = ("north", "south", "east", "west", "central")
 
@@ -83,8 +88,18 @@ def _make_column(kind: str, n: int, rng: np.random.Generator) -> np.ndarray:
         return rng.choice(_CATEGORIES, n)
 
     if kind == "text":
-        left = rng.choice(_WORDS, n)
-        right = rng.choice(_WORDS, n)
+        # _WORDS alone caps two-word cells at 16**2 == 256 distinct values.
+        # Real corpora grow their vocabulary roughly per Heaps' law (a
+        # sublinear power of the corpus length), so a fixed-size pool makes
+        # a per-token cache (e.g. readability_wordnet's WordNet lookups)
+        # saturate within a few thousand rows and look far more scalable
+        # than it is on real text. sqrt(n) distinct base words keeps the
+        # pool -- and so the number of distinct two-word combinations --
+        # growing with the row count.
+        vocab_size = max(len(_WORDS), math.isqrt(n) + 1)
+        pool = _word_pool(vocab_size, rng)
+        left = rng.choice(pool, n)
+        right = rng.choice(pool, n)
         return np.char.add(np.char.add(left.astype(str), " "), right.astype(str))
 
     if kind == "date":
@@ -98,3 +113,31 @@ def _make_column(kind: str, n: int, rng: np.random.Generator) -> np.ndarray:
         return values
 
     raise ValueError(f"Unknown column kind {kind!r}.")
+
+
+def _word_pool(size: int, rng: np.random.Generator) -> list[str]:
+    """
+    Build a pronounceable word pool of at least ``size`` distinct tokens.
+
+    :data:`_WORDS` is the base of the pool; when more words are needed the
+    pool is extended with generated consonant-vowel syllables so the tokens
+    stay word-like (and thus behave sensibly under WordNet-based scoring)
+    while remaining fully reproducible from ``rng``'s state.
+
+    :param size: Minimum number of distinct words required.
+    :param rng: The seeded generator; its state advances by roughly
+        ``size - len(_WORDS)`` draws.
+    :return: A list of at least ``size`` distinct lowercase words.
+    """
+    words = list(_WORDS)
+    seen = set(words)
+    while len(words) < size:
+        syllables = int(rng.integers(2, 4))
+        word = "".join(
+            str(rng.choice(list(_CONSONANTS))) + str(rng.choice(list(_VOWELS)))
+            for _ in range(syllables)
+        )
+        if word not in seen:
+            words.append(word)
+            seen.add(word)
+    return words

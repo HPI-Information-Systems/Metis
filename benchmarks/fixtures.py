@@ -11,6 +11,7 @@ import json
 import pathlib
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 import metis.metric  # noqa: F401 - populates Metric.registry
@@ -86,7 +87,7 @@ def config_for(metric_name: str, frame: pd.DataFrame, workdir: pathlib.Path) -> 
         return accuracy_semanticReference_config(reference=frame.copy())
 
     if metric_name == "correctness_heinrich":
-        return correctness_heinrich_config(reference=frame.copy())
+        return correctness_heinrich_config(reference=_perturbed_reference(frame))
 
     return _default_config(metric_name)
 
@@ -136,8 +137,23 @@ def _columns_of_kind(frame: pd.DataFrame, prefix: str) -> list[str]:
 
 
 def _fd_config_path(frame: pd.DataFrame, workdir: pathlib.Path) -> str:
-    """Write a functional dependency spec over two generated columns."""
-    determinant = _first_column_of_kind(frame, "categorical") or str(frame.columns[0])
+    """
+    Write a functional dependency spec over two generated columns.
+
+    The determinant needs high cardinality so the dependency mostly holds.
+    A low-cardinality determinant (e.g. the 5-valued categorical column)
+    paired with an independently-generated dependent guarantees almost every
+    group violates the FD: ``DQvalue`` collapses to ~0, and the metric dumps
+    nearly the whole table to JSON in ``DQexplanation`` (measured at 151KB
+    for a 500-row frame, growing to hundreds of megabytes at a million
+    rows). That would make the sweep hit a wall that is an artifact of this
+    fixture, not a real Metis scaling limit. An ``integer_*`` column is
+    close to a natural key: its values are nearly unique, so most groups are
+    singletons and cannot violate, while ``groupby().nunique()`` still does
+    its full work. This also mirrors a realistic FD, where a near-key
+    determines an attribute.
+    """
+    determinant = _first_column_of_kind(frame, "integer") or str(frame.columns[0])
     dependent = _first_column_of_kind(frame, "text") or str(frame.columns[-1])
     path = workdir / "fd_config.json"
     path.write_text(json.dumps({determinant: [dependent]}), encoding="utf-8")
@@ -203,6 +219,64 @@ def _data_range_config(frame: pd.DataFrame) -> accuracy_dataRange_config:
     for column in _columns_of_kind(frame, "float"):
         intervals[column] = (0.0, 200.0)
     return accuracy_dataRange_config(intervals=intervals, fallback="skip")
+
+
+_PERTURB_FRACTION: float = 0.30
+_PERTURB_SEED: int = 29
+
+
+def _perturbed_reference(frame: pd.DataFrame, seed: int = _PERTURB_SEED) -> pd.DataFrame:
+    """
+    Build a same-shaped reference for ``correctness_heinrich`` that actually
+    differs from the data on a substantial share of cells.
+
+    ``correctness_heinrich.measure_correctness`` starts with
+    ``if value == reference_value: return 1``, which short-circuits before
+    both its numeric-distance branch and its ``levenshtein_distance`` call.
+    An identical reference (e.g. ``frame.copy()``) means every single cell
+    takes that first branch, so the sweep would time "iterate and compare
+    with ``==``" and never once run the metric's real comparison work.
+    Perturbing ~30% of cells forces both branches to execute: numeric
+    columns get a numeric delta, text/categorical columns get a changed
+    string.
+
+    Date and sparse columns are left untouched. The metric's dtype dispatch
+    only handles numeric and string dtypes and raises on anything else
+    (``pd.api.types.is_numeric_dtype``/``is_string_dtype`` are both False for
+    ``datetime64``), so date cells must stay identical to avoid an error; the
+    sparse column already contains ``None`` gaps and its category strings
+    would just duplicate the categorical column's perturbation.
+
+    :param frame: The frame being assessed.
+    :param seed: Seed controlling which cells are perturbed and by how much.
+    :return: A reference frame of the same shape, ~30% of eligible cells
+        modified.
+    """
+    rng = np.random.default_rng(seed)
+    reference = frame.copy()
+
+    for column in _columns_of_kind(frame, "integer") + _columns_of_kind(frame, "float"):
+        series = reference[column]
+        mask = rng.random(len(series)) < _PERTURB_FRACTION
+        if not mask.any():
+            continue
+        scale = float(series.std()) or 1.0
+        delta = rng.normal(0.0, max(scale * 0.5, 1.0), int(mask.sum()))
+        values = series.to_numpy(dtype="float64", copy=True)
+        values[mask] = values[mask] + delta
+        reference[column] = values
+
+    for column in _columns_of_kind(frame, "categorical") + _columns_of_kind(frame, "text"):
+        series = reference[column]
+        mask = rng.random(len(series)) < _PERTURB_FRACTION
+        if not mask.any():
+            continue
+        values = series.to_numpy(dtype=object, copy=True)
+        for idx in np.flatnonzero(mask):
+            values[idx] = f"{values[idx]}_x"
+        reference[column] = values
+
+    return reference
 
 
 def _syntactic_domain_config(frame: pd.DataFrame) -> accuracy_syntacticDomain_config:
