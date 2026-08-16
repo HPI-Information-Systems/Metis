@@ -44,3 +44,22 @@ def short_name(metric_name: str) -> str:
         return cls.meta.label
     parts = metric_name.split("_", 1)
     return parts[1] if len(parts) > 1 else metric_name
+
+
+def qualified_name(metric_name: str) -> str:
+    """
+    Return a metric's display label prefixed with its dimension.
+
+    Use this wherever a metric is named on its own, outside a dimension tab
+    or a legend that already supplies the dimension. Same registry fallback
+    as :func:`short_name`, so stored results from a metric that no longer
+    exists still render something readable.
+
+    :param metric_name: Full metric name (e.g. ``accuracy_dataRange``).
+    :return: A string like ``Accuracy · Data Range``.
+    """
+    cls = Metric.registry.get(metric_name)
+    if cls is not None and cls.meta is not None:
+        return f"{cls.meta.dimension} · {cls.meta.label}"
+    dimension = metric_name.split("_", 1)[0].capitalize() or "Other"
+    return f"{dimension} · {short_name(metric_name)}"

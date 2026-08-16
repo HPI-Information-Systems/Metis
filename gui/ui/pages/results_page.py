@@ -13,7 +13,7 @@ from metis.utils.result import DQResult
 from ui.icons import icon_for
 from ui.state import AppState
 from visualization import dispatch
-from visualization.metric_palette import short_name
+from visualization.metric_palette import qualified_name, short_name
 from visualization.renderers import (
     dimension_header,
     heatmap,
@@ -508,10 +508,11 @@ def _render_dimension_tab(
         granularity = s.get("primary_granularity", "")
         n = s.get("count", 0)
         with st.expander(
-            f"**{metric_name}**  ·  {granularity}  ·  {n:,} DQ Measurement Results",
+            f"**{qualified_name(metric_name)}**  ·  {granularity}  ·  "
+            f"{n:,} DQ Measurement Results",
             expanded=single_metric,
         ):
-            st.markdown(f"### {metric_name}")
+            st.markdown(f"### {qualified_name(metric_name)}")
             dispatch.render(store, tag, metric_name, dataset_cols, key_prefix=key_prefix)
 
 

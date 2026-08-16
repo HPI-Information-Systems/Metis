@@ -19,7 +19,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from visualization.metric_palette import metric_colors, short_name
+from visualization.metric_palette import metric_colors, qualified_name, short_name
 
 
 def render(
@@ -82,7 +82,7 @@ def render(
                 continue
             rows.append({
                 "metric": short_name(metric_name),
-                "metric_full": metric_name,
+                "metric_full": qualified_name(metric_name),
                 "sub": str(r.get("sub", "")),
                 "DQvalue": float(v),
             })
