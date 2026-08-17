@@ -5,15 +5,27 @@ from collections import Counter
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
+
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
-from metis.utils.result import DQResult
+from metis.metric.readability.readability_llm_config import readability_llm_config
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
-from metis.metric.readability.readability_llm_config import readability_llm_config
-
-from metis.utils.readability.tokenization import (split_identifier, split_text, compute_case_consistency_scores)
 from metis.utils.readability.llm_backend import HFTransformersBackend, LLMBackend
-from metis.utils.readability.scorers import (load_abbreviations, WordNetScorer, WordNetOnlyAdapter, HybridScorer, schema_label_score, content_cell_score)
+from metis.utils.readability.scorers import (
+    HybridScorer,
+    WordNetOnlyAdapter,
+    WordNetScorer,
+    content_cell_score,
+    load_abbreviations,
+    schema_label_score,
+)
+from metis.utils.readability.tokenization import (
+    compute_case_consistency_scores,
+    split_identifier,
+    split_text,
+)
+from metis.utils.result import DQResult
 
 # ---------------- Helpers ----------------
 
@@ -61,8 +73,7 @@ class readability_llm(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the readability of a tabular dataset using the hybrid readability metric.
@@ -158,7 +169,7 @@ class readability_llm(Metric):
                     hybrid.backend = _build_backend(cfg)
                 if hybrid.backend is not None:
                     hybrid.score_llm_batch(sorted(schema_llm_tokens))
-                    
+
             for label in labels:
                 toks = [t for t in split_identifier(label) if len(t) >= cfg.min_token_length]
                 s_case = float(case_scores.get(label, 1.0))
@@ -222,13 +233,13 @@ class readability_llm(Metric):
                 if cfg.output_cells:
                     cell_results.append(
                         DQResult(
-                            mesTime=pd.Timestamp.now(),
+                            timestamp=pd.Timestamp.now(),
                             DQvalue=float(z_hybrid),
-                            DQdimension="Readability",
+                            DQdimension=DQDimension.READABILITY,
                             DQmetric="LLM",
                             columnNames=[col],
                             rowIndex=row_pos,  # ✅ stable int position (never crashes)
-                            DQgranularity="cell",
+                            DQgranularity=DQGranularity.CELL,
                             DQexplanation={
                                 "content_readability_wordnet_only": float(z_wordnet),
                                 "content_readability": float(z_hybrid),

@@ -12,7 +12,7 @@ orchestrator.assess(metrics=["completeness_nullRatio"], metric_configs=[""])
 orchestrator.assess(metrics=["minimality_duplicateCount"], metric_configs=[None])
 orchestrator.assess(
     metrics=["validity_outOfVocabulary"],
-    metric_configs=['{"use_nltk": true, "lowercase": true}'],
+    metric_configs=[None],
 )
 
 orchestrator.assess(

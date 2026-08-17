@@ -7,6 +7,7 @@ from scipy.spatial.distance import squareform
 
 from semhash import SemHash
 
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.metric.minimality.minimality_clustering_config import minimality_clustering_config
 from metis.utils.dq_dimension import DQDimension
@@ -26,8 +27,7 @@ class minimality_clustering(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
 
         if metric_config is None:

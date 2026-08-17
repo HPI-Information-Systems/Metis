@@ -4,6 +4,7 @@ import random
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
 from metis.utils.result import DQResult
 from metis.utils.dq_dimension import DQDimension
@@ -38,8 +39,7 @@ class readability_wordnet(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the readability of a tabular dataset using the WordNet-only readability metric.
@@ -138,10 +138,10 @@ class readability_wordnet(Metric):
                 if cfg.output_cells:
                     cell_results.append(
                         DQResult(
-                            mesTime=pd.Timestamp.now(),
+                            timestamp=pd.Timestamp.now(),
                             DQdimension=DQDimension.READABILITY,
                             DQmetric="WordNet",
-                            DQgranularity="cell",
+                            DQgranularity=DQGranularity.CELL,
                             DQvalue=z,
                             columnNames=[col],
                             rowIndex=row_pos,  # stable integer position (never crashes)
@@ -153,7 +153,7 @@ class readability_wordnet(Metric):
                             dataset=None,
                             tableName=None,
                         )
-                    )                 
+                    )
             if cfg.output_cells:
                 all_cell_results.extend(cell_results)
 

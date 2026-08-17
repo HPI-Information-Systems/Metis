@@ -31,7 +31,6 @@ class consistency_ruleBasedHinrichs(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
         metric_config: str | None | MetricConfig = None,
     ) -> List[DQResult]:
         """
@@ -39,7 +38,6 @@ class consistency_ruleBasedHinrichs(Metric):
         Additionally, this metric assesses the certainty of the measurement based on the minimum quality in the assessed data. The certainty is calculated as sqrt((1 - dq_value) * (1 - min_quality)), where dq_value is the quality measurement for the specific value/row and min_quality is the lowest quality measurement observed in the dataset.
 
         :param data: DataFrame to assess.
-        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing consistency results.
         """

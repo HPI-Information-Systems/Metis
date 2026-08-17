@@ -31,7 +31,6 @@ class timeliness_heinrich(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
@@ -39,7 +38,6 @@ class timeliness_heinrich(Metric):
         The formula used is: timeliness = exp(-decline_rate * age), where age and decline_rate are measured in years. The age is calculated as the difference between the reference date and the ingestion date of the tuple (defined by the ingestion_date_column in the configuration).
 
         :param data: DataFrame to assess.
-        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Configuration for the metric (required).
         :return: List of DQResult objects containing timeliness results.
         """
@@ -58,6 +56,9 @@ class timeliness_heinrich(Metric):
         )
 
         for col_name, col_config in config.timeliness_config_per_column.items():
+            if col_name not in data.columns:
+                continue
+
             ingestion_date_column = col_config.ingestion_date_column
             assessment_date = pd.to_datetime(
                 col_config.simulated_assessment_date or pd.Timestamp.now()
@@ -108,7 +109,7 @@ class timeliness_heinrich(Metric):
                     columnNames=[col_name],
                     rowIndex=row_index,
                     DQexplanation={
-                        "certainty": certainty_value,
+                        "certainty": float(certainty_value),
                     },
                     DQgranularity=DQGranularity.CELL,
                 )

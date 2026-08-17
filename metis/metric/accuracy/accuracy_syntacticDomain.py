@@ -36,10 +36,10 @@ class accuracy_syntacticDomain(Metric):
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, set, None] = None,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         config = self.load_config(metric_config or "", accuracy_syntacticDomain_config)
+        reference = pd.read_csv(config.reference_file_path) if config.reference_file_path else None
         strategy = DOMAIN_STRATEGIES[config.method]
         params = config.method_params or {}
         results: List[DQResult] = []

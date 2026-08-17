@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List
 
-from .base import BaseImporter, auto_detect_type
+from .base import BaseImporter
 
 
 class JaccardImporter(BaseImporter):
@@ -25,7 +25,7 @@ class JaccardImporter(BaseImporter):
             col2 = row["column2"]
             value = float(row["value"])
 
-            profile = {
+            profile: Dict[str, List[str] | float | Dict[str, int]] = {
                 "column_names": sorted([col1, col2]),
                 "value": value,
             }

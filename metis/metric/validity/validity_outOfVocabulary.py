@@ -1,5 +1,5 @@
 import re
-from typing import List, Union
+from typing import List
 
 import nltk
 import pandas as pd
@@ -7,6 +7,9 @@ from nltk.corpus import words as nltk_words
 
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.validity.validity_outOfVocabulary_config import (
+    validity_outOfVocabulary_config,
+)
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
@@ -26,27 +29,41 @@ class validity_outOfVocabulary(Metric):
         super().__init__()
         nltk.download("words", quiet=True)
 
-    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, set, None] = None, metric_config: Union[MetricConfig, str, None] = None) -> List[DQResult]:
+    def assess(
+        self,
+        data: pd.DataFrame,
+        metric_config: str | MetricConfig | None = None,
+    ) -> List[DQResult]:
         """
         General vocabulary check at token level.
         Any alphabetic token not in the standard vocab is OOV.
         """
         results: List[DQResult] = []
 
+        if metric_config is None:
+            config = validity_outOfVocabulary_config()
+        else:
+            config = self.load_config(metric_config, validity_outOfVocabulary_config)
+
         # Build vocabulary (lowercase)
-        if reference is None:
+        if config.reference is None:
             vocab_set = {w.lower() for w in nltk_words.words()}
             ref_src = "NLTK English words"
-        elif isinstance(reference, pd.DataFrame):
-            if reference.shape[1] != 1:
+        elif isinstance(config.reference, pd.DataFrame):
+            if config.reference.shape[1] != 1:
                 raise ValueError("Reference DataFrame must have exactly one column.")
-            vocab_set = {str(x).strip().lower() for x in reference.iloc[:, 0].dropna().unique()}
+            vocab_set = {
+                str(x).strip().lower()
+                for x in config.reference.iloc[:, 0].dropna().unique()
+            }
             ref_src = "Custom vocabulary"
-        elif isinstance(reference, set):
-            vocab_set = {str(x).strip().lower() for x in reference}
+        elif isinstance(config.reference, set):
+            vocab_set = {str(x).strip().lower() for x in config.reference}
             ref_src = "Custom vocabulary"
         else:
-            raise ValueError("Reference must be a one column DataFrame, a set, or None.")
+            raise ValueError(
+                "Reference must be a one column DataFrame, a set, or None."
+            )
 
         def tokenize(text: str):
             return re.findall(r"[A-Za-z]+", text.lower())
@@ -59,10 +76,12 @@ class validity_outOfVocabulary(Metric):
             #     dq_value = 0.0
             #     in_vocab_count = 0
             # else:
+
             def is_valid(text: str) -> bool:
                 tokens = tokenize(text)
                 if not tokens:
-                    return True  # empty or numeric-like strings are treated as valid
+                    # empty or numeric-like strings are treated as valid
+                    return True
                 # valid if *all* tokens are in vocabulary
                 return all(token in vocab_set for token in tokens)
 
@@ -75,7 +94,7 @@ class validity_outOfVocabulary(Metric):
                 annotations = {
                     "TotalNotNullValues": total_not_null_values,
                     "InVocabValues": in_vocab_count,
-                    "ReferenceSource": ref_src
+                    "ReferenceSource": ref_src,
                 }
 
             result = DQResult(
