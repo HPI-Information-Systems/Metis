@@ -7,6 +7,7 @@ DIMENSION_ICONS: dict[str, str] = {
     "Completeness": ":material/water_drop:",
     "Consistency":  ":material/link:",
     "Correctness":  ":material/check_circle:",
+    "Diversity":    ":material/diversity_3:",
     "Minimality":   ":material/compress:",
     "Timeliness":   ":material/schedule:",
     "Validity":     ":material/fact_check:",
