@@ -12,3 +12,4 @@ class DQDimension(StrEnum):
     MINIMALITY = "Minimality"
     VALIDITY = "Validity"
     READABILITY = "Readability"
+    DIVERSITY = "Diversity"

@@ -8,6 +8,7 @@ from .consistency.consistency_countFDViolations import consistency_countFDViolat
 from .consistency.consistency_ruleBasedHinrichs import consistency_ruleBasedHinrichs
 from .consistency.consistency_ruleBasedPipino import consistency_ruleBasedPipino
 from .correctness.correctness_heinrich import correctness_heinrich
+from .diversity.diversity_coverageGap import diversity_coverageGap
 from .metric import Metric
 from .minimality.minimality_duplicateCount import minimality_duplicateCount
 from .minimality.minimality_clustering import minimality_clustering

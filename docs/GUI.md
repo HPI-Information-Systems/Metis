@@ -75,7 +75,7 @@ metric is selected and no blockers remain.
   availability warnings. Metrics whose native dependencies are missing (for
   example FAHES for `completeness_nullAndDMVRatio`) are disabled with a
   warning.
-- Metrics are configured inline through one of three editors, chosen by the
+- Metrics are configured inline through the appropriate editor, chosen by the
   metric's metadata (see the config conventions in the
   [README](../README.md#config-conventions)):
   - a form editor for plain dataclass configs
@@ -83,6 +83,9 @@ metric is selected and no blockers remain.
   - an inline rule editor for functional dependencies
     (`consistency_countFDViolations`)
   - `timeliness_heinrich` gets a dedicated per-column editor
+  - `diversity_coverageGap` gets a dedicated MUP-file uploader and positional
+    dataset-attribute mapping; its `mincov` is inferred from filenames such as
+    `*_mincov_19000.txt` when available
 - Select all and deselect buttons exist per dimension. The page lists
   blockers (missing required configs, missing reference dataset) before
   letting you continue.

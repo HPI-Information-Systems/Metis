@@ -17,6 +17,7 @@ from demo.demo_metric_configs import DEMO_CONFIG_DISPLAY, DEMO_METRICS
 from metis.utils.dq_granularity import DQGranularity
 from ui.components.config_editors import (
     callable_editor,
+    mups_editor,
     simple_editor,
     timeliness_editor,
 )
@@ -713,6 +714,16 @@ def _render_inline_config(info: MetricInfo, df) -> None:
             key_prefix=info.name,
             df_columns=list(df.columns),
             df=df,
+        )
+        if cfg is not None:
+            AppState.set_metric_config(info.name, cfg)
+        return
+
+    if info.name == "diversity_coverageGap":
+        cfg = mups_editor.render(
+            info.config_class,
+            key_prefix=info.name,
+            df_columns=list(df.columns),
         )
         if cfg is not None:
             AppState.set_metric_config(info.name, cfg)

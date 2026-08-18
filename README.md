@@ -156,6 +156,43 @@ to a JSON file, a JSON string, a pre-instantiated config object, or `None`
 (see [How to implement new metrics](#how-to-implement-new-metrics)). If no
 `writer_config_path` is given, results are printed to the console.
 
+### Coverage-gap diversity from MUPs
+
+`diversity_coverageGap` calculates the exact finite-domain DNF union induced
+by a supplied set of Maximal Uncovered Patterns (MUPs). The paper-defined
+coverage gap and exact pattern counts are included in `DQexplanation`.
+`DQvalue` is the complementary coverage-space score (`1 - coverage_gap`) so
+that it follows the METIS convention that higher scores indicate better data
+quality.
+
+```python
+from metis.metric.diversity.diversity_coverageGap_config import (
+    diversity_coverageGap_config,
+)
+
+config = diversity_coverageGap_config(
+    mups_path="path/to/mups_bluenile.csv_mincov_19000.txt",
+    attributes=[
+        "shape", "color", "cut", "clarity",
+        "polish", "symmetry", "florescence",
+    ],
+    mincov=19000,
+)
+
+orchestrator.assess(
+    metrics=["diversity_coverageGap"],
+    metric_configs=[config],
+)
+```
+
+MUP fields are mapped positionally to `attributes`. Use the same attribute
+order as during MUP discovery. The wildcard defaults to `x`; trailing fields
+are interpreted exactly as in FLAPS: the final value is parsed as the MUP's
+actual coverage and validated against `mincov`. The coverage value verifies the
+frontier but does not change the geometric DNF volume. In the GUI, select
+**Diversity: Coverage Gap** and upload the MUP file directly in its metric
+configuration.
+
 ### Data loader configs
 
 Datasets are described by small JSON configs (see `data/*.json`). File paths
@@ -214,6 +251,7 @@ Writer config details are also covered in
 | Consistency  | `consistency_ruleBasedHinrichs` | Rule-based consistency score after Hinrichs (attribute and tuple rules)  |
 | Consistency  | `consistency_ruleBasedPipino`   | Rule-based consistency score after Pipino (boolean rules)                |
 | Correctness  | `correctness_heinrich`          | Cell-wise correctness against a reference dataset after Heinrich         |
+| Diversity    | `diversity_coverageGap`          | Exact MUP-induced DNF coverage space; details include the coverage gap    |
 | Minimality   | `minimality_duplicateCount`     | Duplicate rows in the dataset                                            |
 | Timeliness   | `timeliness_heinrich`           | Decay-based timeliness of date columns after Heinrich                    |
 | Validity     | `validity_outOfVocabulary`      | Share of values outside a known vocabulary                               |
