@@ -39,7 +39,7 @@ class timeliness_heinrich(Metric):
     ) -> List[DQResult]:
         """
         Assess the timeliness of the data by calculating how likely each cell is to be out of date based on a reference date and a decline rate. The reference date is either provided in the configuration or defaults to the current date.
-        The formula used is: timeliness = exp(-decline_rate * age), where age and decline_rate are measured in years. The age is calculated as the difference between the reference date and the ingestion date of the tuple (defined by the ingestion_date_column in the configuration).
+        The formula used is: timeliness = exp(-decline_rate * age), where age is measured in days and decline_rate per day. The age is calculated as the difference between the reference date and the ingestion date of the tuple (defined by the ingestion_date_column in the configuration).
 
         :param data: DataFrame to assess.
         :param metric_config: Configuration for the metric (required).
