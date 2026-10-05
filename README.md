@@ -2,7 +2,7 @@
 
 Metis is a framework to automatically assess the quality of tabular data across multiple data quality dimensions. The Metis DQ framework (this GitHub repo) is part of the Metis project: [www.metisdq.org](https://www.metisdq.org)
 
-![Overview](images/Metis.png)
+![Overview](images/visualization_metis.png)
 
 ## Installation
 
@@ -62,10 +62,10 @@ Results are written to the SQLite repository `dq_repository/demo.db` (table
 
 ### The demo dataset
 
-The demo uses `data/restaurants.csv` — a small, intentionally messy dataset
+The demo uses `data/restaurants.csv`, a small, intentionally messy dataset
 (864 rows) derived from a classic dirty-restaurants benchmark used for
 duplicate detection. The source columns are `id`, `name`, `address`, `city`,
-`phone`, and `type`; most rows appear twice in slightly different forms (mixed
+`phone`, and `type`. Most rows appear twice in slightly different forms (mixed
 phone separators, abbreviated city names, divergent cuisine labels), which
 gives the duplicate-detection and FD-violation metrics natural raw material to
 flag.
@@ -80,7 +80,7 @@ python gui/scripts/build_demo_dataset.py \
 	--output data/restaurants.csv
 ```
 
-Synthetic columns (seeded; defaults to `--seed 42`):
+Synthetic columns (seeded, defaults to `--seed 42`):
 
 | Column                | Distribution                                     |
 |-----------------------|--------------------------------------------------|
@@ -109,7 +109,7 @@ Metis includes a Streamlit GUI that walks through a full assessment in four
 steps: upload a dataset, select and configure metrics, compute, and explore
 the results visually.
 
-![Metis GUI — results page](images/gui_results.png)
+![Metis GUI results page](images/gui_results.png)
 
 ### Quick start
 
@@ -120,10 +120,12 @@ streamlit run gui/app.py
 
 The GUI opens with two flows:
 
-- **Own files** — upload a CSV (plus an optional reference CSV for
-  reference-based metrics), pick metrics, and compute. Results are persisted
-  locally, so previous runs can be reopened and compared over time.
-- **Demo** — a bundled restaurants sample with precomputed results for seven
+- **Own files**: upload a CSV, pick metrics, and compute. Reference-based
+  metrics such as `correctness_heinrich` and `accuracy_semanticReference` get
+  their own reference CSV uploader inline on the Metrics step, as part of
+  that metric's config. Results are persisted locally, so previous runs can
+  be reopened and compared over time.
+- **Demo**: a bundled restaurants sample with precomputed results for seven
   metrics across three points in time, so the full results page (including
   the temporal comparison chart) works without computing anything. Set the
   environment variable `METIS_DEMO_ONLY=1` to start the GUI in demo-only
@@ -131,7 +133,7 @@ The GUI opens with two flows:
 
 For the full GUI documentation, including a walkthrough, demo mode
 internals, the dataset/result build scripts, and the architecture of
-`gui/core/`, `gui/ui/`, and `gui/visualization/` — see
+`gui/core/`, `gui/ui/`, and `gui/visualization/`, see
 [docs/GUI.md](docs/GUI.md).
 
 ## Using Metis as a library
@@ -151,7 +153,7 @@ orchestrator.assess(
 )
 ```
 
-`metrics` and `metric_configs` are parallel lists; each config may be a path
+`metrics` and `metric_configs` are parallel lists. Each config may be a path
 to a JSON file, a JSON string, a pre-instantiated config object, or `None`
 (see [How to implement new metrics](#how-to-implement-new-metrics)). If no
 `writer_config_path` is given, results are printed to the console.
@@ -171,8 +173,11 @@ are resolved relative to the `data/` directory:
 }
 ```
 
-`reference_file_name` is optional; when set, the orchestrator loads it as the
-reference DataFrame and passes it to every metric run on that dataset.
+`reference_file_name` is optional. When set, the orchestrator still loads it
+into memory, but no longer passes it to metrics automatically. Setting
+`reference_file_name` alone does not feed any metric. A metric that needs
+reference data declares its own `reference` field on its config class, as
+described in [How to implement new metrics](#how-to-implement-new-metrics).
 Further optional fields control CSV parsing (`delimiter`, `encoding`,
 `header`, `nrows`, `usecols`, `parse_dates`, `decimals`, `thousands`) and
 profile imports (`data_profiles`, see [Data Profiling](#data-profiling)). The
@@ -202,21 +207,27 @@ Writer config details are also covered in
 
 ## Available metrics
 
-| Dimension    | Metric                          | What it measures                                                        |
-|--------------|---------------------------------|--------------------------------------------------------------------------|
-| Accuracy     | `accuracy_syntacticDomain`      | Values belong to an allowed domain, by exact match or WordNet (ISO/IEC 25024 Acc-I-1) |
-| Accuracy     | `accuracy_semanticReference`    | Cell agreement with a reference/gold-standard dataset (Acc-I-2)          |
-| Accuracy     | `accuracy_outlierRisk`          | Risk of statistical outliers per numeric column, inverted (Acc-I-4)      |
-| Accuracy     | `accuracy_dataRange`            | Values fall inside expected intervals (Acc-I-7)                          |
-| Completeness | `completeness_nullRatio`        | Ratio of non-null cells                                                  |
-| Completeness | `completeness_nullAndDMVRatio`  | Nulls plus disguised missing values (via FAHES)                          |
-| Consistency  | `consistency_countFDViolations` | Violations of user-declared functional dependencies                      |
-| Consistency  | `consistency_ruleBasedHinrichs` | Rule-based consistency score after Hinrichs (attribute and tuple rules)  |
-| Consistency  | `consistency_ruleBasedPipino`   | Rule-based consistency score after Pipino (boolean rules)                |
-| Correctness  | `correctness_heinrich`          | Cell-wise correctness against a reference dataset after Heinrich         |
-| Minimality   | `minimality_duplicateCount`     | Duplicate rows in the dataset                                            |
-| Timeliness   | `timeliness_heinrich`           | Decay-based timeliness of date columns after Heinrich                    |
-| Validity     | `validity_outOfVocabulary`      | Share of values outside a known vocabulary                               |
+| Dimension    | Metric                          | Label                  | What it measures                                                        | Standard |
+|--------------|---------------------------------|-----------------------|-------------------------------------------------------------------------|----------|
+| Accuracy     | `accuracy_syntacticDomain`      | Syntactic Domain      | Values belong to an allowed domain, by exact match or WordNet            | ISO/IEC 25024:2015 Acc-I-1 |
+| Accuracy     | `accuracy_semanticReference`    | Semantic Reference    | Cell agreement with a reference or gold-standard dataset                 | ISO/IEC 25024:2015 Acc-I-2 |
+| Accuracy     | `accuracy_outlierRisk`          | Outlier Risk          | Risk of statistical outliers per numeric column, inverted                | ISO/IEC 25024:2015 Acc-I-4 |
+| Accuracy     | `accuracy_dataRange`            | Data Range            | Values fall inside expected intervals                                    | ISO/IEC 25024:2015 Acc-I-7 |
+| Completeness | `completeness_nullRatio`        | Null Ratio            | Ratio of non-null cells                                                  |          |
+| Completeness | `completeness_nullAndDMVRatio`  | Null and DMV Ratio    | Nulls plus disguised missing values (via FAHES)                          |          |
+| Consistency  | `consistency_countFDViolations` | FD Violations         | Violations of user-declared functional dependencies                      |          |
+| Consistency  | `consistency_ruleBasedHinrichs` | Rule Based (Hinrichs) | Rule-based consistency score after Hinrichs (attribute and tuple rules)  |          |
+| Consistency  | `consistency_ruleBasedPipino`   | Rule Based (Pipino)   | Rule-based consistency score after Pipino (boolean rules)                |          |
+| Correctness  | `correctness_heinrich`          | Heinrich              | Cell-wise correctness against a reference dataset after Heinrich         |          |
+| Minimality   | `minimality_duplicateCount`     | Duplicate Count       | Duplicate rows in the dataset                                            |          |
+| Minimality   | `minimality_clustering`         | Clustering            | Near-duplicate rows grouped into clusters, scored against the row count  |          |
+| Readability  | `readability_wordnet`           | WordNet               | Readability of schema labels and text content, scored against WordNet    |          |
+| Readability  | `readability_llm`               | LLM Assisted          | As above, with a local language model for tokens WordNet cannot resolve  |          |
+| Timeliness   | `timeliness_heinrich`           | Heinrich              | Decay-based timeliness of date columns after Heinrich                    |          |
+| Validity     | `validity_outOfVocabulary`      | Out of Vocabulary     | Share of values outside a known vocabulary                               |          |
+
+Every metric reports a score between 0 and 1, where 0 is the worst possible
+quality and 1 is the best. See [Output: creating a DQResult](#output-creating-a-dqresult).
 
 ## How to implement new metrics
 
@@ -224,17 +235,46 @@ To extend the Metis framework and add new data quality metrics, please check our
 ````python
 def assess(self,
 			data: pd.DataFrame,
-			reference: pd.DataFrame | None = None,
+			*,
 			metric_config: str | MetricConfig | None = None) -> List[DQResult]:
 ````
-Each metric should be a subclass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes three arguments:
+Each metric should be a subclass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes two arguments:
 - **data: pandas.Dataframe**: The DataFrame that should be assessed by this metric. This is the primary dataset under inspection.
-- **reference: Optional[pd.DataFrame]**: An optional, cleaned reference DataFrame that can act as a gold-standard / ground-truth version of the dataset. Metrics that need a clean version of the data (e.g., correctness against a known-good source) should accept and use this DataFrame. If not needed by a metric, `None` is allowed. The orchestrator loads it via the `reference_file_name` field of the data loader config.
-- **metric_config: Optional[str | MetricConfig]**: Optional metric-specific configuration. Accepts a path to a `.json` file, a JSON string, or a pre-instantiated config object; an empty string resolves to a config with all defaults. Use this to keep the method signature compact; all metric-specific parameters (thresholds, aggregation options, etc.) can be stored here.
+- **metric_config: Optional[str | MetricConfig]**: Optional metric-specific configuration. Accepts a path to a `.json` file, a JSON string, or a pre-instantiated config object. An empty string resolves to a config with all defaults. Use this to keep the method signature compact. All metric-specific parameters (thresholds, aggregation options, reference data) can be stored here.
+
+Metrics that compare against reference data declare a `reference` field on their
+config class rather than taking a reference parameter. Different metrics need
+different reference shapes, so each one declares what it accepts. Resolve the
+field with `metis.utils.reference_loader`:
+
+````python
+from metis.utils.reference_loader import ReferenceSource, load_reference_frame
+
+@dataclass
+class my_metric_config(MetricConfig):
+	reference: ReferenceSource = None
+
+# inside assess:
+reference = load_reference_frame(config.reference)
+````
+
+A reference source can be a live DataFrame, a path to a CSV file, a
+`DataConfig` mapping when the file needs custom parsing options, or an inline
+list of values. Use `load_reference_vocabulary` instead when the metric wants a
+set of words rather than a table.
+
+### The score range
+
+Every metric must return a `DQvalue` between 0 and 1, where 0 is the worst
+possible quality and 1 is the best. Metrics whose natural formula runs the
+other way must invert before reporting. `accuracy_outlierRisk` is the worked
+example. ISO/IEC 25024 defines it as the ratio of outliers to total values,
+where lower is better, so Metis stores `1 - (outliers / total)` and records the
+raw counts in `DQexplanation` so the original ratio can be recovered.
 
 The metric should return a list of ```metis.utils.result.DQResult```. This can be only one object if one value is computed on a table level or mutliple DQResults if for example one result per column is computed.
 
-**Note:** Each metric has to be imported in the *__init__.py* file inside the folder *metric/* so it is recognized by the Metric registry. Registration itself is automatic: `Metric.__init_subclass__` adds every subclass to `Metric.registry`; the import only triggers it.
+**Note:** Each metric has to be imported in the *__init__.py* file inside the folder *metric/* so it is recognized by the Metric registry. Registration itself is automatic. `Metric.__init_subclass__` adds every subclass to `Metric.registry`, and the import only triggers it.
 
 ### Metric naming convention
 
@@ -272,7 +312,7 @@ editor and badges.
   ```python
   @dataclass
   class completeness_nullRatio_config(MetricConfig):
-	  aggregation_axis: Literal["index", "columns", None] = None
+	  aggregation_axis: Literal["index", "columns", None] = "index"
 	  aggregate_all: bool = False
   ```
 
@@ -283,26 +323,48 @@ the metric class:
 
 | Type             | Marker on metric class                  | Editor                          |
 |------------------|-----------------------------------------|---------------------------------|
-| Dataclass config | (default — just provide a config class) | `simple_editor`                 |
-| Callable rules   | `_gui_callable_config = True`           | `callable_editor` (Python rules)|
+| Dataclass config | (default, just provide a config class)  | `simple_editor`                 |
+| Callable rules   | `MetricMeta(callable_config=True, ...)` | `callable_editor` (Python rules)|
 | FD JSON config   | `name == "consistency_countFDViolations"` (handled specially) | inline FD-rule editor |
 
 `timeliness_heinrich` uses a dedicated `timeliness_editor` (selected by
 metric name) because its config nests per-column settings.
 
-#### GUI metadata class attributes
+#### Metric metadata
 
-Declare these as class attributes on the `Metric` subclass. All are
-optional and default to safe values; see existing metrics for examples.
+Every metric declares a `MetricMeta` as a `meta` class attribute. It is the
+single source of truth for the GUI catalog, chart labels and generated
+documentation, and a metric without one raises `NotImplementedError` from
+`Metric.describe()`.
 
-| Attribute                        | Type           | Purpose                                                                                          |
-|----------------------------------|----------------|--------------------------------------------------------------------------------------------------|
-| `_gui_description`               | `str`          | Short summary of how the metric is calculated. Shown under the metric name in the GUI.           |
-| `_gui_requires_reference`        | `bool`         | The metric needs a reference DataFrame (e.g. `correctness_heinrich`).                            |
-| `_gui_config_required`           | `bool`         | The metric refuses to run without a config; the GUI blocks **Compute** until one is provided.    |
-| `_gui_callable_config`           | `bool`         | The config carries Python callables (rules) and must be edited via the callable editor.          |
-| `_gui_cell_granularity`          | `bool`         | The metric *can* emit per-cell results, so the GUI offers a row-limit cap.                       |
-| `_gui_recommended_granularities` | `frozenset[DQGranularity]` | Granularities the metric produces meaningful results at. Used by the results page renderers. |
+````python
+from metis.metric.metric_meta import MetricMeta
+
+class completeness_nullRatio(Metric):
+	meta = MetricMeta(
+		label="Null Ratio",
+		description="Completeness as the ratio of non-null values.",
+		dimension=DQDimension.COMPLETENESS,
+		granularities=frozenset({DQGranularity.COLUMN, DQGranularity.TABLE}),
+	)
+````
+
+| Field                  | Type                        | Purpose                                                                                       |
+|------------------------|-----------------------------|------------------------------------------------------------------------------------------------|
+| `label`                | `str`                       | Display name without the dimension prefix. Callers compose `"{dimension}: {label}"` themselves. |
+| `description`          | `str`                       | What the metric measures and how it is computed. Shown under the metric name in the GUI.       |
+| `dimension`            | `DQDimension`               | The quality dimension. Must match the metric name prefix.                                      |
+| `granularities`        | `frozenset[DQGranularity]`  | Granularities the metric produces meaningful results at.                                       |
+| `requires_reference`   | `bool`                      | The metric cannot run without reference data in its config.                                    |
+| `config_required`      | `bool`                      | The metric refuses to run without a config. The GUI blocks **Compute** until one is provided.  |
+| `callable_config`      | `bool`                      | The config carries Python callables and needs the callable editor.                             |
+| `standard`             | `str \| None`               | Citation of the standard this metric implements, e.g. `"ISO/IEC 25024:2015 Acc-I-4"`.          |
+| `value_range`          | `tuple[float, float]`       | Inclusive score bounds. Always `(0.0, 1.0)` in Metis.                                          |
+| `higher_is_better`     | `bool`                      | Whether a larger value means better quality. Always `True` in Metis, since metrics invert.     |
+
+`meta.cell_granularity` is derived rather than declared. It is `True` when
+`granularities` contains `DQGranularity.CELL`, and the GUI uses it to offer a
+row-limit cap.
 
 #### Native dependency declarations
 
@@ -338,13 +400,13 @@ To create a new instance of DQResult, one needs to provide at least the followin
 - **timestamp: pd.Timestamp**: The time at which a result was assessed.
 - **DQdimension: DQDimension**: Data quality dimension assessed (e.g. `DQDimension.COMPLETENESS`, `DQDimension.ACCURACY`).
 - **DQmetric: str**: Name of the specific metric within the dimension.
-- **DQgranularity: DQGranularity**: Granularity of the metric — one of `DQGranularity.CELL`, `DQGranularity.ROW`, `DQGranularity.COLUMN`, `DQGranularity.TABLE`.
-- **DQvalue: float**: Numeric outcome of the assessment. This currently only supports quantitative assessments.
+- **DQgranularity: DQGranularity**: Granularity of the metric, one of `DQGranularity.CELL`, `DQGranularity.ROW`, `DQGranularity.COLUMN`, `DQGranularity.TABLE`.
+- **DQvalue: float**: Numeric outcome of the assessment, between 0 and 1 inclusive, where 0 is the worst possible quality and 1 is the best. Metrics whose natural formula runs the other way invert before reporting.
 
 Furthermore, there are more optional arguments that might need to be set depending on the nature of different metrics. ```dataset``` and ```tableName``` are automatically set by the ```metis.dq_orchestrator.DQOrchestrator``` class which controls the data quality assessment and takes care of calling the individual metrics and storing the results.
 - **DQexplanation: Optional[dict]**: Arbitrary additional information produced by the metric (no fixed schema required).
 - **runtime: Optional[float]**: Time taken to compute the metric, in seconds.
-- **columnNames: Optional[List[str]]**: Columns that this result pertains to. For a column-level metric this is typically a single-item list; for a table-level metric this may be `None` or an empty list.
+- **columnNames: Optional[List[str]]**: Columns that this result pertains to. For a column-level metric this is typically a single-item list. For a table-level metric this may be `None` or an empty list.
 - **rowIndex: Optional[int]**: Row index associated with the result. Use together with `columnNames` to represent a cell-level result, or for row-based metrics.
 - **experimentTag: Optional[str]**: Tag to identify a specific run.
 - **configJson: Optional[dict]**: Configuration used for the metric as a JSON object.
@@ -396,7 +458,7 @@ For complete documentation of all supported import formats, see [Data Profile Im
 Three flags can be passed to `DataProfileManager.initialize()`:
 
 - **`ignore_cache`**: Never read from or write to the database. Pure passthrough on every call.
-- **`overwrite_cache`**: Skip cache lookup; always recompute and overwrite the stored value. Note: every call recomputes, not just the first. There is no within-run caching.
+- **`overwrite_cache`**: Skip cache lookup, always recompute and overwrite the stored value. Note: every call recomputes, not just the first. There is no within-run caching.
 - **`clear_cache`**: Delete all stored profiles at startup, then cache normally from there.
 
 ```python

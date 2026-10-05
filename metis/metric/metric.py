@@ -1,10 +1,11 @@
 import json
 from abc import ABC, abstractmethod
-from typing import Any, List, TypeVar
+from typing import Any, ClassVar, List, TypeVar
 
 import pandas as pd
 
 from metis.metric.config import MetricConfig
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.logging import logger as main_logger
 from metis.utils.result import DQResult
 
@@ -26,11 +27,28 @@ class Metric(ABC):
     def __init__(self) -> None:
         self.logger = main_logger.getChild(self.__class__.__name__)
 
+    meta: ClassVar[MetricMeta | None] = None
+    """Declarative metadata for this metric. Every concrete metric sets it."""
+
+    @classmethod
+    def describe(cls) -> MetricMeta:
+        """Return this metric's declared metadata.
+
+        :raises NotImplementedError: If the metric does not declare ``meta``.
+        :return: The metric's :class:`MetricMeta`.
+        """
+        if cls.meta is None:
+            raise NotImplementedError(
+                f"{cls.__name__} does not declare a MetricMeta. Add a `meta` "
+                f"class attribute. See metis/metric/metric_meta.py."
+            )
+        return cls.meta
+
     @abstractmethod
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """Assess data using this metric and return the results.
@@ -40,18 +58,14 @@ class Metric(ABC):
                 The DataFrame that should be assessed by this metric. This is
                 the primary dataset under inspection.
 
-        - reference: Optional[pd.DataFrame]
-                An optional, cleaned reference DataFrame that can act as a
-                clean version of the dataset. Metrics that need a canonical or
-                expected version of the data (for example correctness against a
-                known-good source) should accept and use this DataFrame. If not
-                needed by a metric, `None` is allowed.
-
         - metric_config: Optional[str]
                 Optional path or JSON string containing metric-specific
                 configuration. Use this to keep the method signature compact;
                 all metric-specific parameters (thresholds, aggregation options,
-                etc.) can be stored here.
+                reference data, etc.) can be stored here. Metrics that compare
+                against reference data declare a ``reference`` field on their
+                config class and resolve it with
+                ``metis.utils.reference_loader``.
 
         Returns
         - List[DQResult]
@@ -73,9 +87,9 @@ class Metric(ABC):
         Examples
         - Column-level completeness metric: returns one `DQResult` per
             column with the fraction of non-null values.
-        - Correctness metric against a reference: compares `data` to
-            `reference` and returns one `DQResult` per cell in the input table containing the
-            agreement score.
+        - Correctness metric against a reference: compares `data` to the
+            reference resolved from its config and returns one `DQResult` per
+            cell in the input table containing the agreement score.
         """
         raise NotImplementedError()
 

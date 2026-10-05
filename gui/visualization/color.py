@@ -6,7 +6,7 @@ import altair as alt
 DQ_COLOR_SCALE: alt.Scale = alt.Scale(scheme="redyellowgreen", domain=[0, 1])
 
 
-def dq_color(field: str = "DQvalue:Q", title: str = "DQ Score") -> alt.Color:
+def dq_color(field: str = "DQvalue:Q", title: str = "DQ Score (0 = worst, 1 = best)") -> alt.Color:
     """
     Build an Altair ``Color`` channel that uses the shared DQ score scale.
 

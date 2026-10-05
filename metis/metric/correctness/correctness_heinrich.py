@@ -3,30 +3,37 @@ from typing import List
 import pandas as pd
 
 from metis.metric.config import MetricConfig
+from metis.metric.correctness.correctness_heinrich_config import (
+    correctness_heinrich_config,
+)
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.numbers import clamp
+from metis.utils.reference_loader import load_reference_frame
 from metis.utils.result import DQResult
 from metis.utils.similarity_measures.string import levenshtein_distance
 
 
 class correctness_heinrich(Metric):
-    _gui_requires_reference: bool = True
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_cell_granularity: bool = True
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.CELL})
-    _gui_description: str = (
-        "Compares each cell against a reference DataFrame of the same shape. "
-        "Numeric values use a normalized relative-distance score; strings use "
-        "a normalized Levenshtein similarity. Produces a per-cell correctness "
-        "value in `[0, 1]`."
+    meta = MetricMeta(
+        label="Heinrich",
+        description=(
+            "Compares each cell against a reference DataFrame of the same shape. "
+            "Numeric values use a normalized relative-distance score; strings use "
+            "a normalized Levenshtein similarity. Produces a per-cell correctness "
+            "value in `[0, 1]`."
+        ),
+        dimension=DQDimension.CORRECTNESS,
+        granularities=frozenset({DQGranularity.CELL}),
+        requires_reference=True,
     )
+
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
@@ -36,10 +43,8 @@ class correctness_heinrich(Metric):
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing correctness results.
         """
-        if reference is None:
-            raise ValueError(
-                "Reference DataFrame is required for correctness assessment."
-            )
+        config = self.load_config(metric_config or correctness_heinrich_config(), correctness_heinrich_config)
+        reference = load_reference_frame(config.reference)
 
         if data.shape != reference.shape:
             raise ValueError(
@@ -50,11 +55,14 @@ class correctness_heinrich(Metric):
         total_rows = len(data)
 
         for col_name in data.columns:
+            column = data[col_name]
+            reference_column = reference[col_name]
+            dtype = column.dtype
             for row_index in range(total_rows):
                 measurement = self.measure_correctness(
-                    data[col_name].iat[row_index],
-                    reference_value=reference[col_name].iat[row_index],
-                    dtype=data[col_name].dtype,
+                    column.iat[row_index],
+                    reference_value=reference_column.iat[row_index],
+                    dtype=dtype,
                 )
 
                 result = DQResult(

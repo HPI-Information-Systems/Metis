@@ -14,6 +14,7 @@ from core.metric_catalog import (
     get_metrics_by_dimension,
 )
 from demo.demo_metric_configs import DEMO_CONFIG_DISPLAY, DEMO_METRICS
+from metis.metric.metric import Metric
 from metis.utils.dq_granularity import DQGranularity
 from ui.components.config_editors import (
     callable_editor,
@@ -878,9 +879,16 @@ def _format_name(name: str) -> str:
     """
     Format a registry name like ``completeness_nullRatio`` for display.
 
+    Uses the metric's declared label when it is registered, and falls back to
+    splitting the name on camel case otherwise.
+
     :param name: The metric registry name (``dimension_metric``).
-    :return: A display string like ``"Completeness: Null ratio"``.
+    :return: A display string like ``"Completeness: Null Ratio"``.
     """
+    cls = Metric.registry.get(name)
+    if cls is not None and cls.meta is not None:
+        return f"{cls.meta.dimension}: {cls.meta.label}"
+
     parts = name.split("_", 1)
     if len(parts) == 2:
         dim, metric = parts

@@ -21,7 +21,9 @@ def row_similarity(row_a: pd.Series, row_b: pd.Series) -> float:
 
         if isinstance(a, str):
             sims.append(normalized_levenshtein_distance(a, b))
-        elif isinstance(a, (int, float)):
+        # numpy's int64 is not a subclass of int, so without np.integer every
+        # integer column of a DataFrame would fall through to the 0.0 fallback.
+        elif isinstance(a, (int, float, np.integer, np.floating)):
             sims.append(numeric_similarity(a, b))
         elif isinstance(a, bool):
             sims.append(boolean_similarity(a, b))

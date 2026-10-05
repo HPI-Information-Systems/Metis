@@ -22,14 +22,6 @@ class AppState:
         st.session_state["df"] = df
 
     @staticmethod
-    def get_reference_df() -> pd.DataFrame | None:
-        return st.session_state.get("reference_df")
-
-    @staticmethod
-    def set_reference_df(df: pd.DataFrame | None) -> None:
-        st.session_state["reference_df"] = df
-
-    @staticmethod
     def get_dataset_name() -> str:
         return st.session_state.get("dataset_name", "")
 
@@ -206,9 +198,20 @@ class AppState:
         :return: None.
         """
         for key in (
-            "df", "reference_df", "dataset_name", "table_name",
+            "df", "dataset_name", "table_name",
             "experiment_tag", "selected_metrics", "metric_configs",
             "last_results", "last_errors", "run_requested",
         ):
             st.session_state.pop(key, None)
+
+        # Per-metric reference state is keyed by metric name, not by dataset,
+        # so it outlives a reset unless it is swept explicitly. Leaving it
+        # would silently score a new dataset against the old dataset's
+        # reference.
+        for key in [
+            k for k in st.session_state
+            if k.startswith("_ref_cache__") or k.endswith("__reference")
+        ]:
+            st.session_state.pop(key, None)
+
         st.session_state["wizard_step"] = 0

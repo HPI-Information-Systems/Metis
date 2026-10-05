@@ -7,33 +7,37 @@ from metis.metric.completeness.completeness_nullRatio_config import (
 )
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.result import DQResult
 
 
 class completeness_nullRatio(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({
-        DQGranularity.ROW, DQGranularity.COLUMN, DQGranularity.TABLE,
-    })
-    _gui_description: str = (
-        "Completeness as the ratio of non-null values. Configurable to report "
-        "per cell, per row, per column, or as a single table-level score."
+    meta = MetricMeta(
+        label="Null Ratio",
+        description=(
+            "Completeness as the ratio of non-null values. Reports per column by "
+            "default; configurable to report per cell, per row, or as a single "
+            "table-level score."
+        ),
+        dimension=DQDimension.COMPLETENESS,
+        granularities=frozenset({
+            DQGranularity.CELL, DQGranularity.ROW,
+            DQGranularity.COLUMN, DQGranularity.TABLE,
+        }),
     )
+
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the completeness of the data by calculating the ratio and count of null values on different granularities. The ratio of non-null values is stored as the completeness quality measurement, while the count of null values is stored in the explanation for better interpretability. The metric can be configured using `completeness_nullRatio_config` to calculate the completeness on column, row level, or table-level granularity.
 
         :param data: DataFrame to assess.
-        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing completeness results.
         """

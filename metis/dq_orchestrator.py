@@ -98,7 +98,6 @@ class DQOrchestrator:
                     start = time.perf_counter()
                     incomplete_metric_results = metric_instance.assess(
                         data=df,
-                        reference=self.reference_dataframes.get(df_name),
                         metric_config=metric_config,
                     )
                     elapsed = time.perf_counter() - start
@@ -107,7 +106,6 @@ class DQOrchestrator:
                 else:
                     incomplete_metric_results = metric_instance.assess(
                         data=df,
-                        reference=self.reference_dataframes.get(df_name),
                         metric_config=metric_config,
                     )
                 for result in incomplete_metric_results:

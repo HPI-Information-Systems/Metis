@@ -5,6 +5,8 @@ grouped bar chart, overlay histogram, trend strip and worst-rows table.
 """
 from __future__ import annotations
 
+from metis.metric.metric import Metric
+
 from theme import HPI_PALETTE
 
 _PALETTE: tuple[str, ...] = HPI_PALETTE
@@ -28,10 +30,36 @@ def metric_colors(metric_names: list[str]) -> dict[str, str]:
 
 def short_name(metric_name: str) -> str:
     """
-    Return a metric's display name with the dimension prefix stripped.
+    Return a metric's declared display label.
+
+    Falls back to the substring after the first underscore for metric names
+    that are not in the registry, which happens when stored results outlive
+    the metric that produced them.
 
     :param metric_name: Full metric name (e.g. ``completeness_nullRatio``).
-    :return: The suffix after the first underscore (e.g. ``nullRatio``).
+    :return: The metric's ``MetricMeta.label`` (e.g. ``Null Ratio``).
     """
+    cls = Metric.registry.get(metric_name)
+    if cls is not None and cls.meta is not None:
+        return cls.meta.label
     parts = metric_name.split("_", 1)
     return parts[1] if len(parts) > 1 else metric_name
+
+
+def qualified_name(metric_name: str) -> str:
+    """
+    Return a metric's display label prefixed with its dimension.
+
+    Use this wherever a metric is named on its own, outside a dimension tab
+    or a legend that already supplies the dimension. Same registry fallback
+    as :func:`short_name`, so stored results from a metric that no longer
+    exists still render something readable.
+
+    :param metric_name: Full metric name (e.g. ``accuracy_dataRange``).
+    :return: A string like ``Accuracy · Data Range``.
+    """
+    cls = Metric.registry.get(metric_name)
+    if cls is not None and cls.meta is not None:
+        return f"{cls.meta.dimension} · {cls.meta.label}"
+    dimension = metric_name.split("_", 1)[0].capitalize() or "Other"
+    return f"{dimension} · {short_name(metric_name)}"

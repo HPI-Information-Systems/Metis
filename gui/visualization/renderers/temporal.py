@@ -12,7 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from core.metric_catalog import get_catalog
-from visualization.metric_palette import metric_colors, short_name
+from visualization.metric_palette import metric_colors, qualified_name, short_name
 
 
 def _dimension_for(metric_name: str) -> str:
@@ -29,8 +29,8 @@ def _dimension_for(metric_name: str) -> str:
 
 
 def _labelled(metric_name: str) -> str:
-    """Format a metric for chart legends as ``Dimension · shortName``."""
-    return f"{_dimension_for(metric_name)} · {short_name(metric_name)}"
+    """Format a metric for chart legends as ``Dimension · label``."""
+    return qualified_name(metric_name)
 
 _MAX_COLUMNS_DEFAULT: int = 8
 _CHART_HEIGHT_PX: int = 280
@@ -95,7 +95,7 @@ def render(results: list[dict], metric_name: str) -> None:
                 alt.Tooltip("DQvalue:Q", format=".1%", title="Score"),
             ],
         )
-        .properties(title=f"Temporal trend: {metric_name}", height=_CHART_HEIGHT_PX)
+        .properties(title=f"Temporal trend: {_labelled(metric_name)}", height=_CHART_HEIGHT_PX)
     )
 
     st.altair_chart(chart, width='stretch')
@@ -124,7 +124,7 @@ def render_multi_metric(
             .mean()
         )
         agg["metric"] = _labelled(metric_name)
-        agg["metric_full"] = metric_name
+        agg["metric_full"] = _labelled(metric_name)
         agg["dimension"] = _dimension_for(metric_name)
         frames.append(agg)
 

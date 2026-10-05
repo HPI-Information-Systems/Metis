@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.result import DQResult
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
@@ -19,7 +21,8 @@ def _select_text_columns(df: pd.DataFrame, ignore_numeric: bool) -> List[str]:
     cols: List[str] = []
     for c in df.columns:
         dt = str(df[c].dtype)
-        if dt == "object" or dt.startswith("string"):
+        # pandas 3 names its default string dtype "str", not "string".
+        if dt in ("object", "str") or dt.startswith("string"):
             cols.append(str(c))
     return cols
 
@@ -35,11 +38,28 @@ def _sample_df(df: pd.DataFrame, sample_size: Optional[int], rng: random.Random)
 class readability_wordnet(Metric):
     """WordNet-only readability metric (no LLM / no HF dependencies)."""
 
+    meta = MetricMeta(
+        label="WordNet",
+        description=(
+            "Readability of schema labels and text content, scored by splitting "
+            "identifiers into words, expanding abbreviations and checking the "
+            "tokens against WordNet, with a case-consistency component. Uses no "
+            "language model, so it needs no optional dependencies. Reports at "
+            "schema, table, column and optionally cell level."
+        ),
+        dimension=DQDimension.READABILITY,
+        granularities=frozenset({
+            DQGranularity.CELL, DQGranularity.COLUMN,
+            DQGranularity.TABLE, DQGranularity.SCHEMA,
+        }),
+        config_required=True,
+    )
+
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        *,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the readability of a tabular dataset using the WordNet-only readability metric.
@@ -53,11 +73,6 @@ class readability_wordnet(Metric):
         - data: pd.DataFrame
                 The DataFrame to assess. This is the primary dataset whose schema labels
                 and textual cell values are evaluated for readability.
-
-        - reference: Optional[pd.DataFrame]
-                Optional reference DataFrame. This metric does not use a reference
-                dataset and accepts this parameter only to conform to the framework-wide
-                metric interface.
 
         - metric_config: Optional[str]
                 Optional path or JSON string containing readability-specific
@@ -138,9 +153,9 @@ class readability_wordnet(Metric):
                 if cfg.output_cells:
                     cell_results.append(
                         DQResult(
-                            mesTime=pd.Timestamp.now(),
+                            timestamp=pd.Timestamp.now(),
                             DQdimension=DQDimension.READABILITY,
-                            DQmetric="WordNet",
+                            DQmetric=self.__class__.__name__,
                             DQgranularity="cell",
                             DQvalue=z,
                             columnNames=[col],
@@ -177,7 +192,7 @@ class readability_wordnet(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(content_wordnet),
                     DQdimension=DQDimension.READABILITY,
-                    DQmetric="WordNet",
+                    DQmetric=self.__class__.__name__,
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity=DQGranularity.TABLE,
@@ -196,7 +211,7 @@ class readability_wordnet(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(schema_wordnet),
                     DQdimension=DQDimension.READABILITY,
-                    DQmetric="WordNet",
+                    DQmetric=self.__class__.__name__,
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity=DQGranularity.SCHEMA,
@@ -217,7 +232,7 @@ class readability_wordnet(Metric):
                         timestamp=pd.Timestamp.now(),
                         DQvalue=float(col_scores.get(col, 0.0)),
                         DQdimension=DQDimension.READABILITY,
-                        DQmetric="WordNet",
+                        DQmetric=self.__class__.__name__,
                         columnNames=[col],
                         rowIndex=None,
                         DQgranularity=DQGranularity.COLUMN,

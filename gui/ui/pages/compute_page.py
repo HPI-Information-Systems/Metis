@@ -72,11 +72,13 @@ def _validate(selected: list[str]) -> list[str]:
         info = catalog.get(name)
         if info is None:
             continue
-        if info.requires_reference and AppState.get_reference_df() is None:
-            errors.append(
-                f"**{name}** requires a reference dataset. "
-                "Upload one in the Dataset step."
-            )
+        if info.requires_reference:
+            cfg = AppState.get_metric_configs().get(name)
+            if cfg is None or getattr(cfg, "reference", None) is None:
+                errors.append(
+                    f"**{name}** requires reference data. "
+                    "Upload it in the metric's config on the Metrics step."
+                )
         if info.config_required:
             cfg = AppState.get_metric_configs().get(name)
             if not cfg:
@@ -131,7 +133,6 @@ def _run(
     :param tag: Experiment tag used to label the run.
     :return: None.
     """
-    reference = AppState.get_reference_df()
     configs = AppState.get_metric_configs()
     max_rows = AppState.get_all_metric_max_rows()
 
@@ -151,7 +152,7 @@ def _run(
         status_text.text(f"Running {name}  ({i + 1}/{total})")
 
     results, errors = run_all(
-        selected, df, reference, configs, on_progress,
+        selected, df, configs, on_progress,
         max_rows_by_metric=max_rows or None,
     )
 

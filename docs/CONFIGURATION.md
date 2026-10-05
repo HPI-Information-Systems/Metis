@@ -62,12 +62,16 @@ config file's own location.
 
 ### Reference datasets
 
-When `reference_file_name` is set, the orchestrator loads that file with
-the same parsing options as the primary file and passes it as the
-`reference` argument to every metric run on this dataset. Reference-based
-metrics such as `correctness_heinrich` and `accuracy_semanticReference`
-require it and do nothing useful without one. See
-`demo/configs/adult_with_reference.json` for a working example.
+When `reference_file_name` is set, the orchestrator still loads that file
+with the same parsing options as the primary file, but it no longer passes
+that DataFrame to any metric automatically. Setting `reference_file_name`
+alone does not feed a metric that needs reference data.
+
+Reference-based metrics such as `correctness_heinrich` and
+`accuracy_semanticReference` instead declare their own `reference` field on
+their config class, resolved independently of this loader-level setting.
+See [How to implement new metrics](../README.md#how-to-implement-new-metrics)
+in the README for the reference field contract.
 
 ### Pre-computed data profiles
 

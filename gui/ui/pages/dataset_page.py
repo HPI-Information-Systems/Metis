@@ -58,7 +58,6 @@ def _render_upload_section() -> None:
         # immediately. Nav-button availability reads df from session_state on the same rerun.
         _render_metadata_form()
         _render_preview_fragment(df)
-        _render_reference_upload()
     else:
         st.info("Upload a CSV file to get started.")
 
@@ -230,32 +229,3 @@ def _render_demo_dataset_info(df: pd.DataFrame | None) -> None:
         f"(dirty-restaurants duplicate-detection benchmark)"
     )
     _render_preview_fragment(df)
-
-
-def _render_reference_upload() -> None:
-    with st.expander("Reference dataset (optional)"):
-        st.write(
-            "Some metrics (e.g. **correctness_heinrich**) compare your data against "
-            "a clean reference. Upload it here if needed."
-        )
-        ref_file = st.file_uploader(
-            "Reference CSV",
-            type=["csv"],
-            key="reference_uploader",
-        )
-        if ref_file is not None:
-            ref_id = f"{ref_file.name}::{ref_file.size}"
-            if st.session_state.get("_loaded_ref_id") != ref_id:
-                raw = ref_file.read()
-                try:
-                    ref_df = pd.read_csv(io.BytesIO(raw), encoding="utf-8")
-                except UnicodeDecodeError:
-                    ref_df = pd.read_csv(io.BytesIO(raw), encoding="latin-1")
-                AppState.set_reference_df(ref_df)
-                st.session_state["_loaded_ref_id"] = ref_id
-            ref = AppState.get_reference_df()
-            if ref is not None:
-                st.success(f"Reference loaded: {len(ref):,} rows × {len(ref.columns)} columns")
-        elif AppState.get_reference_df() is not None:
-            ref = AppState.get_reference_df()
-            st.info(f"Reference already loaded: {len(ref):,} rows × {len(ref.columns)} columns")

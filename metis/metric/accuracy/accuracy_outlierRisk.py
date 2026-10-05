@@ -7,6 +7,7 @@ from metis.metric.accuracy.accuracy_outlierRisk_config import (
 )
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.profiling import iqr_bounds
 from metis.utils.data_profiling.single_column.value_distribution.outliers import (
     detect_outliers,
@@ -27,23 +28,25 @@ class accuracy_outlierRisk(Metric):
     ISO ratio if needed.
     """
 
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.COLUMN})
-    _gui_description: str = (
-        "Per column, share of values *not* flagged as outliers by a configurable "
-        "detection method (default: IQR / Tukey). ISO/IEC 25024 defines Acc-I-4 "
-        "as outliers / total (lower=better); Metis stores the inverted value "
-        "1 - (outliers / total) so higher is always better and the metric "
-        "aggregates with other accuracy metrics. See `outlier_count` and "
-        "`considered_count` in DQexplanation to recover the raw ISO ratio."
+    meta = MetricMeta(
+        label="Outlier Risk",
+        description=(
+            "Per column, share of values *not* flagged as outliers by a configurable "
+            "detection method (default: IQR / Tukey). ISO/IEC 25024 defines Acc-I-4 "
+            "as outliers / total (lower=better); Metis stores the inverted value "
+            "1 - (outliers / total) so higher is always better and the metric "
+            "aggregates with other accuracy metrics. See `outlier_count` and "
+            "`considered_count` in DQexplanation to recover the raw ISO ratio."
+        ),
+        dimension=DQDimension.ACCURACY,
+        granularities=frozenset({DQGranularity.COLUMN}),
+        standard="ISO/IEC 25024:2015 Acc-I-4",
     )
 
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         config = self.load_config(metric_config or "", accuracy_outlierRisk_config)

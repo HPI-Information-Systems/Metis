@@ -28,7 +28,9 @@ class DQResult:
         - `DQdimension: DQDimension`: Data quality dimension assessed (e.g. DQDimension.COMPLETENESS, DQDimension.ACCURACY).
         - `DQmetric: str`: Name of the specific metric within the dimension.
         - `DQgranularity: DQGranularity`: Granularity of the metric (e.g. DQGranularity.COLUMN, DQGranularity.TABLE, DQGranularity.CELL, DQGranularity.ROW).
-        - `DQvalue: float`: Numeric outcome of the assessment (quantitative only).
+        - `DQvalue: float`: Numeric outcome of the assessment. Metis normalises
+            every metric to the range [0, 1], where 0 is the worst possible
+            quality and 1 is the best. See `MetricMeta.value_range`.
 
         Optional arguments
         - `DQexplanation: Optional[dict]`: Arbitrary additional information
@@ -51,9 +53,10 @@ class DQResult:
         - The `metis.dq_orchestrator.DQOrchestrator`
             will populate `dataset` and `tableName` when it assembles results
             across metrics and datasets.
-        - `DQvalue` currently expects a quantitative (float) score. If you
-            need to encode non-numeric outcomes consider using `DQexplanation`
-            to store auxiliary information while keeping `DQvalue` numeric.
+        - `DQvalue` currently expects a quantitative (float) score in [0, 1].
+            If you need to encode non-numeric outcomes consider using
+            `DQexplanation` to store auxiliary information while keeping
+            `DQvalue` numeric.
         """
         self._timestamp = timestamp
         self._DQdimension = DQdimension

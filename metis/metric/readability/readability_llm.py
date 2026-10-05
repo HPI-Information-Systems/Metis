@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import random
 from collections import Counter
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.result import DQResult
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
@@ -42,7 +44,8 @@ def _select_text_columns(df: pd.DataFrame, ignore_numeric: bool) -> List[str]:
     cols: List[str] = []
     for c in df.columns:
         dt = str(df[c].dtype)
-        if dt == "object" or dt.startswith("string"):
+        # pandas 3 names its default string dtype "str", not "string".
+        if dt in ("object", "str") or dt.startswith("string"):
             cols.append(str(c))
     return cols
 
@@ -58,11 +61,29 @@ def _sample_df(df: pd.DataFrame, sample_size: Optional[int], rng: random.Random)
 class readability_llm(Metric):
     """Hybrid readability metric: WordNet-first with LLM fallback (lazy backend loading)."""
 
+    meta = MetricMeta(
+        label="LLM Assisted",
+        description=(
+            "Readability of schema labels and text content, scored by splitting "
+            "identifiers into words and checking them against WordNet and an "
+            "abbreviation list, with a local HuggingFace language model as "
+            "fallback for tokens WordNet cannot resolve. Requires the optional "
+            "transformers dependency and downloads a model on first use "
+            "(default Qwen/Qwen2.5-3B-Instruct)."
+        ),
+        dimension=DQDimension.READABILITY,
+        granularities=frozenset({
+            DQGranularity.CELL, DQGranularity.COLUMN,
+            DQGranularity.TABLE, DQGranularity.SCHEMA,
+        }),
+        config_required=True,
+    )
+
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        *,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the readability of a tabular dataset using the hybrid readability metric.
@@ -76,11 +97,6 @@ class readability_llm(Metric):
         - data: pd.DataFrame
                 The DataFrame to assess. This is the primary dataset whose schema labels
                 and textual cell values are evaluated for readability.
-
-        - reference: Optional[pd.DataFrame]
-                Optional reference DataFrame. This metric does not use a reference
-                dataset and accepts this parameter only to conform to the framework-wide
-                metric interface.
 
         - metric_config: Optional[str]
                 Optional path or JSON string containing readability-specific
@@ -222,10 +238,10 @@ class readability_llm(Metric):
                 if cfg.output_cells:
                     cell_results.append(
                         DQResult(
-                            mesTime=pd.Timestamp.now(),
+                            timestamp=pd.Timestamp.now(),
                             DQvalue=float(z_hybrid),
                             DQdimension="Readability",
-                            DQmetric="LLM",
+                            DQmetric=self.__class__.__name__,
                             columnNames=[col],
                             rowIndex=row_pos,  # ✅ stable int position (never crashes)
                             DQgranularity="cell",
@@ -284,7 +300,7 @@ class readability_llm(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(content_hybrid),
                     DQdimension=DQDimension.READABILITY,
-                    DQmetric="LLM",
+                    DQmetric=self.__class__.__name__,
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity=DQGranularity.TABLE,
@@ -316,7 +332,7 @@ class readability_llm(Metric):
                     timestamp=pd.Timestamp.now(),
                     DQvalue=float(schema_hybrid),
                     DQdimension=DQDimension.READABILITY,
-                    DQmetric="LLM",
+                    DQmetric=self.__class__.__name__,
                     columnNames=None,
                     rowIndex=None,
                     DQgranularity=DQGranularity.SCHEMA,
@@ -340,7 +356,7 @@ class readability_llm(Metric):
                         timestamp=pd.Timestamp.now(),
                         DQvalue=float(col_combined.get(col, 0.0)),
                         DQdimension=DQDimension.READABILITY,
-                        DQmetric="LLM",
+                        DQmetric=self.__class__.__name__,
                         columnNames=[col],
                         rowIndex=None,
                         DQgranularity=DQGranularity.COLUMN,

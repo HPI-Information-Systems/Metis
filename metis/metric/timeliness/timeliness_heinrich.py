@@ -6,6 +6,7 @@ import pandas as pd
 
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.metric.timeliness.timeliness_heinrich_config import (
     timeliness_heinrich_config,
 )
@@ -17,29 +18,30 @@ from metis.utils.result import DQResult
 
 
 class timeliness_heinrich(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = True
-    _gui_callable_config: bool = False
-    _gui_cell_granularity: bool = True
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.CELL})
-    _gui_description: str = (
-        "Per cell, computes `exp(−decline_rate · age)` where age is measured "
-        "from the configured ingestion-date column to a reference date "
-        "(defaults to now). Reports a certainty bounded by the precision of "
-        "the timestamp."
+    meta = MetricMeta(
+        label="Heinrich",
+        description=(
+            "Per cell, computes `exp(−decline_rate · age)` where age is measured "
+            "from the configured ingestion-date column to a reference date "
+            "(defaults to now). Reports a certainty bounded by the precision of "
+            "the timestamp."
+        ),
+        dimension=DQDimension.TIMELINESS,
+        granularities=frozenset({DQGranularity.CELL}),
+        config_required=True,
     )
+
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the timeliness of the data by calculating how likely each cell is to be out of date based on a reference date and a decline rate. The reference date is either provided in the configuration or defaults to the current date.
-        The formula used is: timeliness = exp(-decline_rate * age), where age and decline_rate are measured in years. The age is calculated as the difference between the reference date and the ingestion date of the tuple (defined by the ingestion_date_column in the configuration).
+        The formula used is: timeliness = exp(-decline_rate * age), where age is measured in days and decline_rate per day. The age is calculated as the difference between the reference date and the ingestion date of the tuple (defined by the ingestion_date_column in the configuration).
 
         :param data: DataFrame to assess.
-        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Configuration for the metric (required).
         :return: List of DQResult objects containing timeliness results.
         """

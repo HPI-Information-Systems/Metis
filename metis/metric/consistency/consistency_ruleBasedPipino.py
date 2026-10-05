@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 
 import pandas as pd
 
@@ -7,6 +7,7 @@ from metis.metric.consistency.consistency_ruleBasedPipino_config import (
     consistency_ruleBasedPipino_config,
 )
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
 from metis.utils.logging import warn_unconfigured_columns
@@ -14,31 +15,31 @@ from metis.utils.result import DQResult
 
 
 class consistency_ruleBasedPipino(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = True
-    _gui_callable_config: bool = True
-    _gui_cell_granularity: bool = True
-    _gui_recommended_granularities: frozenset = frozenset({
-        DQGranularity.CELL, DQGranularity.ROW,
-    })
-    _gui_description: str = (
-        "Scores cells and rows against user-defined attribute and tuple rules "
-        "using Pipino's formula `1 − violations / total_rules`. A certainty "
-        "value derived from rule fulfillment rates is reported alongside each "
-        "result."
+    meta = MetricMeta(
+        label="Rule Based (Pipino)",
+        description=(
+            "Scores cells and rows against user-defined attribute and tuple rules "
+            "using Pipino's formula `1 − violations / total_rules`. A certainty "
+            "value derived from rule fulfillment rates is reported alongside each "
+            "result."
+        ),
+        dimension=DQDimension.CONSISTENCY,
+        granularities=frozenset({DQGranularity.CELL, DQGranularity.ROW}),
+        config_required=True,
+        callable_config=True,
     )
+
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: str | None | MetricConfig = None,
+        *,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the consistency of the data by checking the given rules for each value. The rules are defined in the metric configuration. There are attribute rules that apply to individual columns and tuple rules that apply to entire rows. The quality measurement is calculated as 1 - degree_of_violation / N, where degree_of_violation is the sum of the result of all applicable rules for a given value/row and N is the total number of rules.
         Additionally, this metric assesses the certainty of the measurement based on the minimum quality in the assessed data. The certainty is calculated as sqrt((1 - dq_value) * (1 - min_quality)), where dq_value is the quality measurement for the specific value/row and min_quality is the lowest quality measurement observed in the dataset.
 
         :param data: DataFrame to assess.
-        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Mandatory configuration for the metric.
         :return: List of DQResult objects containing consistency results.
         """
