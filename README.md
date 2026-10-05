@@ -312,7 +312,7 @@ editor and badges.
   ```python
   @dataclass
   class completeness_nullRatio_config(MetricConfig):
-	  aggregation_axis: Literal["index", "columns", None] = None
+	  aggregation_axis: Literal["index", "columns", None] = "index"
 	  aggregate_all: bool = False
   ```
 

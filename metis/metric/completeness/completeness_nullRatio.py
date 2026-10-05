@@ -17,12 +17,14 @@ class completeness_nullRatio(Metric):
     meta = MetricMeta(
         label="Null Ratio",
         description=(
-            "Completeness as the ratio of non-null values. Configurable to report "
-            "per cell, per row, per column, or as a single table-level score."
+            "Completeness as the ratio of non-null values. Reports per column by "
+            "default; configurable to report per cell, per row, or as a single "
+            "table-level score."
         ),
         dimension=DQDimension.COMPLETENESS,
         granularities=frozenset({
-            DQGranularity.ROW, DQGranularity.COLUMN, DQGranularity.TABLE,
+            DQGranularity.CELL, DQGranularity.ROW,
+            DQGranularity.COLUMN, DQGranularity.TABLE,
         }),
     )
 

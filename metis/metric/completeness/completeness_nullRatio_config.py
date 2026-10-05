@@ -10,11 +10,12 @@ class completeness_nullRatio_config(MetricConfig):
     """
     Configuration class for the completeness_nullRatio metric.
 
-    :param aggregation_axis: Axis along which to aggregate completeness ('index': aggregate each column; 'columns': aggregate each row).
+    :param aggregation_axis: Axis along which to aggregate completeness ('index' (default): aggregate each column; 'columns': aggregate each row; None: one result per cell).
+        Per column is the default because a per-cell completeness value is only ever 0 or 1, a copy of the null mask, while it costs one result object per cell.
     :param aggregate_all: Whether to aggregate all completeness results into a single value for the whole input data.
     """
 
-    aggregation_axis: Literal["index", "columns", None] = None
+    aggregation_axis: Literal["index", "columns", None] = "index"
     aggregate_all: bool = False
 
     def to_json(self):
