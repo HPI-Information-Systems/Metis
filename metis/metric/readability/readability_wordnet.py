@@ -21,7 +21,8 @@ def _select_text_columns(df: pd.DataFrame, ignore_numeric: bool) -> List[str]:
     cols: List[str] = []
     for c in df.columns:
         dt = str(df[c].dtype)
-        if dt == "object" or dt.startswith("string"):
+        # pandas 3 names its default string dtype "str", not "string".
+        if dt in ("object", "str") or dt.startswith("string"):
             cols.append(str(c))
     return cols
 
