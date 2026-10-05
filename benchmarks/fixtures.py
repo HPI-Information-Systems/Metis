@@ -187,7 +187,8 @@ def _timeliness_config(frame: pd.DataFrame):
     return timeliness_heinrich_config(
         timeliness_config_per_column={
             column: timeliness_heinrich_column_config(
-                decline_rate=0.2,
+                # The metric measures age in days, so the rate is per day.
+                decline_rate=0.2 / 365.25,
                 ingestion_date_column=column,
                 # The generated date column holds real Timestamp values (not
                 # strings), so the metric's automatic precision detection
