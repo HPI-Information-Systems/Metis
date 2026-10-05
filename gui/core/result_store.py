@@ -381,7 +381,7 @@ class JSONResultStore(ResultStore):
                 "DQexplanation": r.get("DQexplanation") or {},
             }
             for r in records
-            if r.get("DQmetric") == metric
+            if r.get("DQmetric") == metric and r.get("DQgranularity") == "column"
         ]
         return sorted(rows, key=lambda x: x["DQvalue"])
 
@@ -1125,6 +1125,7 @@ class SQLiteResultStore(ResultStore):
                     dq_explanation
                 FROM {t}
                 WHERE COALESCE(experiment_tag, '') = :tag AND dq_metric = :metric
+                  AND dq_granularity = 'column'
                 ORDER BY dq_value ASC
             """), {"tag": tag, "metric": metric}).fetchall()
         result = []
