@@ -149,10 +149,14 @@ results page groups them into one time series. The temporal chart then
 shows data quality improving over time, which is the intended demo
 narrative.
 
-The seven demo metrics are `completeness_nullRatio`,
-`minimality_duplicateCount`, `validity_outOfVocabulary`,
+The thirteen demo metrics are `completeness_nullRatio`,
+`minimality_duplicateCount`, `minimality_clustering`,
+`validity_outOfVocabulary`, `accuracy_dataRange`, `accuracy_outlierRisk`,
+`accuracy_semanticReference`, `accuracy_syntacticDomain`,
 `consistency_countFDViolations`, `consistency_ruleBasedHinrichs`,
-`consistency_ruleBasedPipino` and `timeliness_heinrich`. Their
+`consistency_ruleBasedPipino`, `timeliness_heinrich` and
+`readability_wordnet`. The two reference-based accuracy metrics use the
+clean source `data/restaurants_source.csv` as their gold standard. Their
 configurations are fixed and shown read-only in the Metrics step. They are
 defined in `gui/demo/demo_metric_configs.py`, with the Python rule files
 for the two rule-based consistency metrics living in
