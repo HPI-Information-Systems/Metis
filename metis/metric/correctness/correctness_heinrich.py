@@ -55,11 +55,14 @@ class correctness_heinrich(Metric):
         total_rows = len(data)
 
         for col_name in data.columns:
+            column = data[col_name]
+            reference_column = reference[col_name]
+            dtype = column.dtype
             for row_index in range(total_rows):
                 measurement = self.measure_correctness(
-                    data[col_name].iat[row_index],
-                    reference_value=reference[col_name].iat[row_index],
-                    dtype=data[col_name].dtype,
+                    column.iat[row_index],
+                    reference_value=reference_column.iat[row_index],
+                    dtype=dtype,
                 )
 
                 result = DQResult(
