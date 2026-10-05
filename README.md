@@ -2,7 +2,7 @@
 
 Metis is a framework to automatically assess the quality of tabular data across multiple data quality dimensions. The Metis DQ framework (this GitHub repo) is part of the Metis project: [www.metisdq.org](https://www.metisdq.org)
 
-![Overview](images/Metis.png)
+![Overview](images/visualization_metis.png)
 
 ## Installation
 
