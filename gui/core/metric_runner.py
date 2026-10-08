@@ -12,6 +12,7 @@ import pandas as pd
 
 import metis.metric  # noqa: F401 — populates Metric.registry on import
 from metis.metric.metric import Metric
+from metis.utils.garbage_collection import gc_paused
 from metis.utils.result import DQResult
 
 from core.metric_catalog import get_catalog
@@ -60,7 +61,8 @@ def run_all(
                     cap = max_rows_by_metric[name]
                     if cap > 0 and len(data) > cap:
                         metric_data = data.head(cap)
-                batch = Metric.registry[name]().assess(metric_data, metric_config=metric_config)
+                with gc_paused():
+                    batch = Metric.registry[name]().assess(metric_data, metric_config=metric_config)
                 results.extend(batch)
             except Exception as e:
                 errors.append(RunError(

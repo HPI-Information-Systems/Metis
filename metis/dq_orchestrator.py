@@ -12,6 +12,7 @@ from metis.metric.config import MetricConfig
 from metis.profiling.data_profile_manager import DataProfileManager
 from metis.profiling.importers import get_importer
 from metis.utils.data_config import DataConfig
+from metis.utils.garbage_collection import gc_paused
 from metis.utils.logging import logger
 from metis.utils.result import DQResult
 from metis.writer.console_writer import ConsoleWriter
@@ -96,18 +97,20 @@ class DQOrchestrator:
                 measure_runtime = self._should_measure_runtime(metric_config)
                 if measure_runtime:
                     start = time.perf_counter()
-                    incomplete_metric_results = metric_instance.assess(
-                        data=df,
-                        metric_config=metric_config,
-                    )
+                    with gc_paused():
+                        incomplete_metric_results = metric_instance.assess(
+                            data=df,
+                            metric_config=metric_config,
+                        )
                     elapsed = time.perf_counter() - start
                     for result in incomplete_metric_results:
                         result.runtime = elapsed
                 else:
-                    incomplete_metric_results = metric_instance.assess(
-                        data=df,
-                        metric_config=metric_config,
-                    )
+                    with gc_paused():
+                        incomplete_metric_results = metric_instance.assess(
+                            data=df,
+                            metric_config=metric_config,
+                        )
                 for result in incomplete_metric_results:
                     result.tableName = df_name
                     result.dataset = self.data_paths[df_name]
