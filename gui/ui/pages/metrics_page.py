@@ -78,7 +78,6 @@ def render(demo_mode: bool = False) -> None:
     active_filter = st.pills(
         "Filter",
         options=_FILTER_OPTIONS,
-        default="All",
         selection_mode="single",
         label_visibility="collapsed",
         key=AppState.widget_key("metrics", "filter"),
