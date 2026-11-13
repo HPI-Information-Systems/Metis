@@ -18,6 +18,16 @@ The GUI has additional dependencies (Streamlit, Altair):
 pip install -r gui/requirements.txt
 ```
 
+The readability metrics look words up in WordNet, which NLTK does not ship
+with. Download the corpus once:
+
+```
+python -m nltk.downloader wordnet
+```
+
+Without it, `readability_wordnet` and `readability_llm` stop with an error
+that names this command.
+
 ## Start the demo and run Metis:
 
 Metis ships three CLI demos plus an interactive GUI demo. Pick by what you
@@ -173,11 +183,12 @@ are resolved relative to the `data/` directory:
 }
 ```
 
-`reference_file_name` is optional. When set, the orchestrator still loads it
-into memory, but no longer passes it to metrics automatically. Setting
-`reference_file_name` alone does not feed any metric. A metric that needs
-reference data declares its own `reference` field on its config class, as
-described in [How to implement new metrics](#how-to-implement-new-metrics).
+`reference_file_name` is optional. It declares a reference for the whole
+dataset, loaded with the same parsing options as the primary file. Every
+metric that requires reference data (`correctness_heinrich`,
+`accuracy_semanticReference`) uses it by default. A metric whose config sets
+its own `reference` field uses that one instead, as described in
+[How to implement new metrics](#how-to-implement-new-metrics).
 Further optional fields control CSV parsing (`delimiter`, `encoding`,
 `header`, `nrows`, `usecols`, `parse_dates`, `decimals`, `thousands`) and
 profile imports (`data_profiles`, see [Data Profiling](#data-profiling)). The
@@ -262,6 +273,14 @@ A reference source can be a live DataFrame, a path to a CSV file, a
 `DataConfig` mapping when the file needs custom parsing options, or an inline
 list of values. Use `load_reference_vocabulary` instead when the metric wants a
 set of words rather than a table.
+
+When the field is left at `None`, `load_reference_frame` returns the
+dataset-level reference (`reference_file_name` in the data loader config, or
+the reference dataset uploaded on the Dataset step of the GUI). This default
+only reaches metrics that declare `MetricMeta(requires_reference=True)`. Such
+a metric checks the field in its config's `validate()` with
+`metis.utils.reference_loader.has_reference`, which accepts `None` while a
+dataset-level reference is available.
 
 ### The score range
 
@@ -373,6 +392,36 @@ in `_NATIVE_LIB_CHECKS` in `gui/core/metric_catalog.py`. The catalog will
 mark the metric as unavailable when the library is missing, the GUI will
 disable its checkbox with a warning, the per-dimension/global "Select all"
 buttons will skip it, and `get_compute_blockers` will refuse to run it.
+
+### Unit tests
+
+Every metric should come with unit tests, small checks that run the metric on
+a tiny table and compare the result with a value worked out by hand. They
+show that the metric computes what it claims, and they catch it when a later
+change breaks the metric.
+
+Install the test dependencies and run the suite from the project root:
+
+```
+pip install -r requirements-dev.txt
+python -m pytest tests
+```
+
+To test a new metric, add a file
+`tests/metric/{dimension}/test_{MetricName}.py`. Use
+[tests/metric/completeness/test_completeness_nullRatio.py](tests/metric/completeness/test_completeness_nullRatio.py)
+as the template. A metric's tests should cover at least:
+
+- the score on a table where the expected value is known
+- every config option that changes the result or its granularity
+- the best and the worst case, so the 0 to 1 range is exercised
+- an invalid config, which must raise a clear error
+- that the input DataFrame is not modified
+
+Some checks run on every registered metric automatically and need no work
+from the metric author. `tests/test_metric_meta_conformance.py` verifies that
+the metric is registered, declares a `MetricMeta` and follows the naming and
+score conventions above.
 
 ## Output: creating a DQResult
 

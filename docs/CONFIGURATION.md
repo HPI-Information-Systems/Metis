@@ -62,14 +62,17 @@ config file's own location.
 
 ### Reference datasets
 
-When `reference_file_name` is set, the orchestrator still loads that file
-with the same parsing options as the primary file, but it no longer passes
-that DataFrame to any metric automatically. Setting `reference_file_name`
-alone does not feed a metric that needs reference data.
+When `reference_file_name` is set, the orchestrator loads that file with the
+same parsing options as the primary file and uses it as the default
+reference of the dataset. Every metric that requires reference data
+(`correctness_heinrich`, `accuracy_semanticReference`) is assessed against
+it, unless the metric's own config says otherwise.
 
-Reference-based metrics such as `correctness_heinrich` and
-`accuracy_semanticReference` instead declare their own `reference` field on
-their config class, resolved independently of this loader-level setting.
+Each of these metrics also declares a `reference` field on its config class.
+A value set there overrides the dataset-level reference for that metric
+only. Metrics for which a reference is optional
+(`accuracy_syntacticDomain`, `validity_outOfVocabulary`) never use the
+dataset-level reference and only read their own `reference` field.
 See [How to implement new metrics](../README.md#how-to-implement-new-metrics)
 in the README for the reference field contract.
 

@@ -58,6 +58,9 @@ metric is selected and no blockers remain.
   experiment tag, auto-generated as `{dataset_name}_{timestamp}`.
 - A preview shows the first 50 rows together with column types and basic
   statistics.
+- Optionally upload a reference dataset. It is the default reference for
+  every metric that requires one, such as `correctness_heinrich` and
+  `accuracy_semanticReference`.
 - The four most recent runs are listed with quick-open buttons that jump
   straight to their results.
 
@@ -83,9 +86,10 @@ metric is selected and no blockers remain.
   - a reference editor (`reference_editor`) for any config field declared as
     a reference source. It is a CSV uploader nested inside the form editor,
     used by reference-based metrics such as `correctness_heinrich` and
-    `accuracy_semanticReference`. There is no dataset-level reference upload:
-    each metric that needs reference data gets its own uploader here, on the
-    Metrics step.
+    `accuracy_semanticReference`. A metric that requires a reference uses
+    the reference dataset from the Dataset step by default. Uploading a file
+    here overrides it for that metric only, and a button switches back to
+    the reference dataset from the Dataset step.
 - Select all and deselect buttons exist per dimension. The page lists
   blockers (missing required configs, missing reference dataset) before
   letting you continue.
