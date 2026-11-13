@@ -60,6 +60,19 @@ The data root is defined in `metis/globals.py` (`data_root = "data"`), so
 `"file_name": "adult.csv"` resolves to `data/adult.csv` regardless of the
 config file's own location.
 
+### Datasets that cannot be assessed
+
+`DQOrchestrator.load` declines a dataset it cannot use and says why. A file
+that is missing, empty, not in the configured `encoding` or not valid CSV
+raises `DatasetLoadError`. A file that loads but has no rows or no columns
+raises `EmptyDatasetError`. `DQOrchestrator.assess` repeats the emptiness
+check before the first metric runs. Both errors live in
+`metis.utils.dataset_checks` and derive from `DatasetError`, a `ValueError`.
+
+The check is made once for the whole run and not inside the metrics, so
+every metric declines an empty dataset the same way and a new metric needs
+no code for it.
+
 ### Reference datasets
 
 When `reference_file_name` is set, the orchestrator loads that file with the

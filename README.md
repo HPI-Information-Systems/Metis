@@ -421,7 +421,9 @@ as the template. A metric's tests should cover at least:
 Some checks run on every registered metric automatically and need no work
 from the metric author. `tests/test_metric_meta_conformance.py` verifies that
 the metric is registered, declares a `MetricMeta` and follows the naming and
-score conventions above.
+score conventions above. `tests/test_empty_dataset.py` verifies that an empty
+dataset is declined before the metric runs. The orchestrator and the GUI do
+that for every metric, so `assess` does not have to handle empty input.
 
 ## Output: creating a DQResult
 
