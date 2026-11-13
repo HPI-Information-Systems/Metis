@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
+from core.metric_catalog import get_catalog
 from core.result_store import get_active_store
 from ui.state import AppState
 
@@ -15,6 +16,11 @@ MAX_RECENT_RUNS_VISIBLE: int = 4
 RECENT_RUN_CARD_BORDER: str = "#e0e0e0"
 RECENT_RUN_CARD_BG: str = "#fafafa"
 RECENT_RUN_CARD_HEIGHT_PX: int = 90
+
+# Session keys of the global reference upload. The "_ref_cache__" prefix puts
+# them in the sweep AppState.reset() runs over all reference upload state.
+_REFERENCE_STAMP_KEY: str = "_ref_cache__global__stamp"
+_REFERENCE_VERSION_KEY: str = "_ref_cache__global__version"
 
 
 def render(demo_mode: bool = False, demo_df: pd.DataFrame | None = None) -> None:
@@ -58,6 +64,7 @@ def _render_upload_section() -> None:
         # immediately. Nav-button availability reads df from session_state on the same rerun.
         _render_metadata_form()
         _render_preview_fragment(df)
+        _render_reference_upload()
     else:
         st.info("Upload a CSV file to get started.")
 
@@ -88,6 +95,75 @@ def _load_csv(uploaded) -> None:
 
     if not AppState.get_experiment_tag():
         AppState.set_experiment_tag(f"{dataset_name}_{datetime.now():%Y%m%d_%H%M}")
+
+
+def _render_reference_upload() -> None:
+    """
+    Render the optional upload of a global reference dataset.
+
+    The reference is the default for every metric that requires one. A metric
+    can override it with its own upload on the Metrics step.
+
+    :return: None.
+    """
+    with st.expander(
+        "Reference dataset (optional)",
+        expanded=AppState.get_reference_df() is not None,
+    ):
+        users = ", ".join(
+            f"**{info.dimension}: {info.label}**"
+            for info in get_catalog().values()
+            if info.requires_reference
+        )
+        st.write(
+            f"Some metrics ({users}) compare your data against a clean "
+            "reference. Upload it here once and each of them uses it. You can "
+            "still give a single metric its own reference on the Metrics step."
+        )
+
+        # A file uploader cannot be emptied from code, so removing the
+        # reference moves the uploader to a fresh key instead.
+        version = st.session_state.get(_REFERENCE_VERSION_KEY, 0)
+        uploaded = st.file_uploader(
+            "Choose a reference CSV file",
+            type=["csv"],
+            key=f"reference_uploader_{version}",
+        )
+        if uploaded is not None:
+            stamp = f"{uploaded.name}::{uploaded.size}"
+            if st.session_state.get(_REFERENCE_STAMP_KEY) != stamp:
+                raw = uploaded.read()
+                try:
+                    reference = pd.read_csv(io.BytesIO(raw), encoding="utf-8")
+                except UnicodeDecodeError:
+                    reference = pd.read_csv(io.BytesIO(raw), encoding="latin-1")
+                AppState.set_reference_df(reference)
+                st.session_state[_REFERENCE_STAMP_KEY] = stamp
+
+        reference = AppState.get_reference_df()
+        if reference is not None:
+            st.success(
+                f"Reference loaded: {len(reference):,} rows × "
+                f"{len(reference.columns)} columns"
+            )
+            st.button(
+                "Remove reference",
+                key="reference_remove",
+                on_click=_remove_reference,
+            )
+
+
+def _remove_reference() -> None:
+    """
+    Drop the global reference dataset and empty its uploader.
+
+    :return: None.
+    """
+    AppState.set_reference_df(None)
+    st.session_state.pop(_REFERENCE_STAMP_KEY, None)
+    st.session_state[_REFERENCE_VERSION_KEY] = (
+        st.session_state.get(_REFERENCE_VERSION_KEY, 0) + 1
+    )
 
 
 def _render_metadata_form() -> None:

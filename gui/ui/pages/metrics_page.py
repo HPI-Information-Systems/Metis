@@ -16,6 +16,7 @@ from core.metric_catalog import (
 from demo.demo_metric_configs import DEMO_CONFIG_DISPLAY, DEMO_METRICS
 from metis.metric.metric import Metric
 from metis.utils.dq_granularity import DQGranularity
+from metis.utils.reference_loader import default_reference
 from ui.components.config_editors import (
     callable_editor,
     simple_editor,
@@ -729,11 +730,16 @@ def _render_inline_config(info: MetricInfo, df) -> None:
             and any(f.name == "aggregation_axis" for f in info.config_fields)
         ):
             field_defaults["aggregation_axis"] = "index"
-        cfg = simple_editor.render(
-            info.config_class,
-            key_prefix=info.name,
-            field_defaults=field_defaults or None,
-        )
+        # The global reference from the Dataset step stands in for a metric
+        # that requires a reference and has no upload of its own, so the
+        # editor shows it and the config validates without one.
+        global_reference = AppState.get_reference_df() if info.requires_reference else None
+        with default_reference(global_reference):
+            cfg = simple_editor.render(
+                info.config_class,
+                key_prefix=info.name,
+                field_defaults=field_defaults or None,
+            )
         if cfg is not None:
             AppState.set_metric_config(info.name, cfg)
 

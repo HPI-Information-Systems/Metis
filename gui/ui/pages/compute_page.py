@@ -72,12 +72,13 @@ def _validate(selected: list[str]) -> list[str]:
         info = catalog.get(name)
         if info is None:
             continue
-        if info.requires_reference:
+        if info.requires_reference and AppState.get_reference_df() is None:
             cfg = AppState.get_metric_configs().get(name)
             if cfg is None or getattr(cfg, "reference", None) is None:
                 errors.append(
                     f"**{name}** requires reference data. "
-                    "Upload it in the metric's config on the Metrics step."
+                    "Upload a reference dataset on the Dataset step, or one "
+                    "for this metric in its config on the Metrics step."
                 )
         if info.config_required:
             cfg = AppState.get_metric_configs().get(name)
@@ -154,6 +155,7 @@ def _run(
     results, errors = run_all(
         selected, df, configs, on_progress,
         max_rows_by_metric=max_rows or None,
+        global_reference=AppState.get_reference_df(),
     )
 
     progress_bar.progress(1.0)
