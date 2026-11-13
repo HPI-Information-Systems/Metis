@@ -5,10 +5,17 @@ DataFrame. A reference field therefore stores a *source*, and this module
 turns that source into the shape the metric actually wants. File paths route
 through the project's :class:`~metis.loader.csv_loader.CSVLoader` so a
 reference honours the same parsing options as the primary dataset.
+
+A dataset can also carry a *default* reference, declared once for the whole
+dataset rather than per metric. While :func:`default_reference` is active, a
+reference field left at ``None`` resolves to that default, and a metric's own
+``reference`` still wins when it is set.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Any, Union
 
 import pandas as pd
@@ -20,6 +27,51 @@ ReferenceSource = Union[pd.DataFrame, str, Mapping, list, set, None]
 
 _VOCABULARY_COLUMN = "value"
 
+_default_reference: ContextVar[pd.DataFrame | None] = ContextVar(
+    "metis_default_reference", default=None
+)
+
+
+@contextmanager
+def default_reference(frame: pd.DataFrame | None) -> Iterator[None]:
+    """
+    Make ``frame`` the reference for configs that do not set their own.
+
+    The orchestrator and the GUI wrap a metric run in this so that a
+    dataset-level reference reaches the metrics that require one. Passing
+    ``None`` leaves no default in place.
+
+    :param frame: The dataset-level reference, or ``None``.
+    :return: A context manager. The default is cleared again on exit.
+    """
+    token = _default_reference.set(frame)
+    try:
+        yield
+    finally:
+        _default_reference.reset(token)
+
+
+def get_default_reference() -> pd.DataFrame | None:
+    """
+    Return the dataset-level default reference, if one is active.
+
+    :return: The active default reference, or ``None``.
+    """
+    return _default_reference.get()
+
+
+def has_reference(source: ReferenceSource) -> bool:
+    """
+    Return whether a reference field resolves to any reference data.
+
+    Config classes use this in ``validate`` so that a field left at ``None``
+    is accepted while a dataset-level default is active.
+
+    :param source: The configured reference source.
+    :return: ``True`` if the source is set or a default reference is active.
+    """
+    return source is not None or get_default_reference() is not None
+
 
 def load_reference_frame(source: ReferenceSource) -> pd.DataFrame | None:
     """
@@ -27,7 +79,8 @@ def load_reference_frame(source: ReferenceSource) -> pd.DataFrame | None:
 
     Accepted sources:
 
-    - ``None``: no reference, returns ``None``.
+    - ``None``: the dataset-level default if :func:`default_reference` is
+      active, otherwise ``None``.
     - ``pd.DataFrame``: returned unchanged. Used by the GUI and notebooks.
     - ``str``: a CSV path, loaded with default parsing options.
     - ``Mapping``: a :class:`DataConfig` payload, so callers can set
@@ -42,7 +95,7 @@ def load_reference_frame(source: ReferenceSource) -> pd.DataFrame | None:
     :return: The reference DataFrame, or ``None``.
     """
     if source is None:
-        return None
+        return get_default_reference()
 
     if isinstance(source, pd.DataFrame):
         return source
@@ -72,7 +125,9 @@ def load_reference_vocabulary(source: ReferenceSource) -> set[str] | None:
     Resolve a reference source into a lower-cased vocabulary.
 
     Lists and sets are used directly. Every other source is resolved through
-    :func:`load_reference_frame` and must yield exactly one column.
+    :func:`load_reference_frame` and must yield exactly one column. A
+    dataset-level default reference is a table, not a vocabulary, so it is
+    never used here.
 
     :param source: The configured reference source.
     :raises ValueError: If the resolved frame does not have exactly one column.
@@ -112,25 +167,41 @@ def describe_reference_source(source: ReferenceSource) -> Any:
 
     Metric configs record themselves into ``DQResult.configJson``, which must
     be serialisable. A live DataFrame is summarised by shape rather than
-    embedded.
+    embedded. A source left at ``None`` echoes the dataset-level default when
+    one is active, so the result records which reference was actually used.
 
     :param source: The configured reference source.
     :return: A JSON-safe representation of the source.
     """
-    if source is None or isinstance(source, str):
+    if source is None:
+        default = get_default_reference()
+        if default is None:
+            return None
+        return {"dataset_default": _describe_frame(default)}
+    if isinstance(source, str):
         return source
     if isinstance(source, pd.DataFrame):
-        return {
-            "dataframe": {
-                "rows": int(len(source)),
-                "columns": [str(c) for c in source.columns],
-            }
-        }
+        return _describe_frame(source)
     if isinstance(source, Mapping):
         return dict(source)
     if isinstance(source, (list, set, tuple)):
         return list(source)
     return str(source)
+
+
+def _describe_frame(frame: pd.DataFrame) -> dict:
+    """
+    Summarise a DataFrame by shape so it can be stored as JSON.
+
+    :param frame: The DataFrame to summarise.
+    :return: A JSON-safe summary of the frame.
+    """
+    return {
+        "dataframe": {
+            "rows": int(len(frame)),
+            "columns": [str(c) for c in frame.columns],
+        }
+    }
 
 
 def _load_csv(payload: Mapping) -> pd.DataFrame:

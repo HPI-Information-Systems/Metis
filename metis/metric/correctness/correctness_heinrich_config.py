@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 
 from metis.metric.config import MetricConfig
-from metis.utils.reference_loader import ReferenceSource, describe_reference_source
+from metis.utils.reference_loader import (
+    ReferenceSource,
+    describe_reference_source,
+    has_reference,
+)
 
 
 @dataclass
@@ -10,7 +14,9 @@ class correctness_heinrich_config(MetricConfig):
 
     :param reference: The clean reference data every cell is compared
         against. Must resolve to a DataFrame of the same shape as the assessed
-        data. Accepts a DataFrame, a CSV path, or a DataConfig mapping.
+        data. Accepts a DataFrame, a CSV path, or a DataConfig mapping. When
+        left at ``None``, the dataset-level reference (``reference_file_name``
+        in the data loader config) is used.
     """
 
     reference: ReferenceSource = None
@@ -22,8 +28,9 @@ class correctness_heinrich_config(MetricConfig):
         }
 
     def validate(self):
-        if self.reference is None:
+        if not has_reference(self.reference):
             raise ValueError(
                 "correctness_heinrich requires a reference. Set the 'reference' "
-                "field to a DataFrame, a CSV path, or a DataConfig mapping."
+                "field to a DataFrame, a CSV path, or a DataConfig mapping, or "
+                "declare 'reference_file_name' in the data loader config."
             )
