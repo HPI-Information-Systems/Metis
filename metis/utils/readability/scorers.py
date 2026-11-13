@@ -21,6 +21,43 @@ except Exception:  # pragma: no cover
     wn = None
 
 
+class WordNetUnavailableError(RuntimeError):
+    """Raised when a readability metric needs WordNet and cannot load it."""
+
+
+def require_wordnet() -> None:
+    """
+    Check that the WordNet corpus can be queried.
+
+    Without WordNet every token would count as unknown and the readability
+    metrics would report a score of 0 that says nothing about the data, so
+    they refuse to run instead.
+
+    :raises WordNetUnavailableError: If NLTK or its WordNet corpus is missing
+        or cannot be loaded. The message states how to install it.
+    :return: None.
+    """
+    if wn is None:
+        raise WordNetUnavailableError(
+            "The readability metrics need the NLTK package, which is not "
+            "installed. Install the project requirements with "
+            "'pip install -r requirements.txt' and run the metric again."
+        )
+    try:
+        wn.synsets("test")
+    except LookupError as e:
+        raise WordNetUnavailableError(
+            "The readability metrics need the WordNet corpus, which is not "
+            "installed. Download it once with "
+            "'python -m nltk.downloader wordnet' and run the metric again."
+        ) from e
+    except Exception as e:
+        raise WordNetUnavailableError(
+            f"The WordNet corpus could not be loaded: {e}. Download it again "
+            "with 'python -m nltk.downloader wordnet' and run the metric again."
+        ) from e
+
+
 # ----------------------------
 # Utilities
 # ----------------------------
@@ -66,18 +103,10 @@ def _is_nan(x: Any) -> bool:
 class WordNetHelper:
     def __init__(self, abbreviations: Optional[Dict[str, str]] = None) -> None:
         self.abbreviations = abbreviations or {}
-        self.wordnet_available = wn is not None and self._check_wordnet()
+        require_wordnet()
         self._synsets_cache: Dict[str, List[Any]] = {}
         self._lemmas_cache: Dict[str, Set[str]] = {}
         self._hypernyms_cache: Dict[str, Set[str]] = {}
-
-    @staticmethod
-    def _check_wordnet() -> bool:
-        try:
-            _ = wn.synsets("test")  # type: ignore[attr-defined]
-            return True
-        except Exception:
-            return False
 
     def synsets(self, t: str) -> List[Any]:
         t = str(t).strip().lower()
@@ -85,9 +114,6 @@ class WordNetHelper:
             return []
         if t in self._synsets_cache:
             return self._synsets_cache[t]
-        if not self.wordnet_available:
-            self._synsets_cache[t] = []
-            return []
         try:
             ss = wn.synsets(t)  # type: ignore[attr-defined]
         except Exception:
