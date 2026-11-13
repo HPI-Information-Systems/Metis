@@ -12,6 +12,7 @@ from metis.metric.config import MetricConfig
 from metis.profiling.data_profile_manager import DataProfileManager
 from metis.profiling.importers import get_importer
 from metis.utils.data_config import DataConfig
+from metis.utils.dataset_checks import ensure_not_empty
 from metis.utils.garbage_collection import gc_paused
 from metis.utils.logging import logger
 from metis.utils.reference_loader import default_reference
@@ -60,6 +61,7 @@ class DQOrchestrator:
                 if config.loader == "CSV":
                     loader = CSVLoader()
                     dataframe = loader.load(config)
+                    ensure_not_empty(dataframe, f"Dataset '{config.name}'")
                     self.dataframes[config.name] = dataframe
                     self.data_paths[config.name] = config_path
 
@@ -67,6 +69,10 @@ class DQOrchestrator:
                         reference_config = DataConfig(config_data)
                         reference_config.file_name = config.reference_file_name
                         reference_dataframe = loader.load(reference_config)
+                        ensure_not_empty(
+                            reference_dataframe,
+                            f"The reference of dataset '{config.name}'",
+                        )
                         self.reference_dataframes[config.name] = reference_dataframe
 
                     # Import pre-computed data profiles
@@ -83,6 +89,11 @@ class DQOrchestrator:
         self, metrics: List[str], metric_configs: List[str | MetricConfig | None]
     ) -> List[DQResult]:
         results: List[DQResult] = []
+
+        # Decline an empty dataset here, once and before any metric runs, so
+        # every metric answers it the same way without handling it itself.
+        for df_name, df in self.dataframes.items():
+            ensure_not_empty(df, f"Dataset '{df_name}'")
 
         for metric, metric_config in zip(metrics, metric_configs):
             metric_class: Type[Metric] | None = Metric.registry.get(metric)

@@ -12,6 +12,7 @@ import pandas as pd
 
 import metis.metric  # noqa: F401 — populates Metric.registry on import
 from metis.metric.metric import Metric
+from metis.utils.dataset_checks import ensure_not_empty
 from metis.utils.garbage_collection import gc_paused
 from metis.utils.reference_loader import default_reference
 from metis.utils.result import DQResult
@@ -59,6 +60,9 @@ def run_all(
         for i, name in enumerate(metric_names):
             on_progress(i, len(metric_names), name)
             try:
+                # Checked before the config so an empty dataset is reported
+                # as such, whatever state the metric's config is in.
+                ensure_not_empty(data)
                 metric_config = _prepare_config(name, configs.get(name), tmp_files)
                 metric_data = data
                 if max_rows_by_metric and name in max_rows_by_metric:

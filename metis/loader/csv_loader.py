@@ -2,6 +2,7 @@ import pandas as pd
 
 from metis.loader.loader import DataLoader
 from metis.utils.data_config import DataConfig
+from metis.utils.dataset_checks import DatasetLoadError
 
 
 class CSVLoader(DataLoader):
@@ -10,17 +11,48 @@ class CSVLoader(DataLoader):
         Load data from a CSV file specified by the config.
 
         :param config: DataConfig object containing the CSV parsing details.
+        :raises DatasetLoadError: If the file is missing, empty, not in the
+            configured encoding or not a valid CSV file. The message names
+            the file and the config field to check.
         :return: DataFrame containing the loaded data.
         """
-
-        return pd.read_csv(
-            config.file_name,
-            delimiter=config.delimiter,
-            encoding=config.encoding,
-            header=config.header,
-            nrows=config.nrows,
-            usecols=config.usecols,
-            parse_dates=config.parse_dates,
-            decimal=config.decimals,
-            thousands=config.thousands
-        )
+        try:
+            return pd.read_csv(
+                config.file_name,
+                delimiter=config.delimiter,
+                encoding=config.encoding,
+                header=config.header,
+                nrows=config.nrows,
+                usecols=config.usecols,
+                parse_dates=config.parse_dates,
+                decimal=config.decimals,
+                thousands=config.thousands
+            )
+        except FileNotFoundError as e:
+            raise DatasetLoadError(
+                f"Dataset '{config.name}' could not be loaded: the file "
+                f"'{config.file_name}' does not exist. Check 'file_name' in "
+                "the data config. It is resolved relative to the data directory."
+            ) from e
+        except pd.errors.EmptyDataError as e:
+            raise DatasetLoadError(
+                f"Dataset '{config.name}' could not be loaded: the file "
+                f"'{config.file_name}' is empty."
+            ) from e
+        except UnicodeDecodeError as e:
+            raise DatasetLoadError(
+                f"Dataset '{config.name}' could not be loaded: the file "
+                f"'{config.file_name}' is not valid {config.encoding}. Set "
+                "'encoding' in the data config to the encoding of the file."
+            ) from e
+        except pd.errors.ParserError as e:
+            raise DatasetLoadError(
+                f"Dataset '{config.name}' could not be loaded: the file "
+                f"'{config.file_name}' is not a valid CSV file ({e}). Check "
+                "'delimiter' in the data config and the rows of the file."
+            ) from e
+        except ValueError as e:
+            raise DatasetLoadError(
+                f"Dataset '{config.name}' could not be loaded from "
+                f"'{config.file_name}': {e}"
+            ) from e
