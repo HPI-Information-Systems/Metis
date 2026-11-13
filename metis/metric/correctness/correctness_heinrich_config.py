@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from metis.metric.config import MetricConfig
 from metis.utils.reference_loader import (
+    MissingReferenceError,
     ReferenceSource,
     describe_reference_source,
     has_reference,
@@ -29,7 +30,7 @@ class correctness_heinrich_config(MetricConfig):
 
     def validate(self):
         if not has_reference(self.reference):
-            raise ValueError(
+            raise MissingReferenceError(
                 "correctness_heinrich requires a reference. Set the 'reference' "
                 "field to a DataFrame, a CSV path, or a DataConfig mapping, or "
                 "declare 'reference_file_name' in the data loader config."

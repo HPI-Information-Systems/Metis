@@ -27,6 +27,11 @@ ReferenceSource = Union[pd.DataFrame, str, Mapping, list, set, None]
 
 _VOCABULARY_COLUMN = "value"
 
+
+class MissingReferenceError(ValueError):
+    """Raised when a metric that requires a reference has none to use."""
+
+
 _default_reference: ContextVar[pd.DataFrame | None] = ContextVar(
     "metis_default_reference", default=None
 )
