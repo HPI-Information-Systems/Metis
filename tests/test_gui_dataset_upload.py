@@ -74,3 +74,26 @@ def test_skipped_rows_are_kept_as_a_warning():
 
     assert AppState.get_df().shape == (1, 2)
     assert "1 row(s)" in st.session_state["_upload_warnings"][0]
+
+
+def test_a_second_upload_renames_the_dataset_shown_in_the_metadata_form():
+    dataset_page._load_csv(_Upload("first.csv", b"a\n1\n"))
+    # The metadata form's inputs exist once a dataset is on screen.
+    st.session_state["input_dataset_name"] = "first"
+    st.session_state["input_experiment_tag"] = AppState.get_experiment_tag()
+
+    dataset_page._load_csv(_Upload("second.csv", b"a\n1\n"))
+
+    assert AppState.get_dataset_name() == "second"
+    assert st.session_state["input_dataset_name"] == "second"
+    assert AppState.get_experiment_tag().startswith("second_")
+    assert st.session_state["input_experiment_tag"].startswith("second_")
+
+
+def test_a_second_upload_keeps_an_experiment_tag_the_user_typed():
+    dataset_page._load_csv(_Upload("first.csv", b"a\n1\n"))
+    AppState.set_experiment_tag("baseline")
+
+    dataset_page._load_csv(_Upload("second.csv", b"a\n1\n"))
+
+    assert AppState.get_experiment_tag() == "baseline"

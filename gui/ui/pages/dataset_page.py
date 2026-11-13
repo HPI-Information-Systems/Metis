@@ -29,6 +29,10 @@ _REFERENCE_ERROR_KEY: str = "_ref_cache__global__error"
 _UPLOAD_ERROR_KEY: str = "_upload_error"
 _UPLOAD_WARNINGS_KEY: str = "_upload_warnings"
 
+# The experiment tag generated for the last upload. A tag that still equals it
+# was not edited by the user and is regenerated for the next upload.
+_AUTO_TAG_KEY: str = "_auto_experiment_tag"
+
 
 def render(demo_mode: bool = False, demo_df: pd.DataFrame | None = None) -> None:
     """
@@ -123,9 +127,29 @@ def _load_csv(uploaded) -> None:
     dataset_name = uploaded.name.removesuffix(".csv")
     AppState.set_df(df)
     AppState.set_dataset_name(dataset_name)
+    _sync_metadata_input("input_dataset_name", dataset_name)
 
-    if not AppState.get_experiment_tag():
-        AppState.set_experiment_tag(f"{dataset_name}_{datetime.now():%Y%m%d_%H%M}")
+    tag = AppState.get_experiment_tag()
+    if not tag or tag == st.session_state.get(_AUTO_TAG_KEY):
+        tag = f"{dataset_name}_{datetime.now():%Y%m%d_%H%M}"
+        AppState.set_experiment_tag(tag)
+        st.session_state[_AUTO_TAG_KEY] = tag
+        _sync_metadata_input("input_experiment_tag", tag)
+
+
+def _sync_metadata_input(widget_key: str, value: str) -> None:
+    """
+    Point a run-metadata text input at a newly loaded dataset.
+
+    The inputs keep their own widget state. Left alone, an input that is
+    already on screen writes the previous file's name back over the new one.
+
+    :param widget_key: Session key of the text input.
+    :param value: The value the input should show.
+    :return: None.
+    """
+    if widget_key in st.session_state:
+        st.session_state[widget_key] = value
 
 
 def _render_reference_upload() -> None:

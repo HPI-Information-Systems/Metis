@@ -221,7 +221,7 @@ class AppState:
             "df", "reference_df", "dataset_name", "table_name",
             "experiment_tag", "selected_metrics", "metric_configs",
             "last_results", "last_errors", "run_requested",
-            "_upload_error", "_upload_warnings",
+            "_upload_error", "_upload_warnings", "_auto_experiment_tag",
         ):
             st.session_state.pop(key, None)
 
