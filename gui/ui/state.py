@@ -22,6 +22,10 @@ class AppState:
         st.session_state["df"] = df
 
     @staticmethod
+    def clear_df() -> None:
+        st.session_state.pop("df", None)
+
+    @staticmethod
     def get_reference_df() -> pd.DataFrame | None:
         """
         Return the global reference dataset uploaded on the Dataset step.
@@ -217,6 +221,7 @@ class AppState:
             "df", "reference_df", "dataset_name", "table_name",
             "experiment_tag", "selected_metrics", "metric_configs",
             "last_results", "last_errors", "run_requested",
+            "_upload_error", "_upload_warnings",
         ):
             st.session_state.pop(key, None)
 

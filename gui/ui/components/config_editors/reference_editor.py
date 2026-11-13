@@ -1,11 +1,11 @@
 """File-uploader editor for a metric config's reference field."""
 from __future__ import annotations
 
-import io
-
 import pandas as pd
 import streamlit as st
 
+from core.csv_upload import read_csv_upload
+from metis.utils.dataset_checks import DatasetError
 from metis.utils.reference_loader import get_default_reference
 
 
@@ -40,6 +40,7 @@ def render(field_name: str, default, key: str):
 
     cache_key = f"_ref_cache__{key}"
     version_key = f"{cache_key}__version"
+    error_key = f"{cache_key}__error"
 
     # A file uploader cannot be emptied from code. Bumping the version gives
     # it a fresh key instead, which is how a metric's own reference is
@@ -51,13 +52,22 @@ def render(field_name: str, default, key: str):
     if uploaded is not None:
         stamp = f"{uploaded.name}::{uploaded.size}"
         if st.session_state.get(f"{cache_key}__stamp") != stamp:
-            raw = uploaded.read()
-            try:
-                frame = pd.read_csv(io.BytesIO(raw), encoding="utf-8")
-            except UnicodeDecodeError:
-                frame = pd.read_csv(io.BytesIO(raw), encoding="latin-1")
-            st.session_state[cache_key] = frame
             st.session_state[f"{cache_key}__stamp"] = stamp
+            try:
+                upload = read_csv_upload(uploaded.read(), uploaded.name)
+            except DatasetError as e:
+                # A declined file must not leave an earlier reference in
+                # place, or the metric would silently be scored against it.
+                st.session_state.pop(cache_key, None)
+                st.session_state[error_key] = str(e)
+            else:
+                st.session_state[cache_key] = upload.frame
+                st.session_state.pop(error_key, None)
+    elif st.session_state.pop(error_key, None) is not None:
+        st.session_state.pop(f"{cache_key}__stamp", None)
+
+    if st.session_state.get(error_key):
+        st.error(st.session_state[error_key])
 
     frame = st.session_state.get(cache_key)
     if frame is None and isinstance(default, pd.DataFrame):

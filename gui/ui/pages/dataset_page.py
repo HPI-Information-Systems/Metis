@@ -1,14 +1,15 @@
 """Step 1: Upload a CSV dataset and set run metadata."""
 from __future__ import annotations
 
-import io
 from datetime import datetime
 
 import pandas as pd
 import streamlit as st
 
+from core.csv_upload import CSV_FORMAT_EXPECTATION, read_csv_upload
 from core.metric_catalog import get_catalog
 from core.result_store import get_active_store
+from metis.utils.dataset_checks import DatasetError
 from ui.state import AppState
 
 LARGE_DATASET_ROW_THRESHOLD: int = 100_000
@@ -21,6 +22,12 @@ RECENT_RUN_CARD_HEIGHT_PX: int = 90
 # them in the sweep AppState.reset() runs over all reference upload state.
 _REFERENCE_STAMP_KEY: str = "_ref_cache__global__stamp"
 _REFERENCE_VERSION_KEY: str = "_ref_cache__global__version"
+_REFERENCE_ERROR_KEY: str = "_ref_cache__global__error"
+
+# Outcome of the last dataset upload. A file is parsed once, on the rerun it
+# arrives, so its messages are kept here to stay visible on later reruns.
+_UPLOAD_ERROR_KEY: str = "_upload_error"
+_UPLOAD_WARNINGS_KEY: str = "_upload_warnings"
 
 
 def render(demo_mode: bool = False, demo_df: pd.DataFrame | None = None) -> None:
@@ -41,6 +48,7 @@ def render(demo_mode: bool = False, demo_df: pd.DataFrame | None = None) -> None
 def _render_upload_section() -> None:
     st.header("Dataset")
     st.write("Upload a CSV file to assess its data quality.")
+    st.markdown(CSV_FORMAT_EXPECTATION)
 
     uploaded = st.file_uploader(
         "Choose a CSV file",
@@ -53,6 +61,15 @@ def _render_upload_section() -> None:
         if st.session_state.get("_loaded_file_id") != file_id:
             _load_csv(uploaded)
             st.session_state["_loaded_file_id"] = file_id
+    else:
+        # The declined file was taken out of the uploader. Forgetting it lets
+        # the same file be uploaded and checked again.
+        if st.session_state.pop(_UPLOAD_ERROR_KEY, None) is not None:
+            st.session_state.pop("_loaded_file_id", None)
+
+    error = st.session_state.get(_UPLOAD_ERROR_KEY)
+    if error:
+        st.error(error)
 
     df = AppState.get_df()
     if df is not None:
@@ -60,34 +77,48 @@ def _render_upload_section() -> None:
             f"Dataset loaded: **{AppState.get_dataset_name()}** — "
             f"{len(df):,} rows × {len(df.columns)} columns"
         )
+        for warning in st.session_state.get(_UPLOAD_WARNINGS_KEY, []):
+            st.warning(warning)
         # Metadata form runs in main scope so its values affect session_state
         # immediately. Nav-button availability reads df from session_state on the same rerun.
         _render_metadata_form()
         _render_preview_fragment(df)
         _render_reference_upload()
-    else:
+    elif not error:
         st.info("Upload a CSV file to get started.")
 
 
 def _load_csv(uploaded) -> None:
     """
-    Parse an uploaded CSV file with UTF-8 then latin-1 fallback, and seed app state.
+    Parse an uploaded CSV file and seed app state, or decline the file.
+
+    A file that is empty or cannot be read as CSV is declined: the reason is
+    kept for display and no dataset is loaded, so the wizard cannot continue
+    with it.
 
     :param uploaded: A Streamlit ``UploadedFile``.
     :return: None.
     """
-    raw = uploaded.read()
-    try:
-        df = pd.read_csv(io.BytesIO(raw), encoding="utf-8", on_bad_lines="skip", low_memory=False)
-    except UnicodeDecodeError:
-        st.warning("UTF-8 decoding failed. Retrying with latin-1.")
-        df = pd.read_csv(io.BytesIO(raw), encoding="latin-1", on_bad_lines="skip", low_memory=False)
+    st.session_state.pop(_UPLOAD_ERROR_KEY, None)
+    st.session_state.pop(_UPLOAD_WARNINGS_KEY, None)
 
+    try:
+        upload = read_csv_upload(uploaded.read(), uploaded.name)
+    except DatasetError as e:
+        # Drop a dataset loaded earlier too, so the page never shows the
+        # declined file next to another file's data.
+        AppState.clear_df()
+        st.session_state[_UPLOAD_ERROR_KEY] = str(e)
+        return
+
+    df = upload.frame
+    notes = list(upload.warnings)
     if len(df) > LARGE_DATASET_ROW_THRESHOLD:
-        st.warning(
+        notes.append(
             f"Large file: {len(df):,} rows. Metrics may be slow. "
             "Consider using the max-rows cap in the Compute step."
         )
+    st.session_state[_UPLOAD_WARNINGS_KEY] = notes
 
     dataset_name = uploaded.name.removesuffix(".csv")
     AppState.set_df(df)
@@ -132,13 +163,20 @@ def _render_reference_upload() -> None:
         if uploaded is not None:
             stamp = f"{uploaded.name}::{uploaded.size}"
             if st.session_state.get(_REFERENCE_STAMP_KEY) != stamp:
-                raw = uploaded.read()
-                try:
-                    reference = pd.read_csv(io.BytesIO(raw), encoding="utf-8")
-                except UnicodeDecodeError:
-                    reference = pd.read_csv(io.BytesIO(raw), encoding="latin-1")
-                AppState.set_reference_df(reference)
                 st.session_state[_REFERENCE_STAMP_KEY] = stamp
+                try:
+                    upload = read_csv_upload(uploaded.read(), uploaded.name)
+                except DatasetError as e:
+                    AppState.set_reference_df(None)
+                    st.session_state[_REFERENCE_ERROR_KEY] = str(e)
+                else:
+                    AppState.set_reference_df(upload.frame)
+                    st.session_state.pop(_REFERENCE_ERROR_KEY, None)
+        elif st.session_state.pop(_REFERENCE_ERROR_KEY, None) is not None:
+            st.session_state.pop(_REFERENCE_STAMP_KEY, None)
+
+        if st.session_state.get(_REFERENCE_ERROR_KEY):
+            st.error(st.session_state[_REFERENCE_ERROR_KEY])
 
         reference = AppState.get_reference_df()
         if reference is not None:
@@ -161,6 +199,7 @@ def _remove_reference() -> None:
     """
     AppState.set_reference_df(None)
     st.session_state.pop(_REFERENCE_STAMP_KEY, None)
+    st.session_state.pop(_REFERENCE_ERROR_KEY, None)
     st.session_state[_REFERENCE_VERSION_KEY] = (
         st.session_state.get(_REFERENCE_VERSION_KEY, 0) + 1
     )
