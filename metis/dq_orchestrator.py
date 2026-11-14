@@ -68,12 +68,9 @@ class DQOrchestrator:
                     if config.reference_file_name:
                         reference_config = DataConfig(config_data)
                         reference_config.file_name = config.reference_file_name
-                        reference_dataframe = loader.load(reference_config)
-                        ensure_not_empty(
-                            reference_dataframe,
-                            f"The reference of dataset '{config.name}'",
+                        self.reference_dataframes[config.name] = loader.load(
+                            reference_config, file_field="reference_file_name"
                         )
-                        self.reference_dataframes[config.name] = reference_dataframe
 
                     # Import pre-computed data profiles
                     if config.data_profiles:

@@ -73,11 +73,15 @@ def test_a_latin1_file_is_read_with_a_warning():
     assert "Latin-1" in upload.warnings[0]
 
 
-@pytest.mark.parametrize("encoding", ["utf-8-sig", "utf-16"])
-def test_a_byte_order_mark_does_not_end_up_in_the_column_names(encoding):
-    upload = read_csv_upload("name,age\nAda,36\n".encode(encoding), "bom.csv")
+def test_a_utf8_byte_order_mark_does_not_end_up_in_the_column_names():
+    upload = read_csv_upload("name,age\nAda,36\n".encode("utf-8-sig"), "bom.csv")
     assert list(upload.frame.columns) == ["name", "age"]
     assert upload.warnings == []
+
+
+def test_a_utf16_file_is_declined():
+    with pytest.raises(DatasetLoadError, match="is not a text file"):
+        read_csv_upload("name,age\nAda,36\n".encode("utf-16"), "utf16.csv")
 
 
 def test_decline_messages_name_the_file():

@@ -20,6 +20,7 @@ from metis.utils.dataset_checks import (
     EmptyDatasetError,
     ensure_not_empty,
 )
+from metis.utils.reference_loader import load_reference_frame
 
 _GUI = pathlib.Path(__file__).parent.parent / "gui"
 if str(_GUI) not in sys.path:
@@ -139,7 +140,23 @@ def test_loading_with_a_column_the_file_lacks_is_declined(load):
         load(b"a,b\n1,2\n", usecols=["a", "missing"])
 
 
-def test_an_empty_reference_file_is_declined(load, tmp_path):
+def test_a_header_only_reference_file_does_not_block_loading(load, tmp_path):
     (tmp_path / "ref.csv").write_text("a,b\n", encoding="utf-8")
-    with pytest.raises(EmptyDatasetError, match="The reference of dataset 'Sample' is empty"):
+    orchestrator = load(b"a,b\n1,2\n", reference_file_name="ref.csv")
+    assert orchestrator.dataframes["Sample"].shape == (1, 2)
+
+
+def test_a_missing_reference_file_names_the_reference_field(load):
+    with pytest.raises(
+        DatasetLoadError, match="ref.csv' does not exist. Check 'reference_file_name'"
+    ):
         load(b"a,b\n1,2\n", reference_file_name="ref.csv")
+
+
+@pytest.mark.parametrize("source", ["ref.csv", {"file_name": "ref.csv"}], ids=["path", "mapping"])
+def test_a_missing_metric_reference_names_the_metric_config_field(source, tmp_path, monkeypatch):
+    monkeypatch.setattr(metis.globals, "data_root", str(tmp_path))
+    with pytest.raises(
+        DatasetLoadError, match="does not exist. Check 'reference' in the metric config"
+    ):
+        load_reference_frame(source)

@@ -217,4 +217,8 @@ def _load_csv(payload: Mapping) -> pd.DataFrame:
     :return: The loaded DataFrame.
     """
     config_dict = {"name": "reference", **dict(payload)}
-    return CSVLoader().load(DataConfig(config_dict))
+    return CSVLoader().load(
+        DataConfig(config_dict),
+        file_field="reference",
+        config_label="the metric config",
+    )

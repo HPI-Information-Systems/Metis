@@ -1,7 +1,6 @@
 """Read an uploaded CSV file, declining files that cannot be assessed."""
 from __future__ import annotations
 
-import codecs
 import io
 import re
 import warnings
@@ -24,7 +23,6 @@ CSV_FORMAT_EXPECTATION: str = (
 )
 
 _SKIPPED_LINE_RE: re.Pattern[str] = re.compile(r"Skipping line (\d+)")
-_UTF16_BOMS: tuple[bytes, ...] = (codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)
 # Control bytes that text files do not contain, apart from tab, line breaks,
 # form feed and the DOS end-of-file mark. Their presence means binary content.
 _BINARY_BYTE_RE: re.Pattern[bytes] = re.compile(rb"[\x00-\x08\x0e-\x19\x1b-\x1f]")
@@ -64,18 +62,14 @@ def read_csv_upload(raw: bytes, file_name: str) -> CsvUpload:
         raise EmptyDatasetError(f"**{file_name}** is empty. There is nothing to assess.")
 
     notes: list[str] = []
-    if raw.startswith(_UTF16_BOMS):
-        encoding = "utf-16"
-    elif _BINARY_BYTE_RE.search(raw):
+    if _BINARY_BYTE_RE.search(raw):
         raise DatasetLoadError(
             f"**{file_name}** is not a text file, so it cannot be read as CSV. "
             "Export the data as a comma-separated CSV file and upload that."
         )
-    else:
-        encoding = "utf-8"
 
     try:
-        frame, skipped = _parse(raw, encoding)
+        frame, skipped = _parse(raw, "utf-8")
     except UnicodeDecodeError:
         frame, skipped = _parse_or_decline(raw, "latin-1", file_name)
         notes.append(
