@@ -56,8 +56,7 @@ def render(field_name: str, default, key: str):
             try:
                 upload = read_csv_upload(uploaded.read(), uploaded.name)
             except DatasetError as e:
-                # A declined file must not leave an earlier reference in
-                # place, or the metric would silently be scored against it.
+                # A declined file must not leave an earlier reference in use.
                 st.session_state.pop(cache_key, None)
                 st.session_state[error_key] = str(e)
             else:

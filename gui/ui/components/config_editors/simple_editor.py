@@ -74,8 +74,7 @@ def render(
         cfg.validate()
         return cfg
     except MissingReferenceError:
-        # The library message talks about config fields and data loader
-        # configs, which a GUI user never sees. Say where to upload instead.
+        # The library message names fields a GUI user never sees.
         st.warning(MISSING_REFERENCE_MESSAGE)
         return None
     except (TypeError, ValueError) as e:

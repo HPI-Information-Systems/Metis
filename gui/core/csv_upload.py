@@ -10,7 +10,6 @@ import pandas as pd
 
 from metis.utils.dataset_checks import DatasetLoadError, EmptyDatasetError
 
-# What the GUI expects of an uploaded file. Shown next to every uploader.
 CSV_FORMAT_EXPECTATION: str = (
     "**Expected format**\n"
     "- Values are separated by commas (`,`).\n"
@@ -23,8 +22,7 @@ CSV_FORMAT_EXPECTATION: str = (
 )
 
 _SKIPPED_LINE_RE: re.Pattern[str] = re.compile(r"Skipping line (\d+)")
-# Control bytes that text files do not contain, apart from tab, line breaks,
-# form feed and the DOS end-of-file mark. Their presence means binary content.
+# Control bytes text files lack (tab, line breaks, form feed, DOS EOF excepted).
 _BINARY_BYTE_RE: re.Pattern[bytes] = re.compile(rb"[\x00-\x08\x0e-\x19\x1b-\x1f]")
 _OTHER_DELIMITERS: dict[str, str] = {";": "semicolons", "\t": "tabs", "|": "pipes"}
 _MAX_SKIPPED_LINES_LISTED: int = 5

@@ -60,8 +60,7 @@ def run_all(
         for i, name in enumerate(metric_names):
             on_progress(i, len(metric_names), name)
             try:
-                # Checked before the config so an empty dataset is reported
-                # as such, whatever state the metric's config is in.
+                # Before the config, so an empty dataset is reported as such.
                 ensure_not_empty(data)
                 metric_config = _prepare_config(name, configs.get(name), tmp_files)
                 metric_data = data

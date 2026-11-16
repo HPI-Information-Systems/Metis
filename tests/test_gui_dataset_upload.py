@@ -78,7 +78,6 @@ def test_skipped_rows_are_kept_as_a_warning():
 
 def test_a_second_upload_renames_the_dataset_shown_in_the_metadata_form():
     dataset_page._load_csv(_Upload("first.csv", b"a\n1\n"))
-    # The metadata form's inputs exist once a dataset is on screen.
     st.session_state["input_dataset_name"] = "first"
     st.session_state["input_experiment_tag"] = AppState.get_experiment_tag()
 

@@ -87,8 +87,7 @@ class DQOrchestrator:
     ) -> List[DQResult]:
         results: List[DQResult] = []
 
-        # Decline an empty dataset here, once and before any metric runs, so
-        # every metric answers it the same way without handling it itself.
+        # Once, before any metric runs.
         for df_name, df in self.dataframes.items():
             ensure_not_empty(df, f"Dataset '{df_name}'")
 

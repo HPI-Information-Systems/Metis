@@ -77,6 +77,5 @@ def test_reference_survives_config_serialisation():
     "config_class", [accuracy_semanticReference_config, correctness_heinrich_config]
 )
 def test_a_missing_required_reference_has_its_own_error_type(config_class):
-    # The GUI catches this type to tell the user where to upload a reference.
     with pytest.raises(MissingReferenceError):
         config_class().validate()

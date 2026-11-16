@@ -24,13 +24,11 @@ _REFERENCE_STAMP_KEY: str = "_ref_cache__global__stamp"
 _REFERENCE_VERSION_KEY: str = "_ref_cache__global__version"
 _REFERENCE_ERROR_KEY: str = "_ref_cache__global__error"
 
-# Outcome of the last dataset upload. A file is parsed once, on the rerun it
-# arrives, so its messages are kept here to stay visible on later reruns.
+# A file is parsed once, so its messages are kept to survive later reruns.
 _UPLOAD_ERROR_KEY: str = "_upload_error"
 _UPLOAD_WARNINGS_KEY: str = "_upload_warnings"
 
-# The experiment tag generated for the last upload. A tag that still equals it
-# was not edited by the user and is regenerated for the next upload.
+# A tag still equal to this was not edited by the user.
 _AUTO_TAG_KEY: str = "_auto_experiment_tag"
 
 
@@ -66,8 +64,7 @@ def _render_upload_section() -> None:
             _load_csv(uploaded)
             st.session_state["_loaded_file_id"] = file_id
     else:
-        # The declined file was taken out of the uploader. Forgetting it lets
-        # the same file be uploaded and checked again.
+        # Forget the declined file so it can be uploaded again.
         if st.session_state.pop(_UPLOAD_ERROR_KEY, None) is not None:
             st.session_state.pop("_loaded_file_id", None)
 
@@ -109,8 +106,7 @@ def _load_csv(uploaded) -> None:
     try:
         upload = read_csv_upload(uploaded.read(), uploaded.name)
     except DatasetError as e:
-        # Drop a dataset loaded earlier too, so the page never shows the
-        # declined file next to another file's data.
+        # Also drop an earlier dataset, so it is not shown next to the error.
         AppState.clear_df()
         st.session_state[_UPLOAD_ERROR_KEY] = str(e)
         return
