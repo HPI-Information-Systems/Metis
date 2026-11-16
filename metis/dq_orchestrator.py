@@ -12,7 +12,9 @@ from metis.metric.config import MetricConfig
 from metis.profiling.data_profile_manager import DataProfileManager
 from metis.profiling.importers import get_importer
 from metis.utils.data_config import DataConfig
+from metis.utils.garbage_collection import gc_paused
 from metis.utils.logging import logger
+from metis.utils.reference_loader import default_reference
 from metis.utils.result import DQResult
 from metis.writer.console_writer import ConsoleWriter
 from metis.writer.csv_writer import CSVWriter
@@ -93,23 +95,24 @@ class DQOrchestrator:
                     DataProfileManager.get_instance().set_context(
                         dataset=self.data_paths[df_name], table=df_name
                     )
+                reference = self._default_reference_for(metric_class, df_name)
                 measure_runtime = self._should_measure_runtime(metric_config)
                 if measure_runtime:
                     start = time.perf_counter()
-                    incomplete_metric_results = metric_instance.assess(
-                        data=df,
-                        reference=self.reference_dataframes.get(df_name),
-                        metric_config=metric_config,
-                    )
+                    with default_reference(reference), gc_paused():
+                        incomplete_metric_results = metric_instance.assess(
+                            data=df,
+                            metric_config=metric_config,
+                        )
                     elapsed = time.perf_counter() - start
                     for result in incomplete_metric_results:
                         result.runtime = elapsed
                 else:
-                    incomplete_metric_results = metric_instance.assess(
-                        data=df,
-                        reference=self.reference_dataframes.get(df_name),
-                        metric_config=metric_config,
-                    )
+                    with default_reference(reference), gc_paused():
+                        incomplete_metric_results = metric_instance.assess(
+                            data=df,
+                            metric_config=metric_config,
+                        )
                 for result in incomplete_metric_results:
                     result.tableName = df_name
                     result.dataset = self.data_paths[df_name]
@@ -133,6 +136,25 @@ class DQOrchestrator:
 
     def get_dq_result(self, query: str) -> List[DQResult]:
         return []
+
+    def _default_reference_for(
+        self, metric_class: Type[Metric], df_name: str
+    ) -> pd.DataFrame | None:
+        """
+        Return the dataset-level reference a metric falls back to.
+
+        Only metrics that cannot run without a reference get the default. A
+        metric with an optional reference keeps its own fallback, for example
+        the built-in word list of ``validity_outOfVocabulary``.
+
+        :param metric_class: The metric about to be assessed.
+        :param df_name: Name of the dataset the metric runs on.
+        :return: The reference loaded from ``reference_file_name``, or ``None``.
+        """
+        meta = metric_class.meta
+        if meta is None or not meta.requires_reference:
+            return None
+        return self.reference_dataframes.get(df_name)
 
     def _should_measure_runtime(self, metric_config: MetricConfig | str | None) -> bool:
         if metric_config is None:

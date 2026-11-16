@@ -14,7 +14,9 @@ from core.metric_catalog import (
     get_metrics_by_dimension,
 )
 from demo.demo_metric_configs import DEMO_CONFIG_DISPLAY, DEMO_METRICS
+from metis.metric.metric import Metric
 from metis.utils.dq_granularity import DQGranularity
+from metis.utils.reference_loader import default_reference
 from ui.components.config_editors import (
     callable_editor,
     simple_editor,
@@ -77,7 +79,6 @@ def render(demo_mode: bool = False) -> None:
     active_filter = st.pills(
         "Filter",
         options=_FILTER_OPTIONS,
-        default="All",
         selection_mode="single",
         label_visibility="collapsed",
         key=AppState.widget_key("metrics", "filter"),
@@ -729,11 +730,16 @@ def _render_inline_config(info: MetricInfo, df) -> None:
             and any(f.name == "aggregation_axis" for f in info.config_fields)
         ):
             field_defaults["aggregation_axis"] = "index"
-        cfg = simple_editor.render(
-            info.config_class,
-            key_prefix=info.name,
-            field_defaults=field_defaults or None,
-        )
+        # The global reference from the Dataset step stands in for a metric
+        # that requires a reference and has no upload of its own, so the
+        # editor shows it and the config validates without one.
+        global_reference = AppState.get_reference_df() if info.requires_reference else None
+        with default_reference(global_reference):
+            cfg = simple_editor.render(
+                info.config_class,
+                key_prefix=info.name,
+                field_defaults=field_defaults or None,
+            )
         if cfg is not None:
             AppState.set_metric_config(info.name, cfg)
 
@@ -878,9 +884,16 @@ def _format_name(name: str) -> str:
     """
     Format a registry name like ``completeness_nullRatio`` for display.
 
+    Uses the metric's declared label when it is registered, and falls back to
+    splitting the name on camel case otherwise.
+
     :param name: The metric registry name (``dimension_metric``).
-    :return: A display string like ``"Completeness: Null ratio"``.
+    :return: A display string like ``"Completeness: Null Ratio"``.
     """
+    cls = Metric.registry.get(name)
+    if cls is not None and cls.meta is not None:
+        return f"{cls.meta.dimension}: {cls.meta.label}"
+
     parts = name.split("_", 1)
     if len(parts) == 2:
         dim, metric = parts

@@ -86,14 +86,15 @@ def _render_column_block(
     decline_rate = st.number_input(
         "Decline rate (λ)",
         min_value=0.0,
-        max_value=20.0,
-        value=0.5,
-        step=0.1,
+        max_value=1.0,
+        value=0.0014,
+        step=0.0001,
+        format="%.4f",
         key=f"{key_prefix}__{col}__rate",
         help=(
-            "Score = e^(−λ × age_years). "
-            "λ = 0.5 → ~60% score after 1 year; "
-            "λ = 1.0 → ~37% score after 1 year."
+            "Decline per day. Score = e^(−λ × age_days). "
+            "λ = 0.0014 → ~60% score after 1 year; "
+            "λ = 0.0027 → ~37% score after 1 year."
         ),
     )
 

@@ -1,5 +1,5 @@
 import re
-from typing import List, Union
+from typing import List
 
 import nltk
 import pandas as pd
@@ -7,46 +7,54 @@ from nltk.corpus import words as nltk_words
 
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
+from metis.metric.validity.validity_outOfVocabulary_config import (
+    validity_outOfVocabulary_config,
+)
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
+from metis.utils.reference_loader import load_reference_vocabulary
 from metis.utils.result import DQResult
 
 
 class validity_outOfVocabulary(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.COLUMN})
-    _gui_description: str = (
-        "Per column, the share of non-null string values whose alphabetic "
-        "tokens all appear in a reference vocabulary. Defaults to NLTK's "
-        "English word list when no custom reference is supplied."
+    meta = MetricMeta(
+        label="Out of Vocabulary",
+        description=(
+            "Per column, the share of non-null string values whose alphabetic "
+            "tokens all appear in a reference vocabulary. Defaults to NLTK's "
+            "English word list when no custom reference is supplied."
+        ),
+        dimension=DQDimension.VALIDITY,
+        granularities=frozenset({DQGranularity.COLUMN}),
     )
+
     def __init__(self) -> None:
         super().__init__()
         nltk.download("words", quiet=True)
 
-    def assess(self, data: pd.DataFrame, reference: Union[pd.DataFrame, set, None] = None, metric_config: Union[MetricConfig, str, None] = None) -> List[DQResult]:
+    def assess(
+        self,
+        data: pd.DataFrame,
+        *,
+        metric_config: str | MetricConfig | None = None,
+    ) -> List[DQResult]:
         """
         General vocabulary check at token level.
         Any alphabetic token not in the standard vocab is OOV.
         """
         results: List[DQResult] = []
 
-        # Build vocabulary (lowercase)
-        if reference is None:
+        config = self.load_config(
+            metric_config or validity_outOfVocabulary_config(),
+            validity_outOfVocabulary_config,
+        )
+        vocab_set = load_reference_vocabulary(config.reference)
+        if vocab_set is None:
             vocab_set = {w.lower() for w in nltk_words.words()}
-            ref_src = "NLTK English words"
-        elif isinstance(reference, pd.DataFrame):
-            if reference.shape[1] != 1:
-                raise ValueError("Reference DataFrame must have exactly one column.")
-            vocab_set = {str(x).strip().lower() for x in reference.iloc[:, 0].dropna().unique()}
-            ref_src = "Custom vocabulary"
-        elif isinstance(reference, set):
-            vocab_set = {str(x).strip().lower() for x in reference}
-            ref_src = "Custom vocabulary"
+            ref_src = "NLTK English word list"
         else:
-            raise ValueError("Reference must be a one column DataFrame, a set, or None.")
+            ref_src = "Custom vocabulary"
 
         def tokenize(text: str):
             return re.findall(r"[A-Za-z]+", text.lower())

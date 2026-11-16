@@ -1,13 +1,15 @@
 import pandas as pd
 import numpy as np
-from typing import List, Union
+from typing import List
 
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial.distance import squareform
 
 from semhash import SemHash
 
+from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.metric.minimality.minimality_clustering_config import minimality_clustering_config
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
@@ -23,11 +25,25 @@ class minimality_clustering(Metric):
     - Optional: custom type-aware similarity + clustering
     """
 
+    meta = MetricMeta(
+        label="Clustering",
+        description=(
+            "Table-level minimality. Groups near-duplicate rows into clusters and "
+            "reports `(clusters - 1) / (rows - 1)`, so 1.0 means every row is its "
+            "own cluster and lower values mean more redundancy. The default "
+            "backend is a type-aware row similarity with hierarchical clustering. "
+            "Setting use_semhash switches to SemHash semantic deduplication."
+        ),
+        dimension=DQDimension.MINIMALITY,
+        granularities=frozenset({DQGranularity.TABLE}),
+        config_required=True,
+    )
+
     def assess(
         self,
         data: pd.DataFrame,
-        reference: Union[pd.DataFrame, None] = None,
-        metric_config: Union[str, None] = None,
+        *,
+        metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
 
         if metric_config is None:
@@ -57,14 +73,14 @@ class minimality_clustering(Metric):
         result = DQResult(
             timestamp=pd.Timestamp.now(),
             DQdimension=DQDimension.MINIMALITY,
-            DQmetric="Clustering",
+            DQmetric=self.__class__.__name__,
             DQgranularity=DQGranularity.TABLE,
             DQvalue=float(minimality),
             DQexplanation={
                 "total_rows": n_rows,
                 "clusters": num_clusters,
-                "use_semhash": config["use_semhash"],
-                "similarity_threshold": config["similarity_threshold"],
+                "use_semhash": config.use_semhash,
+                "similarity_threshold": config.similarity_threshold,
             },
             columnNames=None,
             rowIndex=None,

@@ -1,4 +1,7 @@
 from metis.dq_orchestrator import DQOrchestrator
+from metis.metric.accuracy.accuracy_semanticReference_config import (
+    accuracy_semanticReference_config,
+)
 from metis.metric.accuracy.accuracy_syntacticDomain_config import (
     accuracy_syntacticDomain_config,
 )
@@ -12,7 +15,7 @@ orchestrator.assess(metrics=["completeness_nullRatio"], metric_configs=[""])
 orchestrator.assess(metrics=["minimality_duplicateCount"], metric_configs=[None])
 orchestrator.assess(
     metrics=["validity_outOfVocabulary"],
-    metric_configs=['{"use_nltk": true, "lowercase": true}'],
+    metric_configs=[None],
 )
 
 orchestrator.assess(
@@ -43,7 +46,10 @@ orchestrator.assess(
 # Second orchestrator uses ConsoleWriter to avoid re-initialising the Database singleton
 ref_orchestrator = DQOrchestrator()
 ref_orchestrator.load(data_loader_configs=["demo/configs/adult_with_reference.json"])
+# The data config declares "reference_file_name", so the metric is assessed
+# against that reference. Set accuracy_semanticReference_config(reference=...)
+# to use a different one for this metric only.
 ref_orchestrator.assess(
     metrics=["accuracy_semanticReference"],
-    metric_configs=[None],
+    metric_configs=[accuracy_semanticReference_config()],
 )

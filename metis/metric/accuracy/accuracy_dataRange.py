@@ -7,6 +7,7 @@ from metis.metric.accuracy.accuracy_dataRange_config import (
 )
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.profiling import value_range
 from metis.utils.dq_dimension import DQDimension
 from metis.utils.dq_granularity import DQGranularity
@@ -23,20 +24,22 @@ class accuracy_dataRange(Metric):
     skipped with a warning.
     """
 
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({DQGranularity.COLUMN})
-    _gui_description: str = (
-        "Per column, share of values that fall inside a required interval. "
-        "Interval is supplied via metric_config.intervals or derived from the "
-        "data's observed min/max (data profiling)."
+    meta = MetricMeta(
+        label="Data Range",
+        description=(
+            "Per column, share of values that fall inside a required interval. "
+            "Interval is supplied via metric_config.intervals or derived from the "
+            "data's observed min/max (data profiling)."
+        ),
+        dimension=DQDimension.ACCURACY,
+        granularities=frozenset({DQGranularity.COLUMN}),
+        standard="ISO/IEC 25024:2015 Acc-I-7",
     )
 
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         config = self.load_config(metric_config or "", accuracy_dataRange_config)

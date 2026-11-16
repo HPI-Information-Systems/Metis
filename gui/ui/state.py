@@ -23,6 +23,14 @@ class AppState:
 
     @staticmethod
     def get_reference_df() -> pd.DataFrame | None:
+        """
+        Return the global reference dataset uploaded on the Dataset step.
+
+        It is the default for every metric that requires a reference. A metric
+        with its own reference upload overrides it.
+
+        :return: The global reference dataframe, or ``None`` if none is set.
+        """
         return st.session_state.get("reference_df")
 
     @staticmethod
@@ -211,4 +219,15 @@ class AppState:
             "last_results", "last_errors", "run_requested",
         ):
             st.session_state.pop(key, None)
+
+        # Reference upload state, global and per metric, is not keyed by
+        # dataset, so it outlives a reset unless it is swept explicitly.
+        # Leaving it would silently score a new dataset against the old
+        # dataset's reference.
+        for key in [
+            k for k in st.session_state
+            if k.startswith("_ref_cache__") or k.endswith("__reference")
+        ]:
+            st.session_state.pop(key, None)
+
         st.session_state["wizard_step"] = 0

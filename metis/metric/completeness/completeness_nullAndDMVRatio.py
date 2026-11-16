@@ -7,6 +7,7 @@ from metis.metric.completeness.completeness_nullAndDMVRatio_config import (
 )
 from metis.metric.config import MetricConfig
 from metis.metric.metric import Metric
+from metis.metric.metric_meta import MetricMeta
 from metis.utils.disguised_missing_values.fahes.fahes import (
     FAHES_PRECISION,
     FAHES_RECALL,
@@ -22,28 +23,29 @@ IS_DMV_MARKER = 2
 
 
 class completeness_nullAndDMVRatio(Metric):
-    _gui_requires_reference: bool = False
-    _gui_config_required: bool = False
-    _gui_callable_config: bool = False
-    _gui_recommended_granularities: frozenset = frozenset({
-        DQGranularity.ROW, DQGranularity.COLUMN, DQGranularity.TABLE,
-    })
-    _gui_description: str = (
-        "Completeness as the ratio of non-null and non-disguised-missing values. "
-        "Disguised missing values (e.g., '?', 'N/A') are detected with the FAHES "
-        "algorithm (Qahtan et al., 2018). Configurable granularity."
+    meta = MetricMeta(
+        label="Null and DMV Ratio",
+        description=(
+            "Completeness as the ratio of non-null and non-disguised-missing values. "
+            "Disguised missing values (e.g., '?', 'N/A') are detected with the FAHES "
+            "algorithm (Qahtan et al., 2018). Configurable granularity."
+        ),
+        dimension=DQDimension.COMPLETENESS,
+        granularities=frozenset({
+            DQGranularity.ROW, DQGranularity.COLUMN, DQGranularity.TABLE,
+        }),
     )
+
     def assess(
         self,
         data: pd.DataFrame,
-        reference: pd.DataFrame | None = None,
+        *,
         metric_config: str | MetricConfig | None = None,
     ) -> List[DQResult]:
         """
         Assess the completeness of the data by checking for null values and disguised missing values. To detect disguised missing values, the FAHES algorithm by Qahtan et al. is applied to the data (paper: https://doi.org/10.1145/3219819.3220109). The completeness quality measurement is calculated as the ratio of valid values (non-null and non-disguised missing) to the total number of values. The metric can be configured using `completeness_nullAndDMVRatio_config` to calculate the completeness on column, row level, or table-level granularity.
 
         :param data: DataFrame to assess.
-        :param reference: Optional reference DataFrame (not used in this metric).
         :param metric_config: Optional configuration for the metric.
         :return: List of DQResult objects containing completeness results.
         """

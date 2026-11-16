@@ -23,22 +23,25 @@ class ConfigField:
 
 @dataclass
 class MetricInfo:
+    """A GUI-facing view over a metric's :class:`MetricMeta` plus config details."""
+
     name: str
+    label: str
     dimension: str
+    description: str
     config_class: type | None
     fd_json_config: bool
     requires_reference: bool
     config_required: bool
     callable_config: bool
-    produces_levels: frozenset[DQGranularity]
     recommended_granularities: frozenset[DQGranularity]
     config_fields: list[ConfigField]
-    description: str = ""
+    standard: str | None = None
     unavailable_reason: str | None = None
 
     @property
     def cell_granularity(self) -> bool:
-        return DQGranularity.CELL in self.produces_levels
+        return DQGranularity.CELL in self.recommended_granularities
 
 
 _NATIVE_LIB_CHECKS: dict[str, tuple[Path, str]] = {
@@ -66,18 +69,14 @@ def get_catalog() -> dict[str, MetricInfo]:
 
     _catalog = {}
     for name, cls in Metric.registry.items():
-        dimension = name.split("_")[0].capitalize()
+        # Metric.__init_subclass__ registers every subclass ever defined,
+        # including private helpers and test doubles that declare no metadata.
+        # describe() would raise on those, so private names are not catalog
+        # entries.
+        if name.startswith("_"):
+            continue
+        meta = cls.describe()
         fd_json_config = name == "consistency_countFDViolations"
-        requires_reference = getattr(cls, "_gui_requires_reference", False)
-        config_required = getattr(cls, "_gui_config_required", False)
-        callable_config = getattr(cls, "_gui_callable_config", False)
-        description = getattr(cls, "_gui_description", "")
-
-        recommended = frozenset(getattr(cls, "_gui_recommended_granularities", frozenset()))
-        is_cell = getattr(cls, "_gui_cell_granularity", False)
-        produces_levels = recommended | (
-            {DQGranularity.CELL} if is_cell and DQGranularity.CELL not in recommended else frozenset()
-        )
 
         if fd_json_config:
             config_class = None
@@ -94,16 +93,17 @@ def get_catalog() -> dict[str, MetricInfo]:
 
         _catalog[name] = MetricInfo(
             name=name,
-            dimension=dimension,
+            label=meta.label,
+            dimension=str(meta.dimension),
+            description=meta.description,
             config_class=config_class,
             fd_json_config=fd_json_config,
-            requires_reference=requires_reference,
-            config_required=config_required,
-            callable_config=callable_config,
-            produces_levels=produces_levels,
-            recommended_granularities=recommended,
+            requires_reference=meta.requires_reference,
+            config_required=meta.config_required,
+            callable_config=meta.callable_config,
+            recommended_granularities=meta.granularities,
             config_fields=config_fields,
-            description=description,
+            standard=meta.standard,
             unavailable_reason=unavailable_reason,
         )
 

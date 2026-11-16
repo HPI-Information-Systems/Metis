@@ -1,0 +1,6 @@
+*.png
+!runtime_by_rows_log.png
+!runtime_by_rows_linear.png
+!runtime_by_rows_linear_panels.png
+!memory_by_rows_linear_panels.png
+!runtime_by_cols_linear_panels.png

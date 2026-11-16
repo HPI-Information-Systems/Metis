@@ -20,13 +20,17 @@ _DATA_DIR: Path = Path(__file__).resolve().parents[2] / "data"
 DEMO_METRICS: list[str] = [
     "completeness_nullRatio",
     "minimality_duplicateCount",
+    "minimality_clustering",
     "validity_outOfVocabulary",
     "accuracy_dataRange",
     "accuracy_outlierRisk",
+    "accuracy_semanticReference",
+    "accuracy_syntacticDomain",
     "consistency_countFDViolations",
     "consistency_ruleBasedHinrichs",
     "consistency_ruleBasedPipino",
     "timeliness_heinrich",
+    "readability_wordnet",
 ]
 
 # FD config — used as the consistency_countFDViolations config dict.
@@ -132,6 +136,57 @@ def get_dataRange_config():
         intervals={
             "avg_rating": (1.0, 5.0),
             "total_reviews_count": (0.0, 1000.0),
+        }
+    )
+
+
+def get_semanticReference_config():
+    """
+    Return the demo config for ``accuracy_semanticReference``.
+
+    The clean source the demo dataset was built from serves as the gold
+    standard, joined on ``id``.
+
+    :return: An ``accuracy_semanticReference_config`` instance.
+    """
+    from metis.metric.accuracy.accuracy_semanticReference_config import (
+        accuracy_semanticReference_config,
+    )
+    return accuracy_semanticReference_config(
+        reference=str(_DATA_DIR / "restaurants_source.csv"),
+        key_column="id",
+    )
+
+
+def preprocess_semanticReference(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Drop rows ``accuracy_semanticReference`` cannot align on ``id``: rows
+    without an ``id`` have no counterpart in the reference, and repeated ids
+    break the key join.
+
+    :param df: The raw restaurant dataframe.
+    :return: A dataframe with one row per non-null ``id``.
+    """
+    return df.dropna(subset=["id"]).drop_duplicates(subset="id")
+
+
+def get_syntacticDomain_config():
+    """
+    Return the demo config for ``accuracy_syntacticDomain``.
+
+    The allowed values for ``city`` and ``type`` are the ones that occur in
+    the clean source the demo dataset was built from.
+
+    :return: An ``accuracy_syntacticDomain_config`` instance.
+    """
+    from metis.metric.accuracy.accuracy_syntacticDomain_config import (
+        accuracy_syntacticDomain_config,
+    )
+    source = pd.read_csv(_DATA_DIR / "restaurants_source.csv")
+    return accuracy_syntacticDomain_config(
+        domains={
+            column: sorted(source[column].dropna().unique().tolist())
+            for column in ("city", "type")
         }
     )
 

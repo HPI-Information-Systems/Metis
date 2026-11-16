@@ -54,13 +54,13 @@ metric is selected and no blockers remain.
 `gui/ui/pages/dataset_page.py`
 
 - Upload a CSV file. UTF-8 is tried first with a latin-1 fallback.
-- Optionally upload a reference CSV. Reference-based metrics such as
-  `correctness_heinrich` and `accuracy_semanticReference` need one and stay
-  blocked without it.
 - Set a dataset name and an optional table name. Each run gets an
   experiment tag, auto-generated as `{dataset_name}_{timestamp}`.
 - A preview shows the first 50 rows together with column types and basic
   statistics.
+- Optionally upload a reference dataset. It is the default reference for
+  every metric that requires one, such as `correctness_heinrich` and
+  `accuracy_semanticReference`.
 - The four most recent runs are listed with quick-open buttons that jump
   straight to their results.
 
@@ -75,7 +75,7 @@ metric is selected and no blockers remain.
   availability warnings. Metrics whose native dependencies are missing (for
   example FAHES for `completeness_nullAndDMVRatio`) are disabled with a
   warning.
-- Metrics are configured inline through one of three editors, chosen by the
+- Metrics are configured inline through one of these editors, chosen by the
   metric's metadata (see the config conventions in the
   [README](../README.md#config-conventions)):
   - a form editor for plain dataclass configs
@@ -83,6 +83,13 @@ metric is selected and no blockers remain.
   - an inline rule editor for functional dependencies
     (`consistency_countFDViolations`)
   - `timeliness_heinrich` gets a dedicated per-column editor
+  - a reference editor (`reference_editor`) for any config field declared as
+    a reference source. It is a CSV uploader nested inside the form editor,
+    used by reference-based metrics such as `correctness_heinrich` and
+    `accuracy_semanticReference`. A metric that requires a reference uses
+    the reference dataset from the Dataset step by default. Uploading a file
+    here overrides it for that metric only, and a button switches back to
+    the reference dataset from the Dataset step.
 - Select all and deselect buttons exist per dimension. The page lists
   blockers (missing required configs, missing reference dataset) before
   letting you continue.
@@ -104,6 +111,9 @@ metric is selected and no blockers remain.
 
 `gui/ui/pages/results_page.py`
 
+- Every score runs from 0 to 1, where 0 is the worst possible quality and 1 is
+  the best. Charts use a red to green scale over that fixed range, so colours
+  are comparable across metrics and across runs.
 - A run selector lists all stored experiments. Runs can be exported to JSON
   and imported back, which also makes results portable between desktop and
   browser mode.
@@ -143,10 +153,14 @@ results page groups them into one time series. The temporal chart then
 shows data quality improving over time, which is the intended demo
 narrative.
 
-The seven demo metrics are `completeness_nullRatio`,
-`minimality_duplicateCount`, `validity_outOfVocabulary`,
+The thirteen demo metrics are `completeness_nullRatio`,
+`minimality_duplicateCount`, `minimality_clustering`,
+`validity_outOfVocabulary`, `accuracy_dataRange`, `accuracy_outlierRisk`,
+`accuracy_semanticReference`, `accuracy_syntacticDomain`,
 `consistency_countFDViolations`, `consistency_ruleBasedHinrichs`,
-`consistency_ruleBasedPipino` and `timeliness_heinrich`. Their
+`consistency_ruleBasedPipino`, `timeliness_heinrich` and
+`readability_wordnet`. The two reference-based accuracy metrics use the
+clean source `data/restaurants_source.csv` as their gold standard. Their
 configurations are fixed and shown read-only in the Metrics step. They are
 defined in `gui/demo/demo_metric_configs.py`, with the Python rule files
 for the two rule-based consistency metrics living in
@@ -221,7 +235,7 @@ gui/
 
 | Module              | Purpose                                                                 |
 |---------------------|--------------------------------------------------------------------------|
-| `metric_catalog.py` | Introspects `Metric.registry` into `MetricInfo` objects (config class, required fields, `_gui_*` metadata) and computes compute blockers. Also home of `_NATIVE_LIB_CHECKS` for native dependencies. |
+| `metric_catalog.py` | Builds `MetricInfo` objects from each metric's `MetricMeta` (config class, required fields, declared metadata) and computes compute blockers. Also home of `_NATIVE_LIB_CHECKS` for native dependencies. |
 | `metric_runner.py`  | Executes the selected metrics with per-metric error isolation            |
 | `result_store.py`   | Persistence behind the GUI. `SQLiteResultStore` for desktop, `JSONResultStore` for the browser. Serves pre-aggregated queries for the results page. |
 | `serialization.py`  | Converts `DQResult` objects to and from JSON-safe dicts                  |
@@ -248,5 +262,5 @@ runs.
 The GUI discovers metrics automatically through `Metric.registry`. A new
 metric appears in the Metrics step without any GUI changes, as long as it
 follows the config conventions documented in the
-[README](../README.md#config-conventions). The `_gui_*` class attributes
-control its description, badges, editor type and renderer choice.
+[README](../README.md#config-conventions). The `meta` attribute and its
+`MetricMeta` control its description, badges, editor type and renderer choice.

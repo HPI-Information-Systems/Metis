@@ -86,7 +86,7 @@ def _classify_domain(series: pd.Series, column_name: Optional[str] = None) -> st
         return domain_by_pattern
 
     if column_name:
-        domain_by_name = _detect_domain_by_column_name(column_name)
+        domain_by_name = _detect_domain_by_column_name(str(column_name))
         if domain_by_name:
             return domain_by_name
 

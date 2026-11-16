@@ -11,7 +11,7 @@ class timeliness_heinrich_column_config:
     """
     Configuration class for a single column in the timeliness_heinrich metric (used as part of timeliness_heinrich_config).
 
-    :param decline_rate: Decline rate for the column
+    :param decline_rate: Decline rate for the column, per day of age (e.g. 0.0014 leaves ~60% after one year)
     :param ingestion_date_column: Name of the column containing the ingestion date that should be used to calculate the age of the data for this column
     :param to_datetime_kwargs: Optional keyword arguments for pandas.to_datetime when parsing the date in ingestion_date_column.
     :param simulated_assessment_date: Optional simulated assessment date in string format. If not provided, the current date will be used. This can be used to simulate the assessment of data at a specific point in time, which is especially useful for testing and evaluation purposes.

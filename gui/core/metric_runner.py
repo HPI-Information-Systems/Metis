@@ -12,6 +12,8 @@ import pandas as pd
 
 import metis.metric  # noqa: F401 — populates Metric.registry on import
 from metis.metric.metric import Metric
+from metis.utils.garbage_collection import gc_paused
+from metis.utils.reference_loader import default_reference
 from metis.utils.result import DQResult
 
 from core.metric_catalog import get_catalog
@@ -27,10 +29,10 @@ class RunError:
 def run_all(
     metric_names: list[str],
     data: pd.DataFrame,
-    reference: pd.DataFrame | None,
     configs: dict,
     on_progress: Callable[[int, int, str], None],
     max_rows_by_metric: dict[str, int] | None = None,
+    global_reference: pd.DataFrame | None = None,
 ) -> tuple[list[DQResult], list[RunError]]:
     """
     Run each selected metric in sequence with isolated error handling.
@@ -40,12 +42,13 @@ def run_all(
 
     :param metric_names: Ordered list of metric names to run.
     :param data: Input dataframe.
-    :param reference: Optional reference dataframe (used by reference-based metrics).
     :param configs: Mapping of metric name to config object (or dict for the FD metric).
     :param on_progress: Callback ``on_progress(current_index, total, metric_name)``
         invoked before each metric run.
     :param max_rows_by_metric: Optional per-metric row cap (for cell-granularity
         metrics that produce very large result sets).
+    :param global_reference: Optional reference dataset used by every metric
+        that requires a reference and whose config does not set its own.
     :return: ``(results, errors)`` — the merged result list and any per-metric errors.
     """
     results: list[DQResult] = []
@@ -62,7 +65,9 @@ def run_all(
                     cap = max_rows_by_metric[name]
                     if cap > 0 and len(data) > cap:
                         metric_data = data.head(cap)
-                batch = Metric.registry[name]().assess(metric_data, reference, metric_config)
+                reference = global_reference if _requires_reference(name) else None
+                with default_reference(reference), gc_paused():
+                    batch = Metric.registry[name]().assess(metric_data, metric_config=metric_config)
                 results.extend(batch)
             except Exception as e:
                 errors.append(RunError(
@@ -78,6 +83,17 @@ def run_all(
                 pass
 
     return results, errors
+
+
+def _requires_reference(metric_name: str) -> bool:
+    """
+    Return whether a metric cannot run without reference data.
+
+    :param metric_name: Registry name of the metric.
+    :return: ``True`` if the metric declares ``requires_reference``.
+    """
+    info = get_catalog().get(metric_name)
+    return bool(info and info.requires_reference)
 
 
 def _prepare_config(metric_name: str, config, tmp_files: list[str]):

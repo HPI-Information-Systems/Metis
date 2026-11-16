@@ -1,0 +1,1200 @@
+skipping completeness_nullAndDMVRatio: Requires the FAHES native library, which is not built in every environment. See _NATIVE_LIB_CHECKS in gui/core/metric_catalog.py.
+skipping readability_llm: Loads a local HuggingFace language model (default Qwen/Qwen2.5-3B-Instruct), so its runtime measures model inference rather than Metis. Needs the optional transformers dependency.
+ok       accuracy_dataRange               rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_dataRange               rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       accuracy_dataRange               rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       accuracy_dataRange               rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=207MB
+ok       accuracy_dataRange               rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       accuracy_dataRange               rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       accuracy_dataRange               rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       accuracy_dataRange               rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=207MB
+ok       accuracy_dataRange               rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_dataRange               rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_dataRange               rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_dataRange               rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_dataRange               rows=1000      #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_dataRange               rows=1000      #1    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_dataRange               rows=1000      #2    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_dataRange               rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       accuracy_dataRange               rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_dataRange               rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_dataRange               rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_dataRange               rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       accuracy_dataRange               rows=5000      #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_dataRange               rows=5000      #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_dataRange               rows=5000      #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_dataRange               rows=5000      timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       accuracy_dataRange               rows=10000     #0    gen=0.01s assess=0.00s baseline=210MB peak=210MB
+ok       accuracy_dataRange               rows=10000     #1    gen=0.01s assess=0.00s baseline=210MB peak=210MB
+ok       accuracy_dataRange               rows=10000     #2    gen=0.01s assess=0.00s baseline=209MB peak=209MB
+ok       accuracy_dataRange               rows=10000     timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       accuracy_dataRange               rows=20000     #0    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_dataRange               rows=20000     #1    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_dataRange               rows=20000     #2    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_dataRange               rows=20000     timed gen=0.02s assess=0.00s (results=0.00s) baseline=215MB peak=215MB
+ok       accuracy_dataRange               rows=50000     #0    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_dataRange               rows=50000     #1    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_dataRange               rows=50000     #2    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_dataRange               rows=50000     timed gen=0.03s assess=0.00s (results=0.00s) baseline=231MB peak=231MB
+ok       accuracy_dataRange               rows=100000    #0    gen=0.06s assess=0.00s baseline=269MB peak=269MB
+ok       accuracy_dataRange               rows=100000    #1    gen=0.06s assess=0.00s baseline=269MB peak=269MB
+ok       accuracy_dataRange               rows=100000    #2    gen=0.06s assess=0.00s baseline=269MB peak=269MB
+ok       accuracy_dataRange               rows=100000    timed gen=0.07s assess=0.00s (results=0.00s) baseline=269MB peak=269MB
+ok       accuracy_dataRange               rows=200000    #0    gen=0.13s assess=0.00s baseline=329MB peak=329MB
+ok       accuracy_dataRange               rows=200000    #1    gen=0.12s assess=0.00s baseline=328MB peak=328MB
+ok       accuracy_dataRange               rows=200000    #2    gen=0.12s assess=0.00s baseline=328MB peak=328MB
+ok       accuracy_dataRange               rows=200000    timed gen=0.12s assess=0.00s (results=0.00s) baseline=328MB peak=328MB
+ok       accuracy_dataRange               rows=500000    #0    gen=0.28s assess=0.00s baseline=527MB peak=527MB
+ok       accuracy_dataRange               rows=500000    #1    gen=0.27s assess=0.00s baseline=527MB peak=527MB
+ok       accuracy_dataRange               rows=500000    #2    gen=0.27s assess=0.00s baseline=527MB peak=527MB
+ok       accuracy_dataRange               rows=500000    timed gen=0.27s assess=0.00s (results=0.00s) baseline=526MB peak=526MB
+ok       accuracy_dataRange               rows=1000000   #0    gen=0.53s assess=0.00s baseline=848MB peak=848MB
+ok       accuracy_dataRange               rows=1000000   #1    gen=0.53s assess=0.00s baseline=848MB peak=848MB
+ok       accuracy_dataRange               rows=1000000   #2    gen=0.53s assess=0.00s baseline=848MB peak=848MB
+ok       accuracy_dataRange               rows=1000000   timed gen=0.53s assess=0.00s (results=0.00s) baseline=849MB peak=849MB
+ok       accuracy_dataRange               cols=6         #0    gen=0.01s assess=0.00s baseline=209MB peak=209MB
+ok       accuracy_dataRange               cols=6         #1    gen=0.01s assess=0.00s baseline=209MB peak=209MB
+ok       accuracy_dataRange               cols=6         #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_dataRange               cols=6         timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=209MB
+ok       accuracy_dataRange               cols=12        #0    gen=0.01s assess=0.00s baseline=210MB peak=210MB
+ok       accuracy_dataRange               cols=12        #1    gen=0.01s assess=0.00s baseline=210MB peak=210MB
+ok       accuracy_dataRange               cols=12        #2    gen=0.01s assess=0.00s baseline=210MB peak=210MB
+ok       accuracy_dataRange               cols=12        timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       accuracy_dataRange               cols=18        #0    gen=0.02s assess=0.00s baseline=212MB peak=212MB
+ok       accuracy_dataRange               cols=18        #1    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       accuracy_dataRange               cols=18        #2    gen=0.02s assess=0.00s baseline=212MB peak=212MB
+ok       accuracy_dataRange               cols=18        timed gen=0.01s assess=0.00s (results=0.00s) baseline=212MB peak=212MB
+ok       accuracy_dataRange               cols=24        #0    gen=0.02s assess=0.00s baseline=214MB peak=214MB
+ok       accuracy_dataRange               cols=24        #1    gen=0.02s assess=0.00s baseline=214MB peak=214MB
+ok       accuracy_dataRange               cols=24        #2    gen=0.02s assess=0.00s baseline=214MB peak=214MB
+ok       accuracy_dataRange               cols=24        timed gen=0.02s assess=0.00s (results=0.00s) baseline=214MB peak=214MB
+ok       accuracy_dataRange               cols=36        #0    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       accuracy_dataRange               cols=36        #1    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       accuracy_dataRange               cols=36        #2    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       accuracy_dataRange               cols=36        timed gen=0.03s assess=0.00s (results=0.00s) baseline=219MB peak=219MB
+ok       accuracy_dataRange               cols=48        #0    gen=0.04s assess=0.00s baseline=224MB peak=224MB
+ok       accuracy_dataRange               cols=48        #1    gen=0.03s assess=0.00s baseline=225MB peak=225MB
+ok       accuracy_dataRange               cols=48        #2    gen=0.03s assess=0.00s baseline=225MB peak=225MB
+ok       accuracy_dataRange               cols=48        timed gen=0.03s assess=0.00s (results=0.00s) baseline=224MB peak=224MB
+ok       accuracy_dataRange               cols=60        #0    gen=0.04s assess=0.00s baseline=229MB peak=229MB
+ok       accuracy_dataRange               cols=60        #1    gen=0.04s assess=0.00s baseline=229MB peak=229MB
+ok       accuracy_dataRange               cols=60        #2    gen=0.04s assess=0.00s baseline=229MB peak=229MB
+ok       accuracy_dataRange               cols=60        timed gen=0.04s assess=0.00s (results=0.00s) baseline=229MB peak=229MB
+ok       accuracy_dataRange               cols=78        #0    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       accuracy_dataRange               cols=78        #1    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       accuracy_dataRange               cols=78        #2    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       accuracy_dataRange               cols=78        timed gen=0.05s assess=0.00s (results=0.00s) baseline=237MB peak=237MB
+ok       accuracy_outlierRisk             rows=100       #0    gen=0.01s assess=0.00s baseline=207MB peak=207MB
+ok       accuracy_outlierRisk             rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       accuracy_outlierRisk             rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       accuracy_outlierRisk             rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=207MB
+ok       accuracy_outlierRisk             rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=500       #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_outlierRisk             rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=1000      #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_outlierRisk             rows=1000      #1    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_outlierRisk             rows=1000      #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=2000      #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_outlierRisk             rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_outlierRisk             rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_outlierRisk             rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       accuracy_outlierRisk             rows=5000      #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_outlierRisk             rows=5000      #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_outlierRisk             rows=5000      #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_outlierRisk             rows=5000      timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       accuracy_outlierRisk             rows=10000     #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_outlierRisk             rows=10000     #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_outlierRisk             rows=10000     #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_outlierRisk             rows=10000     timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       accuracy_outlierRisk             rows=20000     #0    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_outlierRisk             rows=20000     #1    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_outlierRisk             rows=20000     #2    gen=0.02s assess=0.01s baseline=215MB peak=215MB
+ok       accuracy_outlierRisk             rows=20000     timed gen=0.02s assess=0.01s (results=0.00s) baseline=215MB peak=215MB
+ok       accuracy_outlierRisk             rows=50000     #0    gen=0.03s assess=0.01s baseline=231MB peak=231MB
+ok       accuracy_outlierRisk             rows=50000     #1    gen=0.03s assess=0.01s baseline=231MB peak=231MB
+ok       accuracy_outlierRisk             rows=50000     #2    gen=0.03s assess=0.01s baseline=231MB peak=231MB
+ok       accuracy_outlierRisk             rows=50000     timed gen=0.03s assess=0.01s (results=0.00s) baseline=231MB peak=231MB
+ok       accuracy_outlierRisk             rows=100000    #0    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_outlierRisk             rows=100000    #1    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_outlierRisk             rows=100000    #2    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_outlierRisk             rows=100000    timed gen=0.06s assess=0.01s (results=0.00s) baseline=269MB peak=269MB
+ok       accuracy_outlierRisk             rows=200000    #0    gen=0.13s assess=0.03s baseline=328MB peak=328MB
+ok       accuracy_outlierRisk             rows=200000    #1    gen=0.12s assess=0.03s baseline=330MB peak=330MB
+ok       accuracy_outlierRisk             rows=200000    #2    gen=0.12s assess=0.03s baseline=328MB peak=328MB
+ok       accuracy_outlierRisk             rows=200000    timed gen=0.13s assess=0.03s (results=0.00s) baseline=330MB peak=330MB
+ok       accuracy_outlierRisk             rows=500000    #0    gen=0.28s assess=0.06s baseline=526MB peak=526MB
+ok       accuracy_outlierRisk             rows=500000    #1    gen=0.27s assess=0.06s baseline=527MB peak=527MB
+ok       accuracy_outlierRisk             rows=500000    #2    gen=0.27s assess=0.06s baseline=526MB peak=526MB
+ok       accuracy_outlierRisk             rows=500000    timed gen=0.27s assess=0.06s (results=0.00s) baseline=527MB peak=527MB
+ok       accuracy_outlierRisk             rows=1000000   #0    gen=0.54s assess=0.11s baseline=849MB peak=849MB
+ok       accuracy_outlierRisk             rows=1000000   #1    gen=0.53s assess=0.12s baseline=848MB peak=848MB
+ok       accuracy_outlierRisk             rows=1000000   #2    gen=0.55s assess=0.11s baseline=848MB peak=848MB
+ok       accuracy_outlierRisk             rows=1000000   timed gen=0.56s assess=0.11s (results=0.00s) baseline=848MB peak=848MB
+ok       accuracy_outlierRisk             cols=6         #0    gen=0.01s assess=0.00s baseline=209MB peak=209MB
+ok       accuracy_outlierRisk             cols=6         #1    gen=0.01s assess=0.00s baseline=209MB peak=209MB
+ok       accuracy_outlierRisk             cols=6         #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_outlierRisk             cols=6         timed gen=0.01s assess=0.00s (results=0.00s) baseline=210MB peak=211MB
+ok       accuracy_outlierRisk             cols=12        #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_outlierRisk             cols=12        #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_outlierRisk             cols=12        #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_outlierRisk             cols=12        timed gen=0.01s assess=0.00s (results=0.00s) baseline=210MB peak=210MB
+ok       accuracy_outlierRisk             cols=18        #0    gen=0.01s assess=0.01s baseline=211MB peak=212MB
+ok       accuracy_outlierRisk             cols=18        #1    gen=0.01s assess=0.01s baseline=211MB peak=212MB
+ok       accuracy_outlierRisk             cols=18        #2    gen=0.01s assess=0.01s baseline=211MB peak=212MB
+ok       accuracy_outlierRisk             cols=18        timed gen=0.01s assess=0.01s (results=0.00s) baseline=211MB peak=212MB
+ok       accuracy_outlierRisk             cols=24        #0    gen=0.02s assess=0.01s baseline=214MB peak=214MB
+ok       accuracy_outlierRisk             cols=24        #1    gen=0.02s assess=0.01s baseline=214MB peak=214MB
+ok       accuracy_outlierRisk             cols=24        #2    gen=0.02s assess=0.01s baseline=214MB peak=215MB
+ok       accuracy_outlierRisk             cols=24        timed gen=0.02s assess=0.01s (results=0.00s) baseline=214MB peak=215MB
+ok       accuracy_outlierRisk             cols=36        #0    gen=0.03s assess=0.01s baseline=219MB peak=219MB
+ok       accuracy_outlierRisk             cols=36        #1    gen=0.03s assess=0.01s baseline=219MB peak=219MB
+ok       accuracy_outlierRisk             cols=36        #2    gen=0.03s assess=0.01s baseline=219MB peak=219MB
+ok       accuracy_outlierRisk             cols=36        timed gen=0.03s assess=0.01s (results=0.00s) baseline=219MB peak=219MB
+ok       accuracy_outlierRisk             cols=48        #0    gen=0.04s assess=0.01s baseline=224MB peak=224MB
+ok       accuracy_outlierRisk             cols=48        #1    gen=0.04s assess=0.02s baseline=225MB peak=225MB
+ok       accuracy_outlierRisk             cols=48        #2    gen=0.04s assess=0.01s baseline=224MB peak=224MB
+ok       accuracy_outlierRisk             cols=48        timed gen=0.03s assess=0.01s (results=0.00s) baseline=224MB peak=224MB
+ok       accuracy_outlierRisk             cols=60        #0    gen=0.04s assess=0.02s baseline=229MB peak=229MB
+ok       accuracy_outlierRisk             cols=60        #1    gen=0.04s assess=0.02s baseline=230MB peak=230MB
+ok       accuracy_outlierRisk             cols=60        #2    gen=0.04s assess=0.02s baseline=229MB peak=229MB
+ok       accuracy_outlierRisk             cols=60        timed gen=0.05s assess=0.02s (results=0.00s) baseline=230MB peak=230MB
+ok       accuracy_outlierRisk             cols=78        #0    gen=0.05s assess=0.02s baseline=237MB peak=237MB
+ok       accuracy_outlierRisk             cols=78        #1    gen=0.05s assess=0.02s baseline=237MB peak=237MB
+ok       accuracy_outlierRisk             cols=78        #2    gen=0.05s assess=0.02s baseline=237MB peak=237MB
+ok       accuracy_outlierRisk             cols=78        timed gen=0.06s assess=0.02s (results=0.00s) baseline=237MB peak=237MB
+ok       accuracy_semanticReference       rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=200       #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       accuracy_semanticReference       rows=1000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       rows=1000      #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=1000      #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_semanticReference       rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_semanticReference       rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       rows=2000      #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       accuracy_semanticReference       rows=5000      #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       rows=5000      #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       rows=5000      #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       rows=5000      timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       accuracy_semanticReference       rows=10000     #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_semanticReference       rows=10000     #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_semanticReference       rows=10000     #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_semanticReference       rows=10000     timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       accuracy_semanticReference       rows=20000     #0    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_semanticReference       rows=20000     #1    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_semanticReference       rows=20000     #2    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_semanticReference       rows=20000     timed gen=0.02s assess=0.00s (results=0.00s) baseline=215MB peak=215MB
+ok       accuracy_semanticReference       rows=50000     #0    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_semanticReference       rows=50000     #1    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_semanticReference       rows=50000     #2    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_semanticReference       rows=50000     timed gen=0.03s assess=0.00s (results=0.00s) baseline=231MB peak=231MB
+ok       accuracy_semanticReference       rows=100000    #0    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_semanticReference       rows=100000    #1    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_semanticReference       rows=100000    #2    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_semanticReference       rows=100000    timed gen=0.06s assess=0.01s (results=0.00s) baseline=269MB peak=269MB
+ok       accuracy_semanticReference       rows=200000    #0    gen=0.12s assess=0.01s baseline=328MB peak=328MB
+ok       accuracy_semanticReference       rows=200000    #1    gen=0.13s assess=0.01s baseline=328MB peak=328MB
+ok       accuracy_semanticReference       rows=200000    #2    gen=0.13s assess=0.01s baseline=328MB peak=328MB
+ok       accuracy_semanticReference       rows=200000    timed gen=0.11s assess=0.01s (results=0.00s) baseline=328MB peak=328MB
+ok       accuracy_semanticReference       rows=500000    #0    gen=0.28s assess=0.03s baseline=526MB peak=526MB
+ok       accuracy_semanticReference       rows=500000    #1    gen=0.28s assess=0.02s baseline=526MB peak=526MB
+ok       accuracy_semanticReference       rows=500000    #2    gen=0.29s assess=0.03s baseline=526MB peak=526MB
+ok       accuracy_semanticReference       rows=500000    timed gen=0.29s assess=0.02s (results=0.00s) baseline=527MB peak=527MB
+ok       accuracy_semanticReference       rows=1000000   #0    gen=0.54s assess=0.05s baseline=848MB peak=848MB
+ok       accuracy_semanticReference       rows=1000000   #1    gen=0.54s assess=0.05s baseline=849MB peak=849MB
+ok       accuracy_semanticReference       rows=1000000   #2    gen=0.57s assess=0.05s baseline=848MB peak=848MB
+ok       accuracy_semanticReference       rows=1000000   timed gen=0.58s assess=0.05s (results=0.00s) baseline=848MB peak=848MB
+ok       accuracy_semanticReference       cols=6         #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       cols=6         #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       cols=6         #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_semanticReference       cols=6         timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       accuracy_semanticReference       cols=12        #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_semanticReference       cols=12        #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_semanticReference       cols=12        #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_semanticReference       cols=12        timed gen=0.01s assess=0.00s (results=0.00s) baseline=210MB peak=210MB
+ok       accuracy_semanticReference       cols=18        #0    gen=0.01s assess=0.00s baseline=212MB peak=213MB
+ok       accuracy_semanticReference       cols=18        #1    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       accuracy_semanticReference       cols=18        #2    gen=0.01s assess=0.00s baseline=212MB peak=213MB
+ok       accuracy_semanticReference       cols=18        timed gen=0.01s assess=0.00s (results=0.00s) baseline=211MB peak=212MB
+ok       accuracy_semanticReference       cols=24        #0    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       accuracy_semanticReference       cols=24        #1    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       accuracy_semanticReference       cols=24        #2    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       accuracy_semanticReference       cols=24        timed gen=0.02s assess=0.00s (results=0.00s) baseline=214MB peak=215MB
+ok       accuracy_semanticReference       cols=36        #0    gen=0.03s assess=0.01s baseline=219MB peak=219MB
+ok       accuracy_semanticReference       cols=36        #1    gen=0.03s assess=0.01s baseline=219MB peak=219MB
+ok       accuracy_semanticReference       cols=36        #2    gen=0.03s assess=0.01s baseline=219MB peak=219MB
+ok       accuracy_semanticReference       cols=36        timed gen=0.03s assess=0.01s (results=0.00s) baseline=219MB peak=219MB
+ok       accuracy_semanticReference       cols=48        #0    gen=0.03s assess=0.01s baseline=224MB peak=224MB
+ok       accuracy_semanticReference       cols=48        #1    gen=0.04s assess=0.01s baseline=224MB peak=224MB
+ok       accuracy_semanticReference       cols=48        #2    gen=0.04s assess=0.01s baseline=224MB peak=224MB
+ok       accuracy_semanticReference       cols=48        timed gen=0.03s assess=0.01s (results=0.00s) baseline=224MB peak=224MB
+ok       accuracy_semanticReference       cols=60        #0    gen=0.04s assess=0.01s baseline=229MB peak=229MB
+ok       accuracy_semanticReference       cols=60        #1    gen=0.04s assess=0.01s baseline=229MB peak=229MB
+ok       accuracy_semanticReference       cols=60        #2    gen=0.04s assess=0.01s baseline=229MB peak=229MB
+ok       accuracy_semanticReference       cols=60        timed gen=0.04s assess=0.01s (results=0.00s) baseline=229MB peak=229MB
+ok       accuracy_semanticReference       cols=78        #0    gen=0.05s assess=0.01s baseline=237MB peak=237MB
+ok       accuracy_semanticReference       cols=78        #1    gen=0.05s assess=0.01s baseline=237MB peak=237MB
+ok       accuracy_semanticReference       cols=78        #2    gen=0.05s assess=0.01s baseline=237MB peak=237MB
+ok       accuracy_semanticReference       cols=78        timed gen=0.05s assess=0.01s (results=0.00s) baseline=237MB peak=237MB
+ok       accuracy_syntacticDomain         rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=500       #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_syntacticDomain         rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       accuracy_syntacticDomain         rows=1000      #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_syntacticDomain         rows=1000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=1000      #2    gen=0.01s assess=0.00s baseline=208MB peak=208MB
+ok       accuracy_syntacticDomain         rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       accuracy_syntacticDomain         rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=5000      #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=5000      #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=5000      #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=5000      timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       accuracy_syntacticDomain         rows=10000     #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         rows=10000     #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         rows=10000     #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         rows=10000     timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         rows=20000     #0    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_syntacticDomain         rows=20000     #1    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_syntacticDomain         rows=20000     #2    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       accuracy_syntacticDomain         rows=20000     timed gen=0.02s assess=0.00s (results=0.00s) baseline=215MB peak=215MB
+ok       accuracy_syntacticDomain         rows=50000     #0    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_syntacticDomain         rows=50000     #1    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_syntacticDomain         rows=50000     #2    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       accuracy_syntacticDomain         rows=50000     timed gen=0.03s assess=0.00s (results=0.00s) baseline=231MB peak=231MB
+ok       accuracy_syntacticDomain         rows=100000    #0    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_syntacticDomain         rows=100000    #1    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_syntacticDomain         rows=100000    #2    gen=0.06s assess=0.01s baseline=269MB peak=269MB
+ok       accuracy_syntacticDomain         rows=100000    timed gen=0.06s assess=0.01s (results=0.00s) baseline=269MB peak=269MB
+ok       accuracy_syntacticDomain         rows=200000    #0    gen=0.11s assess=0.01s baseline=328MB peak=328MB
+ok       accuracy_syntacticDomain         rows=200000    #1    gen=0.11s assess=0.01s baseline=328MB peak=328MB
+ok       accuracy_syntacticDomain         rows=200000    #2    gen=0.12s assess=0.01s baseline=328MB peak=328MB
+ok       accuracy_syntacticDomain         rows=200000    timed gen=0.11s assess=0.01s (results=0.00s) baseline=328MB peak=328MB
+ok       accuracy_syntacticDomain         rows=500000    #0    gen=0.27s assess=0.02s baseline=526MB peak=526MB
+ok       accuracy_syntacticDomain         rows=500000    #1    gen=0.27s assess=0.02s baseline=526MB peak=526MB
+ok       accuracy_syntacticDomain         rows=500000    #2    gen=0.27s assess=0.02s baseline=526MB peak=526MB
+ok       accuracy_syntacticDomain         rows=500000    timed gen=0.27s assess=0.02s (results=0.00s) baseline=526MB peak=526MB
+ok       accuracy_syntacticDomain         rows=1000000   #0    gen=0.54s assess=0.04s baseline=849MB peak=849MB
+ok       accuracy_syntacticDomain         rows=1000000   #1    gen=0.54s assess=0.04s baseline=848MB peak=848MB
+ok       accuracy_syntacticDomain         rows=1000000   #2    gen=0.54s assess=0.04s baseline=848MB peak=848MB
+ok       accuracy_syntacticDomain         rows=1000000   timed gen=0.54s assess=0.04s (results=0.00s) baseline=849MB peak=849MB
+ok       accuracy_syntacticDomain         cols=6         #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         cols=6         #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         cols=6         #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         cols=6         timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=209MB
+ok       accuracy_syntacticDomain         cols=12        #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         cols=12        #1    gen=0.01s assess=0.00s baseline=210MB peak=211MB
+ok       accuracy_syntacticDomain         cols=12        #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         cols=12        timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       accuracy_syntacticDomain         cols=18        #0    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       accuracy_syntacticDomain         cols=18        #1    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       accuracy_syntacticDomain         cols=18        #2    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       accuracy_syntacticDomain         cols=18        timed gen=0.01s assess=0.00s (results=0.00s) baseline=211MB peak=212MB
+ok       accuracy_syntacticDomain         cols=24        #0    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       accuracy_syntacticDomain         cols=24        #1    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       accuracy_syntacticDomain         cols=24        #2    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       accuracy_syntacticDomain         cols=24        timed gen=0.02s assess=0.00s (results=0.00s) baseline=214MB peak=215MB
+ok       accuracy_syntacticDomain         cols=36        #0    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       accuracy_syntacticDomain         cols=36        #1    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       accuracy_syntacticDomain         cols=36        #2    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       accuracy_syntacticDomain         cols=36        timed gen=0.03s assess=0.00s (results=0.00s) baseline=219MB peak=219MB
+ok       accuracy_syntacticDomain         cols=48        #0    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       accuracy_syntacticDomain         cols=48        #1    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       accuracy_syntacticDomain         cols=48        #2    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       accuracy_syntacticDomain         cols=48        timed gen=0.03s assess=0.00s (results=0.00s) baseline=224MB peak=224MB
+ok       accuracy_syntacticDomain         cols=60        #0    gen=0.04s assess=0.01s baseline=229MB peak=230MB
+ok       accuracy_syntacticDomain         cols=60        #1    gen=0.04s assess=0.01s baseline=229MB peak=230MB
+ok       accuracy_syntacticDomain         cols=60        #2    gen=0.04s assess=0.01s baseline=229MB peak=230MB
+ok       accuracy_syntacticDomain         cols=60        timed gen=0.04s assess=0.01s (results=0.00s) baseline=229MB peak=230MB
+ok       accuracy_syntacticDomain         cols=78        #0    gen=0.05s assess=0.01s baseline=237MB peak=237MB
+ok       accuracy_syntacticDomain         cols=78        #1    gen=0.05s assess=0.01s baseline=237MB peak=237MB
+ok       accuracy_syntacticDomain         cols=78        #2    gen=0.06s assess=0.01s baseline=237MB peak=237MB
+ok       accuracy_syntacticDomain         cols=78        timed gen=0.05s assess=0.01s (results=0.00s) baseline=237MB peak=237MB
+ok       completeness_nullRatio           rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       completeness_nullRatio           rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       completeness_nullRatio           rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=207MB
+ok       completeness_nullRatio           rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       completeness_nullRatio           rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       completeness_nullRatio           rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       completeness_nullRatio           rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=207MB
+ok       completeness_nullRatio           rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=1000      #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=1000      #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=1000      #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       completeness_nullRatio           rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       completeness_nullRatio           rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       completeness_nullRatio           rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       completeness_nullRatio           rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       completeness_nullRatio           rows=5000      #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       completeness_nullRatio           rows=5000      #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       completeness_nullRatio           rows=5000      #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       completeness_nullRatio           rows=5000      timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       completeness_nullRatio           rows=10000     #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       completeness_nullRatio           rows=10000     #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       completeness_nullRatio           rows=10000     #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       completeness_nullRatio           rows=10000     timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       completeness_nullRatio           rows=20000     #0    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       completeness_nullRatio           rows=20000     #1    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       completeness_nullRatio           rows=20000     #2    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       completeness_nullRatio           rows=20000     timed gen=0.02s assess=0.00s (results=0.00s) baseline=215MB peak=215MB
+ok       completeness_nullRatio           rows=50000     #0    gen=0.04s assess=0.00s baseline=231MB peak=231MB
+ok       completeness_nullRatio           rows=50000     #1    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       completeness_nullRatio           rows=50000     #2    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       completeness_nullRatio           rows=50000     timed gen=0.03s assess=0.00s (results=0.00s) baseline=231MB peak=231MB
+ok       completeness_nullRatio           rows=100000    #0    gen=0.06s assess=0.00s baseline=269MB peak=271MB
+ok       completeness_nullRatio           rows=100000    #1    gen=0.06s assess=0.00s baseline=269MB peak=271MB
+ok       completeness_nullRatio           rows=100000    #2    gen=0.06s assess=0.00s baseline=269MB peak=271MB
+ok       completeness_nullRatio           rows=100000    timed gen=0.06s assess=0.00s (results=0.00s) baseline=269MB peak=271MB
+ok       completeness_nullRatio           rows=200000    #0    gen=0.12s assess=0.00s baseline=328MB peak=346MB
+ok       completeness_nullRatio           rows=200000    #1    gen=0.12s assess=0.00s baseline=328MB peak=346MB
+ok       completeness_nullRatio           rows=200000    #2    gen=0.12s assess=0.00s baseline=328MB peak=346MB
+ok       completeness_nullRatio           rows=200000    timed gen=0.12s assess=0.00s (results=0.00s) baseline=328MB peak=346MB
+ok       completeness_nullRatio           rows=500000    #0    gen=0.29s assess=0.01s baseline=526MB peak=584MB
+ok       completeness_nullRatio           rows=500000    #1    gen=0.29s assess=0.01s baseline=527MB peak=584MB
+ok       completeness_nullRatio           rows=500000    #2    gen=0.29s assess=0.01s baseline=527MB peak=584MB
+ok       completeness_nullRatio           rows=500000    timed gen=0.29s assess=0.01s (results=0.00s) baseline=526MB peak=584MB
+ok       completeness_nullRatio           rows=1000000   #0    gen=0.55s assess=0.02s baseline=848MB peak=953MB
+ok       completeness_nullRatio           rows=1000000   #1    gen=0.56s assess=0.02s baseline=848MB peak=953MB
+ok       completeness_nullRatio           rows=1000000   #2    gen=0.59s assess=0.03s baseline=850MB peak=956MB
+ok       completeness_nullRatio           rows=1000000   timed gen=0.55s assess=0.02s (results=0.00s) baseline=848MB peak=953MB
+ok       completeness_nullRatio           cols=6         #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       completeness_nullRatio           cols=6         #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       completeness_nullRatio           cols=6         #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       completeness_nullRatio           cols=6         timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       completeness_nullRatio           cols=12        #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       completeness_nullRatio           cols=12        #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       completeness_nullRatio           cols=12        #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       completeness_nullRatio           cols=12        timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       completeness_nullRatio           cols=18        #0    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       completeness_nullRatio           cols=18        #1    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       completeness_nullRatio           cols=18        #2    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       completeness_nullRatio           cols=18        timed gen=0.01s assess=0.00s (results=0.00s) baseline=211MB peak=212MB
+ok       completeness_nullRatio           cols=24        #0    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       completeness_nullRatio           cols=24        #1    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       completeness_nullRatio           cols=24        #2    gen=0.02s assess=0.00s baseline=214MB peak=215MB
+ok       completeness_nullRatio           cols=24        timed gen=0.02s assess=0.00s (results=0.00s) baseline=214MB peak=215MB
+ok       completeness_nullRatio           cols=36        #0    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       completeness_nullRatio           cols=36        #1    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       completeness_nullRatio           cols=36        #2    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       completeness_nullRatio           cols=36        timed gen=0.03s assess=0.00s (results=0.00s) baseline=219MB peak=219MB
+ok       completeness_nullRatio           cols=48        #0    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       completeness_nullRatio           cols=48        #1    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       completeness_nullRatio           cols=48        #2    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       completeness_nullRatio           cols=48        timed gen=0.03s assess=0.00s (results=0.00s) baseline=224MB peak=224MB
+ok       completeness_nullRatio           cols=60        #0    gen=0.04s assess=0.00s baseline=229MB peak=230MB
+ok       completeness_nullRatio           cols=60        #1    gen=0.04s assess=0.00s baseline=229MB peak=230MB
+ok       completeness_nullRatio           cols=60        #2    gen=0.04s assess=0.00s baseline=229MB peak=230MB
+ok       completeness_nullRatio           cols=60        timed gen=0.04s assess=0.00s (results=0.00s) baseline=229MB peak=230MB
+ok       completeness_nullRatio           cols=78        #0    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       completeness_nullRatio           cols=78        #1    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       completeness_nullRatio           cols=78        #2    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       completeness_nullRatio           cols=78        timed gen=0.05s assess=0.00s (results=0.00s) baseline=237MB peak=237MB
+ok       consistency_countFDViolations    rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       consistency_countFDViolations    rows=1000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_countFDViolations    rows=1000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_countFDViolations    rows=1000      #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_countFDViolations    rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       consistency_countFDViolations    rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_countFDViolations    rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_countFDViolations    rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_countFDViolations    rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       consistency_countFDViolations    rows=5000      #0    gen=0.01s assess=0.00s baseline=208MB peak=210MB
+ok       consistency_countFDViolations    rows=5000      #1    gen=0.01s assess=0.00s baseline=208MB peak=210MB
+ok       consistency_countFDViolations    rows=5000      #2    gen=0.01s assess=0.00s baseline=208MB peak=210MB
+ok       consistency_countFDViolations    rows=5000      timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=210MB
+ok       consistency_countFDViolations    rows=10000     #0    gen=0.01s assess=0.00s baseline=209MB peak=212MB
+ok       consistency_countFDViolations    rows=10000     #1    gen=0.01s assess=0.00s baseline=209MB peak=212MB
+ok       consistency_countFDViolations    rows=10000     #2    gen=0.01s assess=0.00s baseline=209MB peak=212MB
+ok       consistency_countFDViolations    rows=10000     timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=212MB
+ok       consistency_countFDViolations    rows=20000     #0    gen=0.02s assess=0.00s baseline=215MB peak=217MB
+ok       consistency_countFDViolations    rows=20000     #1    gen=0.02s assess=0.00s baseline=215MB peak=217MB
+ok       consistency_countFDViolations    rows=20000     #2    gen=0.02s assess=0.00s baseline=215MB peak=217MB
+ok       consistency_countFDViolations    rows=20000     timed gen=0.02s assess=0.00s (results=0.00s) baseline=215MB peak=217MB
+ok       consistency_countFDViolations    rows=50000     #0    gen=0.03s assess=0.01s baseline=231MB peak=236MB
+ok       consistency_countFDViolations    rows=50000     #1    gen=0.04s assess=0.01s baseline=231MB peak=236MB
+ok       consistency_countFDViolations    rows=50000     #2    gen=0.03s assess=0.01s baseline=231MB peak=236MB
+ok       consistency_countFDViolations    rows=50000     timed gen=0.03s assess=0.01s (results=0.00s) baseline=231MB peak=236MB
+ok       consistency_countFDViolations    rows=100000    #0    gen=0.06s assess=0.02s baseline=269MB peak=272MB
+ok       consistency_countFDViolations    rows=100000    #1    gen=0.06s assess=0.02s baseline=268MB peak=272MB
+ok       consistency_countFDViolations    rows=100000    #2    gen=0.06s assess=0.02s baseline=269MB peak=272MB
+ok       consistency_countFDViolations    rows=100000    timed gen=0.06s assess=0.02s (results=0.00s) baseline=269MB peak=272MB
+ok       consistency_countFDViolations    rows=200000    #0    gen=0.12s assess=0.04s baseline=328MB peak=340MB
+ok       consistency_countFDViolations    rows=200000    #1    gen=0.12s assess=0.04s baseline=328MB peak=340MB
+ok       consistency_countFDViolations    rows=200000    #2    gen=0.12s assess=0.04s baseline=328MB peak=340MB
+ok       consistency_countFDViolations    rows=200000    timed gen=0.12s assess=0.04s (results=0.00s) baseline=328MB peak=340MB
+ok       consistency_countFDViolations    rows=500000    #0    gen=0.28s assess=0.10s baseline=526MB peak=565MB
+ok       consistency_countFDViolations    rows=500000    #1    gen=0.29s assess=0.10s baseline=527MB peak=566MB
+ok       consistency_countFDViolations    rows=500000    #2    gen=0.28s assess=0.11s baseline=526MB peak=565MB
+ok       consistency_countFDViolations    rows=500000    timed gen=0.28s assess=0.11s (results=0.00s) baseline=526MB peak=565MB
+ok       consistency_countFDViolations    rows=1000000   #0    gen=0.55s assess=0.21s baseline=849MB peak=870MB
+ok       consistency_countFDViolations    rows=1000000   #1    gen=0.57s assess=0.21s baseline=849MB peak=870MB
+ok       consistency_countFDViolations    rows=1000000   #2    gen=0.55s assess=0.22s baseline=848MB peak=869MB
+ok       consistency_countFDViolations    rows=1000000   timed gen=0.55s assess=0.21s (results=0.00s) baseline=848MB peak=869MB
+ok       consistency_countFDViolations    cols=6         #0    gen=0.01s assess=0.00s baseline=209MB peak=211MB
+ok       consistency_countFDViolations    cols=6         #1    gen=0.01s assess=0.00s baseline=209MB peak=211MB
+ok       consistency_countFDViolations    cols=6         #2    gen=0.01s assess=0.00s baseline=209MB peak=211MB
+ok       consistency_countFDViolations    cols=6         timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=211MB
+ok       consistency_countFDViolations    cols=12        #0    gen=0.01s assess=0.00s baseline=209MB peak=212MB
+ok       consistency_countFDViolations    cols=12        #1    gen=0.01s assess=0.00s baseline=209MB peak=212MB
+ok       consistency_countFDViolations    cols=12        #2    gen=0.01s assess=0.00s baseline=209MB peak=212MB
+ok       consistency_countFDViolations    cols=12        timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=212MB
+ok       consistency_countFDViolations    cols=18        #0    gen=0.01s assess=0.00s baseline=211MB peak=214MB
+ok       consistency_countFDViolations    cols=18        #1    gen=0.01s assess=0.00s baseline=212MB peak=214MB
+ok       consistency_countFDViolations    cols=18        #2    gen=0.01s assess=0.00s baseline=212MB peak=215MB
+ok       consistency_countFDViolations    cols=18        timed gen=0.01s assess=0.00s (results=0.00s) baseline=212MB peak=214MB
+ok       consistency_countFDViolations    cols=24        #0    gen=0.02s assess=0.00s baseline=214MB peak=216MB
+ok       consistency_countFDViolations    cols=24        #1    gen=0.02s assess=0.00s baseline=214MB peak=216MB
+ok       consistency_countFDViolations    cols=24        #2    gen=0.02s assess=0.00s baseline=214MB peak=216MB
+ok       consistency_countFDViolations    cols=24        timed gen=0.02s assess=0.00s (results=0.00s) baseline=214MB peak=216MB
+ok       consistency_countFDViolations    cols=36        #0    gen=0.03s assess=0.00s baseline=219MB peak=221MB
+ok       consistency_countFDViolations    cols=36        #1    gen=0.03s assess=0.00s baseline=219MB peak=221MB
+ok       consistency_countFDViolations    cols=36        #2    gen=0.03s assess=0.00s baseline=219MB peak=221MB
+ok       consistency_countFDViolations    cols=36        timed gen=0.03s assess=0.00s (results=0.00s) baseline=219MB peak=221MB
+ok       consistency_countFDViolations    cols=48        #0    gen=0.03s assess=0.00s baseline=224MB peak=225MB
+ok       consistency_countFDViolations    cols=48        #1    gen=0.03s assess=0.00s baseline=224MB peak=225MB
+ok       consistency_countFDViolations    cols=48        #2    gen=0.03s assess=0.00s baseline=224MB peak=225MB
+ok       consistency_countFDViolations    cols=48        timed gen=0.03s assess=0.00s (results=0.00s) baseline=224MB peak=225MB
+ok       consistency_countFDViolations    cols=60        #0    gen=0.04s assess=0.00s baseline=229MB peak=231MB
+ok       consistency_countFDViolations    cols=60        #1    gen=0.04s assess=0.00s baseline=229MB peak=231MB
+ok       consistency_countFDViolations    cols=60        #2    gen=0.04s assess=0.00s baseline=229MB peak=231MB
+ok       consistency_countFDViolations    cols=60        timed gen=0.04s assess=0.00s (results=0.00s) baseline=229MB peak=231MB
+ok       consistency_countFDViolations    cols=78        #0    gen=0.05s assess=0.00s baseline=237MB peak=238MB
+ok       consistency_countFDViolations    cols=78        #1    gen=0.05s assess=0.00s baseline=237MB peak=238MB
+ok       consistency_countFDViolations    cols=78        #2    gen=0.05s assess=0.00s baseline=237MB peak=238MB
+ok       consistency_countFDViolations    cols=78        timed gen=0.05s assess=0.00s (results=0.00s) baseline=237MB peak=238MB
+ok       consistency_ruleBasedHinrichs    rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       consistency_ruleBasedHinrichs    rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       consistency_ruleBasedHinrichs    rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       consistency_ruleBasedHinrichs    rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=500       #2    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       consistency_ruleBasedHinrichs    rows=1000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedHinrichs    rows=1000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedHinrichs    rows=1000      #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedHinrichs    rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       consistency_ruleBasedHinrichs    rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedHinrichs    rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedHinrichs    rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedHinrichs    rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       consistency_ruleBasedHinrichs    rows=5000      #0    gen=0.01s assess=0.01s baseline=208MB peak=211MB
+ok       consistency_ruleBasedHinrichs    rows=5000      #1    gen=0.01s assess=0.01s baseline=208MB peak=212MB
+ok       consistency_ruleBasedHinrichs    rows=5000      #2    gen=0.01s assess=0.01s baseline=208MB peak=212MB
+ok       consistency_ruleBasedHinrichs    rows=5000      timed gen=0.01s assess=0.01s (results=0.00s) baseline=208MB peak=211MB
+ok       consistency_ruleBasedHinrichs    rows=10000     #0    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedHinrichs    rows=10000     #1    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedHinrichs    rows=10000     #2    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedHinrichs    rows=10000     timed gen=0.01s assess=0.02s (results=0.01s) baseline=210MB peak=215MB
+ok       consistency_ruleBasedHinrichs    rows=20000     #0    gen=0.02s assess=0.03s baseline=215MB peak=227MB
+ok       consistency_ruleBasedHinrichs    rows=20000     #1    gen=0.02s assess=0.03s baseline=215MB peak=226MB
+ok       consistency_ruleBasedHinrichs    rows=20000     #2    gen=0.02s assess=0.03s baseline=215MB peak=227MB
+ok       consistency_ruleBasedHinrichs    rows=20000     timed gen=0.02s assess=0.04s (results=0.02s) baseline=215MB peak=226MB
+ok       consistency_ruleBasedHinrichs    rows=50000     #0    gen=0.03s assess=0.07s baseline=231MB peak=260MB
+ok       consistency_ruleBasedHinrichs    rows=50000     #1    gen=0.03s assess=0.07s baseline=231MB peak=261MB
+ok       consistency_ruleBasedHinrichs    rows=50000     #2    gen=0.03s assess=0.07s baseline=231MB peak=261MB
+ok       consistency_ruleBasedHinrichs    rows=50000     timed gen=0.03s assess=0.09s (results=0.05s) baseline=231MB peak=261MB
+ok       consistency_ruleBasedHinrichs    rows=100000    #0    gen=0.06s assess=0.17s baseline=269MB peak=330MB
+ok       consistency_ruleBasedHinrichs    rows=100000    #1    gen=0.06s assess=0.17s baseline=269MB peak=329MB
+ok       consistency_ruleBasedHinrichs    rows=100000    #2    gen=0.06s assess=0.17s baseline=269MB peak=330MB
+ok       consistency_ruleBasedHinrichs    rows=100000    timed gen=0.06s assess=0.21s (results=0.13s) baseline=269MB peak=330MB
+ok       consistency_ruleBasedHinrichs    rows=200000    #0    gen=0.12s assess=0.41s baseline=328MB peak=451MB
+ok       consistency_ruleBasedHinrichs    rows=200000    #1    gen=0.12s assess=0.41s baseline=328MB peak=451MB
+ok       consistency_ruleBasedHinrichs    rows=200000    #2    gen=0.11s assess=0.41s baseline=328MB peak=451MB
+ok       consistency_ruleBasedHinrichs    rows=200000    timed gen=0.11s assess=0.50s (results=0.32s) baseline=328MB peak=451MB
+ok       consistency_ruleBasedHinrichs    rows=500000    #0    gen=0.28s assess=1.06s baseline=526MB peak=835MB
+ok       consistency_ruleBasedHinrichs    rows=500000    #1    gen=0.28s assess=1.07s baseline=526MB peak=835MB
+ok       consistency_ruleBasedHinrichs    rows=500000    #2    gen=0.28s assess=1.06s baseline=526MB peak=835MB
+ok       consistency_ruleBasedHinrichs    rows=500000    timed gen=0.28s assess=1.26s (results=0.84s) baseline=526MB peak=835MB
+ok       consistency_ruleBasedHinrichs    rows=1000000   #0    gen=0.55s assess=2.20s baseline=848MB peak=1471MB
+ok       consistency_ruleBasedHinrichs    rows=1000000   #1    gen=0.55s assess=2.28s baseline=848MB peak=1471MB
+ok       consistency_ruleBasedHinrichs    rows=1000000   #2    gen=0.56s assess=2.19s baseline=848MB peak=1471MB
+ok       consistency_ruleBasedHinrichs    rows=1000000   timed gen=0.56s assess=2.66s (results=1.79s) baseline=848MB peak=1471MB
+ok       consistency_ruleBasedHinrichs    cols=6         #0    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedHinrichs    cols=6         #1    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedHinrichs    cols=6         #2    gen=0.01s assess=0.01s baseline=208MB peak=215MB
+ok       consistency_ruleBasedHinrichs    cols=6         timed gen=0.01s assess=0.02s (results=0.01s) baseline=208MB peak=215MB
+ok       consistency_ruleBasedHinrichs    cols=12        #0    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedHinrichs    cols=12        #1    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedHinrichs    cols=12        #2    gen=0.01s assess=0.01s baseline=210MB peak=216MB
+ok       consistency_ruleBasedHinrichs    cols=12        timed gen=0.01s assess=0.02s (results=0.01s) baseline=209MB peak=215MB
+ok       consistency_ruleBasedHinrichs    cols=18        #0    gen=0.01s assess=0.01s baseline=212MB peak=217MB
+ok       consistency_ruleBasedHinrichs    cols=18        #1    gen=0.01s assess=0.01s baseline=212MB peak=217MB
+ok       consistency_ruleBasedHinrichs    cols=18        #2    gen=0.01s assess=0.01s baseline=211MB peak=217MB
+ok       consistency_ruleBasedHinrichs    cols=18        timed gen=0.02s assess=0.02s (results=0.01s) baseline=211MB peak=217MB
+ok       consistency_ruleBasedHinrichs    cols=24        #0    gen=0.02s assess=0.01s baseline=214MB peak=219MB
+ok       consistency_ruleBasedHinrichs    cols=24        #1    gen=0.02s assess=0.01s baseline=214MB peak=219MB
+ok       consistency_ruleBasedHinrichs    cols=24        #2    gen=0.02s assess=0.01s baseline=214MB peak=219MB
+ok       consistency_ruleBasedHinrichs    cols=24        timed gen=0.02s assess=0.02s (results=0.01s) baseline=214MB peak=219MB
+ok       consistency_ruleBasedHinrichs    cols=36        #0    gen=0.03s assess=0.01s baseline=219MB peak=224MB
+ok       consistency_ruleBasedHinrichs    cols=36        #1    gen=0.03s assess=0.01s baseline=219MB peak=224MB
+ok       consistency_ruleBasedHinrichs    cols=36        #2    gen=0.03s assess=0.01s baseline=219MB peak=224MB
+ok       consistency_ruleBasedHinrichs    cols=36        timed gen=0.03s assess=0.02s (results=0.01s) baseline=219MB peak=224MB
+ok       consistency_ruleBasedHinrichs    cols=48        #0    gen=0.03s assess=0.01s baseline=224MB peak=228MB
+ok       consistency_ruleBasedHinrichs    cols=48        #1    gen=0.03s assess=0.01s baseline=224MB peak=228MB
+ok       consistency_ruleBasedHinrichs    cols=48        #2    gen=0.03s assess=0.01s baseline=224MB peak=228MB
+ok       consistency_ruleBasedHinrichs    cols=48        timed gen=0.03s assess=0.02s (results=0.01s) baseline=224MB peak=228MB
+ok       consistency_ruleBasedHinrichs    cols=60        #0    gen=0.04s assess=0.01s baseline=229MB peak=233MB
+ok       consistency_ruleBasedHinrichs    cols=60        #1    gen=0.04s assess=0.01s baseline=229MB peak=233MB
+ok       consistency_ruleBasedHinrichs    cols=60        #2    gen=0.04s assess=0.01s baseline=229MB peak=233MB
+ok       consistency_ruleBasedHinrichs    cols=60        timed gen=0.04s assess=0.02s (results=0.01s) baseline=229MB peak=233MB
+ok       consistency_ruleBasedHinrichs    cols=78        #0    gen=0.05s assess=0.01s baseline=237MB peak=239MB
+ok       consistency_ruleBasedHinrichs    cols=78        #1    gen=0.05s assess=0.01s baseline=237MB peak=239MB
+ok       consistency_ruleBasedHinrichs    cols=78        #2    gen=0.05s assess=0.01s baseline=237MB peak=239MB
+ok       consistency_ruleBasedHinrichs    cols=78        timed gen=0.05s assess=0.02s (results=0.01s) baseline=237MB peak=239MB
+ok       consistency_ruleBasedPipino      rows=100       #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       consistency_ruleBasedPipino      rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       consistency_ruleBasedPipino      rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       consistency_ruleBasedPipino      rows=1000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedPipino      rows=1000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedPipino      rows=1000      #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedPipino      rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       consistency_ruleBasedPipino      rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedPipino      rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       consistency_ruleBasedPipino      rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=210MB
+ok       consistency_ruleBasedPipino      rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=210MB
+ok       consistency_ruleBasedPipino      rows=5000      #0    gen=0.01s assess=0.01s baseline=208MB peak=212MB
+ok       consistency_ruleBasedPipino      rows=5000      #1    gen=0.01s assess=0.01s baseline=209MB peak=212MB
+ok       consistency_ruleBasedPipino      rows=5000      #2    gen=0.01s assess=0.01s baseline=208MB peak=212MB
+ok       consistency_ruleBasedPipino      rows=5000      timed gen=0.01s assess=0.01s (results=0.00s) baseline=208MB peak=212MB
+ok       consistency_ruleBasedPipino      rows=10000     #0    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      rows=10000     #1    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      rows=10000     #2    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      rows=10000     timed gen=0.01s assess=0.02s (results=0.01s) baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      rows=20000     #0    gen=0.02s assess=0.03s baseline=215MB peak=227MB
+ok       consistency_ruleBasedPipino      rows=20000     #1    gen=0.02s assess=0.03s baseline=215MB peak=227MB
+ok       consistency_ruleBasedPipino      rows=20000     #2    gen=0.02s assess=0.03s baseline=215MB peak=226MB
+ok       consistency_ruleBasedPipino      rows=20000     timed gen=0.02s assess=0.03s (results=0.02s) baseline=215MB peak=227MB
+ok       consistency_ruleBasedPipino      rows=50000     #0    gen=0.03s assess=0.07s baseline=231MB peak=261MB
+ok       consistency_ruleBasedPipino      rows=50000     #1    gen=0.03s assess=0.07s baseline=231MB peak=260MB
+ok       consistency_ruleBasedPipino      rows=50000     #2    gen=0.03s assess=0.07s baseline=231MB peak=261MB
+ok       consistency_ruleBasedPipino      rows=50000     timed gen=0.03s assess=0.09s (results=0.05s) baseline=231MB peak=261MB
+ok       consistency_ruleBasedPipino      rows=100000    #0    gen=0.06s assess=0.16s baseline=269MB peak=329MB
+ok       consistency_ruleBasedPipino      rows=100000    #1    gen=0.06s assess=0.16s baseline=269MB peak=330MB
+ok       consistency_ruleBasedPipino      rows=100000    #2    gen=0.06s assess=0.16s baseline=269MB peak=329MB
+ok       consistency_ruleBasedPipino      rows=100000    timed gen=0.06s assess=0.20s (results=0.13s) baseline=267MB peak=327MB
+ok       consistency_ruleBasedPipino      rows=200000    #0    gen=0.12s assess=0.38s baseline=328MB peak=451MB
+ok       consistency_ruleBasedPipino      rows=200000    #1    gen=0.12s assess=0.38s baseline=328MB peak=451MB
+ok       consistency_ruleBasedPipino      rows=200000    #2    gen=0.12s assess=0.41s baseline=328MB peak=451MB
+ok       consistency_ruleBasedPipino      rows=200000    timed gen=0.13s assess=0.52s (results=0.36s) baseline=328MB peak=451MB
+ok       consistency_ruleBasedPipino      rows=500000    #0    gen=0.28s assess=1.00s baseline=527MB peak=839MB
+ok       consistency_ruleBasedPipino      rows=500000    #1    gen=0.28s assess=1.01s baseline=526MB peak=839MB
+ok       consistency_ruleBasedPipino      rows=500000    #2    gen=0.28s assess=1.01s baseline=526MB peak=839MB
+ok       consistency_ruleBasedPipino      rows=500000    timed gen=0.28s assess=1.21s (results=0.85s) baseline=526MB peak=839MB
+ok       consistency_ruleBasedPipino      rows=1000000   #0    gen=0.55s assess=2.05s baseline=849MB peak=1479MB
+ok       consistency_ruleBasedPipino      rows=1000000   #1    gen=0.55s assess=2.06s baseline=848MB peak=1479MB
+ok       consistency_ruleBasedPipino      rows=1000000   #2    gen=0.60s assess=2.29s baseline=848MB peak=1479MB
+ok       consistency_ruleBasedPipino      rows=1000000   timed gen=0.54s assess=2.70s (results=1.94s) baseline=848MB peak=1479MB
+ok       consistency_ruleBasedPipino      cols=6         #0    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      cols=6         #1    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      cols=6         #2    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      cols=6         timed gen=0.01s assess=0.02s (results=0.01s) baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      cols=12        #0    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      cols=12        #1    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      cols=12        #2    gen=0.01s assess=0.01s baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      cols=12        timed gen=0.01s assess=0.02s (results=0.01s) baseline=209MB peak=215MB
+ok       consistency_ruleBasedPipino      cols=18        #0    gen=0.01s assess=0.01s baseline=211MB peak=217MB
+ok       consistency_ruleBasedPipino      cols=18        #1    gen=0.01s assess=0.01s baseline=212MB peak=217MB
+ok       consistency_ruleBasedPipino      cols=18        #2    gen=0.01s assess=0.01s baseline=211MB peak=217MB
+ok       consistency_ruleBasedPipino      cols=18        timed gen=0.01s assess=0.02s (results=0.01s) baseline=212MB peak=217MB
+ok       consistency_ruleBasedPipino      cols=24        #0    gen=0.02s assess=0.01s baseline=214MB peak=219MB
+ok       consistency_ruleBasedPipino      cols=24        #1    gen=0.02s assess=0.01s baseline=214MB peak=219MB
+ok       consistency_ruleBasedPipino      cols=24        #2    gen=0.02s assess=0.01s baseline=214MB peak=219MB
+ok       consistency_ruleBasedPipino      cols=24        timed gen=0.02s assess=0.02s (results=0.01s) baseline=214MB peak=219MB
+ok       consistency_ruleBasedPipino      cols=36        #0    gen=0.03s assess=0.01s baseline=219MB peak=224MB
+ok       consistency_ruleBasedPipino      cols=36        #1    gen=0.03s assess=0.02s baseline=219MB peak=224MB
+ok       consistency_ruleBasedPipino      cols=36        #2    gen=0.03s assess=0.02s baseline=219MB peak=224MB
+ok       consistency_ruleBasedPipino      cols=36        timed gen=0.03s assess=0.02s (results=0.01s) baseline=219MB peak=224MB
+ok       consistency_ruleBasedPipino      cols=48        #0    gen=0.03s assess=0.01s baseline=224MB peak=229MB
+ok       consistency_ruleBasedPipino      cols=48        #1    gen=0.03s assess=0.01s baseline=224MB peak=228MB
+ok       consistency_ruleBasedPipino      cols=48        #2    gen=0.03s assess=0.01s baseline=225MB peak=229MB
+ok       consistency_ruleBasedPipino      cols=48        timed gen=0.03s assess=0.02s (results=0.01s) baseline=224MB peak=228MB
+ok       consistency_ruleBasedPipino      cols=60        #0    gen=0.04s assess=0.01s baseline=229MB peak=233MB
+ok       consistency_ruleBasedPipino      cols=60        #1    gen=0.04s assess=0.01s baseline=229MB peak=233MB
+ok       consistency_ruleBasedPipino      cols=60        #2    gen=0.04s assess=0.01s baseline=229MB peak=233MB
+ok       consistency_ruleBasedPipino      cols=60        timed gen=0.04s assess=0.02s (results=0.01s) baseline=229MB peak=233MB
+ok       consistency_ruleBasedPipino      cols=78        #0    gen=0.05s assess=0.01s baseline=237MB peak=239MB
+ok       consistency_ruleBasedPipino      cols=78        #1    gen=0.05s assess=0.01s baseline=237MB peak=240MB
+ok       consistency_ruleBasedPipino      cols=78        #2    gen=0.05s assess=0.01s baseline=237MB peak=239MB
+ok       consistency_ruleBasedPipino      cols=78        timed gen=0.05s assess=0.02s (results=0.01s) baseline=237MB peak=239MB
+ok       correctness_heinrich             rows=100       #0    gen=0.00s assess=0.01s baseline=208MB peak=208MB
+ok       correctness_heinrich             rows=100       #1    gen=0.00s assess=0.01s baseline=207MB peak=208MB
+ok       correctness_heinrich             rows=100       #2    gen=0.00s assess=0.01s baseline=207MB peak=208MB
+ok       correctness_heinrich             rows=100       timed gen=0.00s assess=0.01s (results=0.00s) baseline=208MB peak=208MB
+ok       correctness_heinrich             rows=200       #0    gen=0.00s assess=0.01s baseline=208MB peak=209MB
+ok       correctness_heinrich             rows=200       #1    gen=0.00s assess=0.01s baseline=208MB peak=209MB
+ok       correctness_heinrich             rows=200       #2    gen=0.00s assess=0.01s baseline=208MB peak=209MB
+ok       correctness_heinrich             rows=200       timed gen=0.00s assess=0.01s (results=0.00s) baseline=208MB peak=209MB
+ok       correctness_heinrich             rows=500       #0    gen=0.00s assess=0.03s baseline=208MB peak=210MB
+ok       correctness_heinrich             rows=500       #1    gen=0.00s assess=0.03s baseline=208MB peak=210MB
+ok       correctness_heinrich             rows=500       #2    gen=0.00s assess=0.03s baseline=208MB peak=210MB
+ok       correctness_heinrich             rows=500       timed gen=0.00s assess=0.03s (results=0.01s) baseline=208MB peak=210MB
+ok       correctness_heinrich             rows=1000      #0    gen=0.00s assess=0.06s baseline=208MB peak=213MB
+ok       correctness_heinrich             rows=1000      #1    gen=0.00s assess=0.06s baseline=208MB peak=213MB
+ok       correctness_heinrich             rows=1000      #2    gen=0.00s assess=0.06s baseline=208MB peak=213MB
+ok       correctness_heinrich             rows=1000      timed gen=0.00s assess=0.07s (results=0.01s) baseline=208MB peak=213MB
+ok       correctness_heinrich             rows=2000      #0    gen=0.01s assess=0.12s baseline=209MB peak=219MB
+ok       correctness_heinrich             rows=2000      #1    gen=0.01s assess=0.13s baseline=208MB peak=219MB
+ok       correctness_heinrich             rows=2000      #2    gen=0.01s assess=0.13s baseline=208MB peak=219MB
+ok       correctness_heinrich             rows=2000      timed gen=0.01s assess=0.14s (results=0.02s) baseline=209MB peak=219MB
+ok       correctness_heinrich             rows=5000      #0    gen=0.01s assess=0.31s baseline=209MB peak=235MB
+ok       correctness_heinrich             rows=5000      #1    gen=0.01s assess=0.31s baseline=209MB peak=235MB
+ok       correctness_heinrich             rows=5000      #2    gen=0.01s assess=0.31s baseline=209MB peak=235MB
+ok       correctness_heinrich             rows=5000      timed gen=0.01s assess=0.34s (results=0.06s) baseline=209MB peak=235MB
+ok       correctness_heinrich             rows=10000     #0    gen=0.01s assess=0.66s baseline=211MB peak=262MB
+ok       correctness_heinrich             rows=10000     #1    gen=0.01s assess=0.65s baseline=211MB peak=262MB
+ok       correctness_heinrich             rows=10000     #2    gen=0.01s assess=0.65s baseline=211MB peak=262MB
+ok       correctness_heinrich             rows=10000     timed gen=0.01s assess=0.70s (results=0.15s) baseline=211MB peak=262MB
+ok       correctness_heinrich             rows=20000     #0    gen=0.02s assess=1.31s baseline=218MB peak=319MB
+ok       correctness_heinrich             rows=20000     #1    gen=0.02s assess=1.31s baseline=218MB peak=319MB
+ok       correctness_heinrich             rows=20000     #2    gen=0.02s assess=1.40s baseline=218MB peak=319MB
+ok       correctness_heinrich             rows=20000     timed gen=0.02s assess=1.40s (results=0.27s) baseline=218MB peak=319MB
+ok       correctness_heinrich             rows=50000     #0    gen=0.05s assess=3.44s baseline=237MB peak=494MB
+ok       correctness_heinrich             rows=50000     #1    gen=0.05s assess=3.55s baseline=237MB peak=494MB
+ok       correctness_heinrich             rows=50000     #2    gen=0.06s assess=4.19s baseline=239MB peak=498MB
+ok       correctness_heinrich             rows=50000     timed gen=0.05s assess=3.77s (results=0.84s) baseline=237MB peak=494MB
+ok       correctness_heinrich             rows=100000    #0    gen=0.09s assess=7.31s baseline=283MB peak=803MB
+ok       correctness_heinrich             rows=100000    #1    gen=0.10s assess=6.92s baseline=283MB peak=803MB
+ok       correctness_heinrich             rows=100000    #2    gen=0.11s assess=7.33s baseline=286MB peak=806MB
+ok       correctness_heinrich             rows=100000    timed gen=0.09s assess=7.57s (results=1.93s) baseline=283MB peak=803MB
+ok       correctness_heinrich             rows=200000    #0    gen=0.18s assess=14.06s baseline=355MB peak=1396MB
+ok       correctness_heinrich             rows=200000    #1    gen=0.19s assess=14.27s baseline=355MB peak=1396MB
+ok       correctness_heinrich             rows=200000    #2    gen=0.19s assess=14.49s baseline=355MB peak=1396MB
+ok       correctness_heinrich             rows=200000    timed gen=0.18s assess=14.72s (results=3.31s) baseline=355MB peak=1396MB
+ok       correctness_heinrich             rows=500000    #0    gen=0.45s assess=35.59s baseline=604MB peak=3205MB
+ok       correctness_heinrich             rows=500000    #1    gen=0.44s assess=34.61s baseline=604MB peak=3205MB
+ok       correctness_heinrich             rows=500000    #2    gen=0.43s assess=34.18s baseline=604MB peak=3205MB
+ok       correctness_heinrich             rows=500000    timed gen=0.45s assess=37.76s (results=9.14s) baseline=604MB peak=3205MB
+ok       correctness_heinrich             rows=1000000   #0    gen=0.89s assess=68.65s baseline=1005MB peak=6211MB
+ok       correctness_heinrich             rows=1000000   #1    gen=0.87s assess=68.31s baseline=1005MB peak=6211MB
+ok       correctness_heinrich             rows=1000000   #2    gen=0.87s assess=69.17s baseline=1005MB peak=6211MB
+ok       correctness_heinrich             rows=1000000   timed gen=0.87s assess=73.68s (results=17.83s) baseline=1005MB peak=6211MB
+ok       correctness_heinrich             cols=6         #0    gen=0.01s assess=0.31s baseline=210MB peak=236MB
+ok       correctness_heinrich             cols=6         #1    gen=0.01s assess=0.32s baseline=210MB peak=235MB
+ok       correctness_heinrich             cols=6         #2    gen=0.01s assess=0.31s baseline=210MB peak=235MB
+ok       correctness_heinrich             cols=6         timed gen=0.01s assess=0.34s (results=0.06s) baseline=210MB peak=235MB
+ok       correctness_heinrich             cols=12        #0    gen=0.01s assess=0.67s baseline=211MB peak=262MB
+ok       correctness_heinrich             cols=12        #1    gen=0.01s assess=0.65s baseline=211MB peak=262MB
+ok       correctness_heinrich             cols=12        #2    gen=0.01s assess=0.65s baseline=211MB peak=262MB
+ok       correctness_heinrich             cols=12        timed gen=0.01s assess=0.71s (results=0.15s) baseline=211MB peak=262MB
+ok       correctness_heinrich             cols=18        #0    gen=0.02s assess=1.00s baseline=213MB peak=291MB
+ok       correctness_heinrich             cols=18        #1    gen=0.02s assess=0.99s baseline=213MB peak=292MB
+ok       correctness_heinrich             cols=18        #2    gen=0.02s assess=1.00s baseline=213MB peak=292MB
+ok       correctness_heinrich             cols=18        timed gen=0.02s assess=1.09s (results=0.21s) baseline=213MB peak=292MB
+ok       correctness_heinrich             cols=24        #0    gen=0.02s assess=1.32s baseline=216MB peak=319MB
+ok       correctness_heinrich             cols=24        #1    gen=0.02s assess=1.31s baseline=216MB peak=319MB
+ok       correctness_heinrich             cols=24        #2    gen=0.02s assess=1.30s baseline=216MB peak=319MB
+ok       correctness_heinrich             cols=24        timed gen=0.02s assess=1.41s (results=0.26s) baseline=216MB peak=318MB
+ok       correctness_heinrich             cols=36        #0    gen=0.04s assess=2.04s baseline=221MB peak=379MB
+ok       correctness_heinrich             cols=36        #1    gen=0.04s assess=2.03s baseline=221MB peak=379MB
+ok       correctness_heinrich             cols=36        #2    gen=0.04s assess=2.05s baseline=221MB peak=379MB
+ok       correctness_heinrich             cols=36        timed gen=0.04s assess=2.19s (results=0.43s) baseline=220MB peak=378MB
+ok       correctness_heinrich             cols=48        #0    gen=0.05s assess=2.73s baseline=226MB peak=438MB
+ok       correctness_heinrich             cols=48        #1    gen=0.05s assess=2.75s baseline=226MB peak=437MB
+ok       correctness_heinrich             cols=48        #2    gen=0.05s assess=2.75s baseline=226MB peak=437MB
+ok       correctness_heinrich             cols=48        timed gen=0.05s assess=3.00s (results=0.56s) baseline=226MB peak=437MB
+ok       correctness_heinrich             cols=60        #0    gen=0.06s assess=3.45s baseline=233MB peak=495MB
+ok       correctness_heinrich             cols=60        #1    gen=0.06s assess=3.46s baseline=233MB peak=495MB
+ok       correctness_heinrich             cols=60        #2    gen=0.06s assess=3.44s baseline=233MB peak=495MB
+ok       correctness_heinrich             cols=60        timed gen=0.06s assess=3.72s (results=0.68s) baseline=233MB peak=495MB
+ok       correctness_heinrich             cols=78        #0    gen=0.08s assess=4.50s baseline=240MB peak=582MB
+ok       correctness_heinrich             cols=78        #1    gen=0.07s assess=4.47s baseline=240MB peak=582MB
+ok       correctness_heinrich             cols=78        #2    gen=0.07s assess=4.52s baseline=240MB peak=583MB
+ok       correctness_heinrich             cols=78        timed gen=0.08s assess=5.01s (results=1.06s) baseline=240MB peak=582MB
+ok       minimality_clustering            rows=100       #0    gen=0.00s assess=0.56s baseline=207MB peak=208MB
+ok       minimality_clustering            rows=100       #1    gen=0.00s assess=0.58s baseline=207MB peak=208MB
+ok       minimality_clustering            rows=100       #2    gen=0.00s assess=0.57s baseline=206MB peak=207MB
+ok       minimality_clustering            rows=100       timed gen=0.00s assess=0.56s (results=0.00s) baseline=207MB peak=207MB
+ok       minimality_clustering            rows=200       #0    gen=0.00s assess=2.29s baseline=207MB peak=208MB
+ok       minimality_clustering            rows=200       #1    gen=0.00s assess=2.33s baseline=207MB peak=208MB
+ok       minimality_clustering            rows=200       #2    gen=0.00s assess=2.27s baseline=207MB peak=208MB
+ok       minimality_clustering            rows=200       timed gen=0.00s assess=2.30s (results=0.00s) baseline=207MB peak=208MB
+ok       minimality_clustering            rows=500       #0    gen=0.00s assess=14.36s baseline=207MB peak=211MB
+ok       minimality_clustering            rows=500       #1    gen=0.00s assess=14.32s baseline=207MB peak=211MB
+ok       minimality_clustering            rows=500       #2    gen=0.00s assess=14.21s baseline=207MB peak=211MB
+ok       minimality_clustering            rows=500       timed gen=0.00s assess=14.22s (results=0.00s) baseline=207MB peak=211MB
+ok       minimality_clustering            rows=1000      #0    gen=0.00s assess=56.80s baseline=207MB peak=227MB
+ok       minimality_clustering            rows=1000      #1    gen=0.00s assess=56.62s baseline=208MB peak=227MB
+ok       minimality_clustering            rows=1000      #2    gen=0.00s assess=56.94s baseline=207MB peak=227MB
+ok       minimality_clustering            rows=1000      timed gen=0.00s assess=57.44s (results=0.00s) baseline=207MB peak=227MB
+timeout  minimality_clustering            rows=2000      #0    exceeded 120.0s
+timeout  minimality_clustering            cols=6         #0    exceeded 120.0s
+ok       minimality_duplicateCount        rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=500       #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       minimality_duplicateCount        rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       minimality_duplicateCount        rows=1000      #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       minimality_duplicateCount        rows=1000      #1    gen=0.00s assess=0.00s baseline=207MB peak=209MB
+ok       minimality_duplicateCount        rows=1000      #2    gen=0.00s assess=0.00s baseline=207MB peak=209MB
+ok       minimality_duplicateCount        rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=209MB
+ok       minimality_duplicateCount        rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       minimality_duplicateCount        rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       minimality_duplicateCount        rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       minimality_duplicateCount        rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       minimality_duplicateCount        rows=5000      #0    gen=0.01s assess=0.00s baseline=208MB peak=210MB
+ok       minimality_duplicateCount        rows=5000      #1    gen=0.01s assess=0.00s baseline=208MB peak=210MB
+ok       minimality_duplicateCount        rows=5000      #2    gen=0.01s assess=0.00s baseline=208MB peak=210MB
+ok       minimality_duplicateCount        rows=5000      timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=210MB
+ok       minimality_duplicateCount        rows=10000     #0    gen=0.01s assess=0.00s baseline=209MB peak=211MB
+ok       minimality_duplicateCount        rows=10000     #1    gen=0.01s assess=0.00s baseline=209MB peak=212MB
+ok       minimality_duplicateCount        rows=10000     #2    gen=0.01s assess=0.00s baseline=209MB peak=211MB
+ok       minimality_duplicateCount        rows=10000     timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=212MB
+ok       minimality_duplicateCount        rows=20000     #0    gen=0.02s assess=0.00s baseline=215MB peak=216MB
+ok       minimality_duplicateCount        rows=20000     #1    gen=0.02s assess=0.00s baseline=215MB peak=216MB
+ok       minimality_duplicateCount        rows=20000     #2    gen=0.02s assess=0.00s baseline=215MB peak=216MB
+ok       minimality_duplicateCount        rows=20000     timed gen=0.02s assess=0.00s (results=0.00s) baseline=215MB peak=216MB
+ok       minimality_duplicateCount        rows=50000     #0    gen=0.04s assess=0.01s baseline=235MB peak=238MB
+ok       minimality_duplicateCount        rows=50000     #1    gen=0.03s assess=0.01s baseline=231MB peak=234MB
+ok       minimality_duplicateCount        rows=50000     #2    gen=0.03s assess=0.01s baseline=231MB peak=234MB
+ok       minimality_duplicateCount        rows=50000     timed gen=0.03s assess=0.01s (results=0.00s) baseline=231MB peak=234MB
+ok       minimality_duplicateCount        rows=100000    #0    gen=0.06s assess=0.02s baseline=269MB peak=272MB
+ok       minimality_duplicateCount        rows=100000    #1    gen=0.06s assess=0.02s baseline=269MB peak=272MB
+ok       minimality_duplicateCount        rows=100000    #2    gen=0.06s assess=0.02s baseline=269MB peak=272MB
+ok       minimality_duplicateCount        rows=100000    timed gen=0.06s assess=0.02s (results=0.00s) baseline=269MB peak=272MB
+ok       minimality_duplicateCount        rows=200000    #0    gen=0.12s assess=0.03s baseline=328MB peak=337MB
+ok       minimality_duplicateCount        rows=200000    #1    gen=0.12s assess=0.04s baseline=328MB peak=337MB
+ok       minimality_duplicateCount        rows=200000    #2    gen=0.12s assess=0.04s baseline=328MB peak=337MB
+ok       minimality_duplicateCount        rows=200000    timed gen=0.12s assess=0.03s (results=0.00s) baseline=328MB peak=337MB
+ok       minimality_duplicateCount        rows=500000    #0    gen=0.29s assess=0.09s baseline=526MB peak=552MB
+ok       minimality_duplicateCount        rows=500000    #1    gen=0.28s assess=0.09s baseline=527MB peak=552MB
+ok       minimality_duplicateCount        rows=500000    #2    gen=0.28s assess=0.09s baseline=526MB peak=552MB
+ok       minimality_duplicateCount        rows=500000    timed gen=0.28s assess=0.09s (results=0.00s) baseline=526MB peak=552MB
+ok       minimality_duplicateCount        rows=1000000   #0    gen=0.58s assess=0.23s baseline=848MB peak=851MB
+ok       minimality_duplicateCount        rows=1000000   #1    gen=0.55s assess=0.21s baseline=848MB peak=851MB
+ok       minimality_duplicateCount        rows=1000000   #2    gen=0.54s assess=0.20s baseline=848MB peak=851MB
+ok       minimality_duplicateCount        rows=1000000   timed gen=0.55s assess=0.20s (results=0.00s) baseline=848MB peak=851MB
+ok       minimality_duplicateCount        cols=6         #0    gen=0.01s assess=0.00s baseline=208MB peak=211MB
+ok       minimality_duplicateCount        cols=6         #1    gen=0.01s assess=0.00s baseline=208MB peak=211MB
+ok       minimality_duplicateCount        cols=6         #2    gen=0.01s assess=0.00s baseline=208MB peak=211MB
+ok       minimality_duplicateCount        cols=6         timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=211MB
+ok       minimality_duplicateCount        cols=12        #0    gen=0.01s assess=0.00s baseline=209MB peak=212MB
+ok       minimality_duplicateCount        cols=12        #1    gen=0.01s assess=0.00s baseline=209MB peak=211MB
+ok       minimality_duplicateCount        cols=12        #2    gen=0.01s assess=0.00s baseline=209MB peak=211MB
+ok       minimality_duplicateCount        cols=12        timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=212MB
+ok       minimality_duplicateCount        cols=18        #0    gen=0.01s assess=0.00s baseline=211MB peak=214MB
+ok       minimality_duplicateCount        cols=18        #1    gen=0.01s assess=0.00s baseline=211MB peak=214MB
+ok       minimality_duplicateCount        cols=18        #2    gen=0.01s assess=0.00s baseline=211MB peak=214MB
+ok       minimality_duplicateCount        cols=18        timed gen=0.01s assess=0.00s (results=0.00s) baseline=211MB peak=214MB
+ok       minimality_duplicateCount        cols=24        #0    gen=0.02s assess=0.00s baseline=214MB peak=216MB
+ok       minimality_duplicateCount        cols=24        #1    gen=0.02s assess=0.00s baseline=214MB peak=216MB
+ok       minimality_duplicateCount        cols=24        #2    gen=0.02s assess=0.00s baseline=214MB peak=216MB
+ok       minimality_duplicateCount        cols=24        timed gen=0.02s assess=0.00s (results=0.00s) baseline=214MB peak=216MB
+ok       minimality_duplicateCount        cols=36        #0    gen=0.03s assess=0.01s baseline=219MB peak=220MB
+ok       minimality_duplicateCount        cols=36        #1    gen=0.03s assess=0.01s baseline=219MB peak=221MB
+ok       minimality_duplicateCount        cols=36        #2    gen=0.03s assess=0.01s baseline=220MB peak=222MB
+ok       minimality_duplicateCount        cols=36        timed gen=0.03s assess=0.01s (results=0.00s) baseline=219MB peak=220MB
+ok       minimality_duplicateCount        cols=48        #0    gen=0.03s assess=0.01s baseline=224MB peak=225MB
+ok       minimality_duplicateCount        cols=48        #1    gen=0.05s assess=0.01s baseline=226MB peak=227MB
+ok       minimality_duplicateCount        cols=48        #2    gen=0.03s assess=0.01s baseline=225MB peak=225MB
+ok       minimality_duplicateCount        cols=48        timed gen=0.03s assess=0.01s (results=0.00s) baseline=224MB peak=224MB
+ok       minimality_duplicateCount        cols=60        #0    gen=0.04s assess=0.01s baseline=229MB peak=231MB
+ok       minimality_duplicateCount        cols=60        #1    gen=0.04s assess=0.01s baseline=229MB peak=231MB
+ok       minimality_duplicateCount        cols=60        #2    gen=0.04s assess=0.01s baseline=229MB peak=231MB
+ok       minimality_duplicateCount        cols=60        timed gen=0.04s assess=0.01s (results=0.00s) baseline=229MB peak=231MB
+ok       minimality_duplicateCount        cols=78        #0    gen=0.05s assess=0.01s baseline=237MB peak=237MB
+ok       minimality_duplicateCount        cols=78        #1    gen=0.05s assess=0.01s baseline=237MB peak=237MB
+ok       minimality_duplicateCount        cols=78        #2    gen=0.05s assess=0.01s baseline=237MB peak=237MB
+ok       minimality_duplicateCount        cols=78        timed gen=0.05s assess=0.01s (results=0.00s) baseline=237MB peak=237MB
+ok       readability_wordnet              rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       readability_wordnet              rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       readability_wordnet              rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       readability_wordnet              rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=207MB
+ok       readability_wordnet              rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       readability_wordnet              rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       readability_wordnet              rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       readability_wordnet              rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=207MB
+ok       readability_wordnet              rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       readability_wordnet              rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       readability_wordnet              rows=500       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       readability_wordnet              rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       readability_wordnet              rows=1000      #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       readability_wordnet              rows=1000      #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       readability_wordnet              rows=1000      #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       readability_wordnet              rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       readability_wordnet              rows=2000      #0    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       readability_wordnet              rows=2000      #1    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       readability_wordnet              rows=2000      #2    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       readability_wordnet              rows=2000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=208MB
+ok       readability_wordnet              rows=5000      #0    gen=0.01s assess=0.00s baseline=208MB peak=208MB
+ok       readability_wordnet              rows=5000      #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       readability_wordnet              rows=5000      #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       readability_wordnet              rows=5000      timed gen=0.01s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       readability_wordnet              rows=10000     #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       readability_wordnet              rows=10000     #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       readability_wordnet              rows=10000     #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       readability_wordnet              rows=10000     timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       readability_wordnet              rows=20000     #0    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       readability_wordnet              rows=20000     #1    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       readability_wordnet              rows=20000     #2    gen=0.02s assess=0.00s baseline=215MB peak=215MB
+ok       readability_wordnet              rows=20000     timed gen=0.02s assess=0.00s (results=0.00s) baseline=215MB peak=215MB
+ok       readability_wordnet              rows=50000     #0    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       readability_wordnet              rows=50000     #1    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       readability_wordnet              rows=50000     #2    gen=0.03s assess=0.00s baseline=231MB peak=231MB
+ok       readability_wordnet              rows=50000     timed gen=0.03s assess=0.00s (results=0.00s) baseline=231MB peak=231MB
+ok       readability_wordnet              rows=100000    #0    gen=0.06s assess=0.00s baseline=269MB peak=269MB
+ok       readability_wordnet              rows=100000    #1    gen=0.06s assess=0.00s baseline=269MB peak=269MB
+ok       readability_wordnet              rows=100000    #2    gen=0.06s assess=0.00s baseline=269MB peak=269MB
+ok       readability_wordnet              rows=100000    timed gen=0.06s assess=0.00s (results=0.00s) baseline=269MB peak=269MB
+ok       readability_wordnet              rows=200000    #0    gen=0.12s assess=0.00s baseline=328MB peak=328MB
+ok       readability_wordnet              rows=200000    #1    gen=0.12s assess=0.00s baseline=328MB peak=328MB
+ok       readability_wordnet              rows=200000    #2    gen=0.12s assess=0.00s baseline=328MB peak=328MB
+ok       readability_wordnet              rows=200000    timed gen=0.12s assess=0.00s (results=0.00s) baseline=328MB peak=328MB
+ok       readability_wordnet              rows=500000    #0    gen=0.28s assess=0.00s baseline=527MB peak=527MB
+ok       readability_wordnet              rows=500000    #1    gen=0.28s assess=0.00s baseline=526MB peak=526MB
+ok       readability_wordnet              rows=500000    #2    gen=0.28s assess=0.00s baseline=527MB peak=527MB
+ok       readability_wordnet              rows=500000    timed gen=0.31s assess=0.00s (results=0.00s) baseline=526MB peak=526MB
+ok       readability_wordnet              rows=1000000   #0    gen=0.55s assess=0.00s baseline=848MB peak=848MB
+ok       readability_wordnet              rows=1000000   #1    gen=0.55s assess=0.00s baseline=848MB peak=848MB
+ok       readability_wordnet              rows=1000000   #2    gen=0.55s assess=0.00s baseline=848MB peak=848MB
+ok       readability_wordnet              rows=1000000   timed gen=0.55s assess=0.00s (results=0.00s) baseline=848MB peak=848MB
+ok       readability_wordnet              cols=6         #0    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       readability_wordnet              cols=6         #1    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       readability_wordnet              cols=6         #2    gen=0.01s assess=0.00s baseline=208MB peak=209MB
+ok       readability_wordnet              cols=6         timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=209MB
+ok       readability_wordnet              cols=12        #0    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       readability_wordnet              cols=12        #1    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       readability_wordnet              cols=12        #2    gen=0.01s assess=0.00s baseline=209MB peak=210MB
+ok       readability_wordnet              cols=12        timed gen=0.01s assess=0.00s (results=0.00s) baseline=209MB peak=210MB
+ok       readability_wordnet              cols=18        #0    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       readability_wordnet              cols=18        #1    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       readability_wordnet              cols=18        #2    gen=0.01s assess=0.00s baseline=211MB peak=212MB
+ok       readability_wordnet              cols=18        timed gen=0.01s assess=0.00s (results=0.00s) baseline=211MB peak=212MB
+ok       readability_wordnet              cols=24        #0    gen=0.02s assess=0.00s baseline=214MB peak=214MB
+ok       readability_wordnet              cols=24        #1    gen=0.02s assess=0.00s baseline=214MB peak=214MB
+ok       readability_wordnet              cols=24        #2    gen=0.02s assess=0.00s baseline=214MB peak=214MB
+ok       readability_wordnet              cols=24        timed gen=0.02s assess=0.00s (results=0.00s) baseline=214MB peak=214MB
+ok       readability_wordnet              cols=36        #0    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       readability_wordnet              cols=36        #1    gen=0.03s assess=0.00s baseline=220MB peak=220MB
+ok       readability_wordnet              cols=36        #2    gen=0.03s assess=0.00s baseline=219MB peak=219MB
+ok       readability_wordnet              cols=36        timed gen=0.03s assess=0.00s (results=0.00s) baseline=219MB peak=219MB
+ok       readability_wordnet              cols=48        #0    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       readability_wordnet              cols=48        #1    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       readability_wordnet              cols=48        #2    gen=0.03s assess=0.00s baseline=224MB peak=224MB
+ok       readability_wordnet              cols=48        timed gen=0.03s assess=0.00s (results=0.00s) baseline=224MB peak=224MB
+ok       readability_wordnet              cols=60        #0    gen=0.04s assess=0.00s baseline=229MB peak=229MB
+ok       readability_wordnet              cols=60        #1    gen=0.04s assess=0.00s baseline=229MB peak=229MB
+ok       readability_wordnet              cols=60        #2    gen=0.04s assess=0.00s baseline=229MB peak=229MB
+ok       readability_wordnet              cols=60        timed gen=0.04s assess=0.00s (results=0.00s) baseline=229MB peak=229MB
+ok       readability_wordnet              cols=78        #0    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       readability_wordnet              cols=78        #1    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       readability_wordnet              cols=78        #2    gen=0.05s assess=0.00s baseline=237MB peak=237MB
+ok       readability_wordnet              cols=78        timed gen=0.05s assess=0.00s (results=0.00s) baseline=237MB peak=237MB
+ok       timeliness_heinrich              rows=100       #0    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       timeliness_heinrich              rows=100       #1    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       timeliness_heinrich              rows=100       #2    gen=0.00s assess=0.00s baseline=207MB peak=207MB
+ok       timeliness_heinrich              rows=100       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       timeliness_heinrich              rows=200       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       timeliness_heinrich              rows=200       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       timeliness_heinrich              rows=200       #2    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       timeliness_heinrich              rows=200       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       timeliness_heinrich              rows=500       #0    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       timeliness_heinrich              rows=500       #1    gen=0.00s assess=0.00s baseline=207MB peak=208MB
+ok       timeliness_heinrich              rows=500       #2    gen=0.00s assess=0.00s baseline=208MB peak=208MB
+ok       timeliness_heinrich              rows=500       timed gen=0.00s assess=0.00s (results=0.00s) baseline=207MB peak=208MB
+ok       timeliness_heinrich              rows=1000      #0    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       timeliness_heinrich              rows=1000      #1    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       timeliness_heinrich              rows=1000      #2    gen=0.00s assess=0.00s baseline=208MB peak=209MB
+ok       timeliness_heinrich              rows=1000      timed gen=0.00s assess=0.00s (results=0.00s) baseline=208MB peak=209MB
+ok       timeliness_heinrich              rows=2000      #0    gen=0.00s assess=0.01s baseline=208MB peak=210MB
+ok       timeliness_heinrich              rows=2000      #1    gen=0.00s assess=0.01s baseline=208MB peak=210MB
+ok       timeliness_heinrich              rows=2000      #2    gen=0.00s assess=0.01s baseline=208MB peak=209MB
+ok       timeliness_heinrich              rows=2000      timed gen=0.00s assess=0.01s (results=0.00s) baseline=208MB peak=210MB
+ok       timeliness_heinrich              rows=5000      #0    gen=0.01s assess=0.02s baseline=208MB peak=212MB
+ok       timeliness_heinrich              rows=5000      #1    gen=0.01s assess=0.02s baseline=208MB peak=212MB
+ok       timeliness_heinrich              rows=5000      #2    gen=0.01s assess=0.02s baseline=208MB peak=212MB
+ok       timeliness_heinrich              rows=5000      timed gen=0.01s assess=0.02s (results=0.00s) baseline=208MB peak=212MB
+ok       timeliness_heinrich              rows=10000     #0    gen=0.01s assess=0.03s baseline=209MB peak=216MB
+ok       timeliness_heinrich              rows=10000     #1    gen=0.01s assess=0.04s baseline=209MB peak=216MB
+ok       timeliness_heinrich              rows=10000     #2    gen=0.01s assess=0.03s baseline=209MB peak=216MB
+ok       timeliness_heinrich              rows=10000     timed gen=0.01s assess=0.04s (results=0.01s) baseline=209MB peak=216MB
+ok       timeliness_heinrich              rows=20000     #0    gen=0.02s assess=0.07s baseline=215MB peak=227MB
+ok       timeliness_heinrich              rows=20000     #1    gen=0.02s assess=0.07s baseline=215MB peak=227MB
+ok       timeliness_heinrich              rows=20000     #2    gen=0.02s assess=0.07s baseline=215MB peak=227MB
+ok       timeliness_heinrich              rows=20000     timed gen=0.02s assess=0.07s (results=0.02s) baseline=215MB peak=227MB
+ok       timeliness_heinrich              rows=50000     #0    gen=0.03s assess=0.16s baseline=231MB peak=261MB
+ok       timeliness_heinrich              rows=50000     #1    gen=0.03s assess=0.16s baseline=231MB peak=262MB
+ok       timeliness_heinrich              rows=50000     #2    gen=0.03s assess=0.16s baseline=231MB peak=262MB
+ok       timeliness_heinrich              rows=50000     timed gen=0.03s assess=0.18s (results=0.05s) baseline=231MB peak=262MB
+ok       timeliness_heinrich              rows=100000    #0    gen=0.06s assess=0.34s baseline=269MB peak=331MB
+ok       timeliness_heinrich              rows=100000    #1    gen=0.06s assess=0.34s baseline=269MB peak=331MB
+ok       timeliness_heinrich              rows=100000    #2    gen=0.06s assess=0.35s baseline=269MB peak=331MB
+ok       timeliness_heinrich              rows=100000    timed gen=0.06s assess=0.39s (results=0.13s) baseline=269MB peak=331MB
+ok       timeliness_heinrich              rows=200000    #0    gen=0.12s assess=0.75s baseline=328MB peak=457MB
+ok       timeliness_heinrich              rows=200000    #1    gen=0.11s assess=0.75s baseline=328MB peak=458MB
+ok       timeliness_heinrich              rows=200000    #2    gen=0.12s assess=0.76s baseline=328MB peak=458MB
+ok       timeliness_heinrich              rows=200000    timed gen=0.11s assess=0.83s (results=0.32s) baseline=328MB peak=457MB
+ok       timeliness_heinrich              rows=500000    #0    gen=0.28s assess=1.91s baseline=526MB peak=853MB
+ok       timeliness_heinrich              rows=500000    #1    gen=0.28s assess=1.94s baseline=527MB peak=853MB
+ok       timeliness_heinrich              rows=500000    #2    gen=0.29s assess=2.08s baseline=527MB peak=853MB
+ok       timeliness_heinrich              rows=500000    timed gen=0.29s assess=2.39s (results=0.93s) baseline=526MB peak=853MB
+ok       timeliness_heinrich              rows=1000000   #0    gen=0.54s assess=3.88s baseline=848MB peak=1517MB
+ok       timeliness_heinrich              rows=1000000   #1    gen=0.55s assess=3.87s baseline=848MB peak=1517MB
+ok       timeliness_heinrich              rows=1000000   #2    gen=0.55s assess=3.86s baseline=848MB peak=1517MB
+ok       timeliness_heinrich              rows=1000000   timed gen=0.54s assess=4.28s (results=1.72s) baseline=848MB peak=1517MB
+ok       timeliness_heinrich              cols=6         #0    gen=0.01s assess=0.03s baseline=209MB peak=215MB
+ok       timeliness_heinrich              cols=6         #1    gen=0.01s assess=0.03s baseline=209MB peak=215MB
+ok       timeliness_heinrich              cols=6         #2    gen=0.01s assess=0.03s baseline=209MB peak=215MB
+ok       timeliness_heinrich              cols=6         timed gen=0.01s assess=0.04s (results=0.01s) baseline=209MB peak=215MB
+ok       timeliness_heinrich              cols=12        #0    gen=0.01s assess=0.03s baseline=209MB peak=216MB
+ok       timeliness_heinrich              cols=12        #1    gen=0.01s assess=0.03s baseline=209MB peak=216MB
+ok       timeliness_heinrich              cols=12        #2    gen=0.01s assess=0.03s baseline=209MB peak=216MB
+ok       timeliness_heinrich              cols=12        timed gen=0.01s assess=0.04s (results=0.01s) baseline=209MB peak=216MB
+ok       timeliness_heinrich              cols=18        #0    gen=0.01s assess=0.03s baseline=212MB peak=218MB
+ok       timeliness_heinrich              cols=18        #1    gen=0.01s assess=0.03s baseline=212MB peak=218MB
+ok       timeliness_heinrich              cols=18        #2    gen=0.01s assess=0.03s baseline=211MB peak=218MB
+ok       timeliness_heinrich              cols=18        timed gen=0.01s assess=0.04s (results=0.01s) baseline=211MB peak=217MB
+ok       timeliness_heinrich              cols=24        #0    gen=0.02s assess=0.03s baseline=214MB peak=219MB
+ok       timeliness_heinrich              cols=24        #1    gen=0.02s assess=0.03s baseline=214MB peak=220MB
+ok       timeliness_heinrich              cols=24        #2    gen=0.02s assess=0.03s baseline=214MB peak=220MB
+ok       timeliness_heinrich              cols=24        timed gen=0.02s assess=0.04s (results=0.01s) baseline=214MB peak=220MB
+ok       timeliness_heinrich              cols=36        #0    gen=0.03s assess=0.03s baseline=219MB peak=224MB
+ok       timeliness_heinrich              cols=36        #1    gen=0.03s assess=0.03s baseline=219MB peak=224MB
+ok       timeliness_heinrich              cols=36        #2    gen=0.03s assess=0.03s baseline=219MB peak=224MB
+ok       timeliness_heinrich              cols=36        timed gen=0.02s assess=0.04s (results=0.01s) baseline=219MB peak=224MB
+ok       timeliness_heinrich              cols=48        #0    gen=0.03s assess=0.04s baseline=224MB peak=229MB
+ok       timeliness_heinrich              cols=48        #1    gen=0.03s assess=0.04s baseline=224MB peak=229MB
+ok       timeliness_heinrich              cols=48        #2    gen=0.03s assess=0.03s baseline=224MB peak=229MB
+ok       timeliness_heinrich              cols=48        timed gen=0.03s assess=0.04s (results=0.01s) baseline=224MB peak=229MB
+ok       timeliness_heinrich              cols=60        #0    gen=0.04s assess=0.03s baseline=229MB peak=233MB
+ok       timeliness_heinrich              cols=60        #1    gen=0.04s assess=0.03s baseline=229MB peak=233MB
+ok       timeliness_heinrich              cols=60        #2    gen=0.04s assess=0.03s baseline=229MB peak=233MB
+ok       timeliness_heinrich              cols=60        timed gen=0.04s assess=0.04s (results=0.01s) baseline=229MB peak=233MB
+ok       timeliness_heinrich              cols=78        #0    gen=0.05s assess=0.04s baseline=237MB peak=240MB
+ok       timeliness_heinrich              cols=78        #1    gen=0.05s assess=0.03s baseline=237MB peak=240MB
+ok       timeliness_heinrich              cols=78        #2    gen=0.05s assess=0.03s baseline=237MB peak=240MB
+ok       timeliness_heinrich              cols=78        timed gen=0.05s assess=0.04s (results=0.01s) baseline=237MB peak=240MB
+ok       validity_outOfVocabulary         rows=100       #0    gen=0.00s assess=0.47s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=100       #1    gen=0.00s assess=0.11s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=100       #2    gen=0.00s assess=0.10s baseline=207MB peak=260MB
+ok       validity_outOfVocabulary         rows=100       timed gen=0.00s assess=0.15s (results=0.00s) baseline=207MB peak=260MB
+ok       validity_outOfVocabulary         rows=200       #0    gen=0.00s assess=0.11s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=200       #1    gen=0.00s assess=0.11s baseline=207MB peak=260MB
+ok       validity_outOfVocabulary         rows=200       #2    gen=0.00s assess=0.10s baseline=207MB peak=260MB
+ok       validity_outOfVocabulary         rows=200       timed gen=0.00s assess=0.17s (results=0.00s) baseline=207MB peak=260MB
+ok       validity_outOfVocabulary         rows=500       #0    gen=0.00s assess=0.10s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=500       #1    gen=0.00s assess=0.11s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=500       #2    gen=0.00s assess=0.10s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=500       timed gen=0.00s assess=0.15s (results=0.00s) baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=1000      #0    gen=0.00s assess=0.11s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=1000      #1    gen=0.00s assess=0.10s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=1000      #2    gen=0.00s assess=0.11s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         rows=1000      timed gen=0.00s assess=0.16s (results=0.00s) baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=2000      #0    gen=0.00s assess=0.12s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         rows=2000      #1    gen=0.00s assess=0.11s baseline=207MB peak=261MB
+ok       validity_outOfVocabulary         rows=2000      #2    gen=0.00s assess=0.11s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         rows=2000      timed gen=0.00s assess=0.18s (results=0.00s) baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         rows=5000      #0    gen=0.01s assess=0.13s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         rows=5000      #1    gen=0.01s assess=0.12s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         rows=5000      #2    gen=0.01s assess=0.13s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         rows=5000      timed gen=0.01s assess=0.13s (results=0.00s) baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         rows=10000     #0    gen=0.01s assess=0.24s baseline=209MB peak=262MB
+ok       validity_outOfVocabulary         rows=10000     #1    gen=0.01s assess=0.24s baseline=209MB peak=262MB
+ok       validity_outOfVocabulary         rows=10000     #2    gen=0.01s assess=1.25s baseline=209MB peak=262MB
+ok       validity_outOfVocabulary         rows=10000     timed gen=0.01s assess=0.23s (results=0.00s) baseline=209MB peak=262MB
+ok       validity_outOfVocabulary         rows=20000     #0    gen=0.02s assess=0.28s baseline=215MB peak=267MB
+ok       validity_outOfVocabulary         rows=20000     #1    gen=0.02s assess=0.30s baseline=215MB peak=266MB
+ok       validity_outOfVocabulary         rows=20000     #2    gen=0.02s assess=0.24s baseline=215MB peak=266MB
+ok       validity_outOfVocabulary         rows=20000     timed gen=0.02s assess=0.25s (results=0.00s) baseline=215MB peak=266MB
+ok       validity_outOfVocabulary         rows=50000     #0    gen=0.03s assess=0.36s baseline=231MB peak=270MB
+ok       validity_outOfVocabulary         rows=50000     #1    gen=0.03s assess=0.35s baseline=231MB peak=270MB
+ok       validity_outOfVocabulary         rows=50000     #2    gen=0.03s assess=0.35s baseline=231MB peak=270MB
+ok       validity_outOfVocabulary         rows=50000     timed gen=0.03s assess=0.35s (results=0.00s) baseline=231MB peak=270MB
+ok       validity_outOfVocabulary         rows=100000    #0    gen=0.06s assess=0.61s baseline=269MB peak=303MB
+ok       validity_outOfVocabulary         rows=100000    #1    gen=0.06s assess=0.69s baseline=269MB peak=303MB
+ok       validity_outOfVocabulary         rows=100000    #2    gen=0.06s assess=0.68s baseline=269MB peak=303MB
+ok       validity_outOfVocabulary         rows=100000    timed gen=0.06s assess=0.60s (results=0.00s) baseline=269MB peak=303MB
+ok       validity_outOfVocabulary         rows=200000    #0    gen=0.12s assess=1.12s baseline=328MB peak=369MB
+ok       validity_outOfVocabulary         rows=200000    #1    gen=0.12s assess=1.10s baseline=328MB peak=369MB
+ok       validity_outOfVocabulary         rows=200000    #2    gen=0.12s assess=1.11s baseline=328MB peak=369MB
+ok       validity_outOfVocabulary         rows=200000    timed gen=0.12s assess=1.10s (results=0.00s) baseline=328MB peak=369MB
+ok       validity_outOfVocabulary         rows=500000    #0    gen=0.28s assess=2.58s baseline=526MB peak=601MB
+ok       validity_outOfVocabulary         rows=500000    #1    gen=0.28s assess=2.69s baseline=526MB peak=601MB
+ok       validity_outOfVocabulary         rows=500000    #2    gen=0.28s assess=2.58s baseline=526MB peak=601MB
+ok       validity_outOfVocabulary         rows=500000    timed gen=0.28s assess=2.59s (results=0.00s) baseline=526MB peak=601MB
+ok       validity_outOfVocabulary         rows=1000000   #0    gen=0.55s assess=5.11s baseline=848MB peak=981MB
+ok       validity_outOfVocabulary         rows=1000000   #1    gen=0.54s assess=5.11s baseline=848MB peak=981MB
+ok       validity_outOfVocabulary         rows=1000000   #2    gen=0.55s assess=5.23s baseline=848MB peak=981MB
+ok       validity_outOfVocabulary         rows=1000000   timed gen=0.54s assess=5.14s (results=0.00s) baseline=848MB peak=981MB
+ok       validity_outOfVocabulary         cols=6         #0    gen=0.01s assess=0.13s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         cols=6         #1    gen=0.01s assess=0.13s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         cols=6         #2    gen=0.01s assess=0.13s baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         cols=6         timed gen=0.01s assess=0.19s (results=0.00s) baseline=208MB peak=261MB
+ok       validity_outOfVocabulary         cols=12        #0    gen=0.01s assess=0.24s baseline=209MB peak=262MB
+ok       validity_outOfVocabulary         cols=12        #1    gen=0.01s assess=0.15s baseline=209MB peak=262MB
+ok       validity_outOfVocabulary         cols=12        #2    gen=0.01s assess=0.15s baseline=209MB peak=261MB
+ok       validity_outOfVocabulary         cols=12        timed gen=0.01s assess=0.15s (results=0.00s) baseline=209MB peak=261MB
+ok       validity_outOfVocabulary         cols=18        #0    gen=0.01s assess=0.18s baseline=211MB peak=262MB
+ok       validity_outOfVocabulary         cols=18        #1    gen=0.01s assess=0.18s baseline=211MB peak=262MB
+ok       validity_outOfVocabulary         cols=18        #2    gen=0.01s assess=0.19s baseline=211MB peak=262MB
+ok       validity_outOfVocabulary         cols=18        timed gen=0.01s assess=0.33s (results=0.00s) baseline=211MB peak=262MB
+ok       validity_outOfVocabulary         cols=24        #0    gen=0.02s assess=0.21s baseline=214MB peak=261MB
+ok       validity_outOfVocabulary         cols=24        #1    gen=0.02s assess=0.21s baseline=214MB peak=261MB
+ok       validity_outOfVocabulary         cols=24        #2    gen=0.02s assess=0.20s baseline=214MB peak=261MB
+ok       validity_outOfVocabulary         cols=24        timed gen=0.02s assess=0.20s (results=0.00s) baseline=214MB peak=261MB
+ok       validity_outOfVocabulary         cols=36        #0    gen=0.03s assess=0.25s baseline=219MB peak=268MB
+ok       validity_outOfVocabulary         cols=36        #1    gen=0.03s assess=0.26s baseline=219MB peak=268MB
+ok       validity_outOfVocabulary         cols=36        #2    gen=0.03s assess=0.25s baseline=219MB peak=268MB
+ok       validity_outOfVocabulary         cols=36        timed gen=0.03s assess=0.27s (results=0.00s) baseline=219MB peak=268MB
+ok       validity_outOfVocabulary         cols=48        #0    gen=0.03s assess=0.31s baseline=224MB peak=269MB
+ok       validity_outOfVocabulary         cols=48        #1    gen=0.03s assess=0.31s baseline=224MB peak=270MB
+ok       validity_outOfVocabulary         cols=48        #2    gen=0.03s assess=0.30s baseline=224MB peak=269MB
+ok       validity_outOfVocabulary         cols=48        timed gen=0.03s assess=0.40s (results=0.00s) baseline=224MB peak=270MB
+ok       validity_outOfVocabulary         cols=60        #0    gen=0.04s assess=0.36s baseline=229MB peak=274MB
+ok       validity_outOfVocabulary         cols=60        #1    gen=0.04s assess=0.35s baseline=229MB peak=274MB
+ok       validity_outOfVocabulary         cols=60        #2    gen=0.04s assess=0.43s baseline=229MB peak=274MB
+ok       validity_outOfVocabulary         cols=60        timed gen=0.04s assess=0.36s (results=0.00s) baseline=229MB peak=274MB
+ok       validity_outOfVocabulary         cols=78        #0    gen=0.05s assess=0.44s baseline=237MB peak=281MB
+ok       validity_outOfVocabulary         cols=78        #1    gen=0.05s assess=0.42s baseline=237MB peak=280MB
+ok       validity_outOfVocabulary         cols=78        #2    gen=0.05s assess=0.43s baseline=237MB peak=281MB
+ok       validity_outOfVocabulary         cols=78        timed gen=0.05s assess=0.50s (results=0.00s) baseline=237MB peak=280MB
+
+wrote 1110 measurements to benchmarks/results/sweep.csv
+ok       readability_wordnet              rows=100       #0    gen=0.00s assess=0.76s baseline=207MB peak=401MB
+ok       readability_wordnet              rows=100       #1    gen=0.00s assess=0.76s baseline=207MB peak=399MB
+ok       readability_wordnet              rows=100       #2    gen=0.00s assess=0.73s baseline=207MB peak=399MB
+ok       readability_wordnet              rows=100       timed gen=0.00s assess=0.73s (results=0.00s) baseline=207MB peak=399MB
+ok       readability_wordnet              rows=200       #0    gen=0.00s assess=0.77s baseline=207MB peak=399MB
+ok       readability_wordnet              rows=200       #1    gen=0.00s assess=0.73s baseline=207MB peak=399MB
+ok       readability_wordnet              rows=200       #2    gen=0.00s assess=0.72s baseline=207MB peak=399MB
+ok       readability_wordnet              rows=200       timed gen=0.00s assess=0.87s (results=0.00s) baseline=207MB peak=400MB
+ok       readability_wordnet              rows=500       #0    gen=0.00s assess=0.85s baseline=208MB peak=400MB
+ok       readability_wordnet              rows=500       #1    gen=0.00s assess=0.78s baseline=207MB peak=399MB
+ok       readability_wordnet              rows=500       #2    gen=0.00s assess=0.80s baseline=207MB peak=401MB
+ok       readability_wordnet              rows=500       timed gen=0.00s assess=0.73s (results=0.00s) baseline=207MB peak=399MB
+ok       readability_wordnet              rows=1000      #0    gen=0.00s assess=0.76s baseline=207MB peak=401MB
+ok       readability_wordnet              rows=1000      #1    gen=0.00s assess=0.74s baseline=207MB peak=400MB
+ok       readability_wordnet              rows=1000      #2    gen=0.00s assess=0.77s baseline=207MB peak=400MB
+ok       readability_wordnet              rows=1000      timed gen=0.00s assess=0.77s (results=0.00s) baseline=207MB peak=400MB
+ok       readability_wordnet              rows=2000      #0    gen=0.00s assess=0.77s baseline=208MB peak=400MB
+ok       readability_wordnet              rows=2000      #1    gen=0.00s assess=0.75s baseline=208MB peak=400MB
+ok       readability_wordnet              rows=2000      #2    gen=0.00s assess=0.75s baseline=208MB peak=400MB
+ok       readability_wordnet              rows=2000      timed gen=0.00s assess=0.77s (results=0.00s) baseline=208MB peak=400MB
+ok       readability_wordnet              rows=5000      #0    gen=0.01s assess=0.78s baseline=208MB peak=402MB
+ok       readability_wordnet              rows=5000      #1    gen=0.01s assess=0.84s baseline=208MB peak=401MB
+ok       readability_wordnet              rows=5000      #2    gen=0.01s assess=0.91s baseline=208MB peak=402MB
+ok       readability_wordnet              rows=5000      timed gen=0.01s assess=0.76s (results=0.00s) baseline=208MB peak=402MB
+ok       readability_wordnet              rows=10000     #0    gen=0.01s assess=0.80s baseline=209MB peak=402MB
+ok       readability_wordnet              rows=10000     #1    gen=0.01s assess=0.81s baseline=209MB peak=402MB
+ok       readability_wordnet              rows=10000     #2    gen=0.01s assess=0.82s baseline=209MB peak=402MB
+ok       readability_wordnet              rows=10000     timed gen=0.01s assess=0.90s (results=0.00s) baseline=209MB peak=403MB
+ok       readability_wordnet              rows=20000     #0    gen=0.02s assess=0.99s baseline=215MB peak=405MB
+ok       readability_wordnet              rows=20000     #1    gen=0.02s assess=0.93s baseline=215MB peak=405MB
+ok       readability_wordnet              rows=20000     #2    gen=0.02s assess=0.97s baseline=215MB peak=405MB
+ok       readability_wordnet              rows=20000     timed gen=0.02s assess=0.90s (results=0.00s) baseline=215MB peak=405MB
+ok       readability_wordnet              rows=50000     #0    gen=0.03s assess=1.25s baseline=231MB peak=416MB
+ok       readability_wordnet              rows=50000     #1    gen=0.03s assess=1.18s baseline=231MB peak=416MB
+ok       readability_wordnet              rows=50000     #2    gen=0.03s assess=1.18s baseline=231MB peak=416MB
+ok       readability_wordnet              rows=50000     timed gen=0.03s assess=1.19s (results=0.00s) baseline=231MB peak=416MB
+ok       readability_wordnet              rows=100000    #0    gen=0.06s assess=1.65s baseline=269MB peak=441MB
+ok       readability_wordnet              rows=100000    #1    gen=0.06s assess=1.68s baseline=269MB peak=441MB
+ok       readability_wordnet              rows=100000    #2    gen=0.06s assess=1.67s baseline=269MB peak=441MB
+ok       readability_wordnet              rows=100000    timed gen=0.06s assess=1.70s (results=0.00s) baseline=269MB peak=441MB
+ok       readability_wordnet              rows=200000    #0    gen=0.11s assess=2.63s baseline=328MB peak=482MB
+ok       readability_wordnet              rows=200000    #1    gen=0.11s assess=2.66s baseline=328MB peak=482MB
+ok       readability_wordnet              rows=200000    #2    gen=0.11s assess=2.65s baseline=328MB peak=482MB
+ok       readability_wordnet              rows=200000    timed gen=0.11s assess=2.64s (results=0.00s) baseline=328MB peak=482MB
+ok       readability_wordnet              rows=500000    #0    gen=0.28s assess=5.63s baseline=526MB peak=632MB
+ok       readability_wordnet              rows=500000    #1    gen=0.27s assess=5.63s baseline=527MB peak=632MB
+ok       readability_wordnet              rows=500000    #2    gen=0.27s assess=5.58s baseline=527MB peak=632MB
+ok       readability_wordnet              rows=500000    timed gen=0.27s assess=5.58s (results=0.00s) baseline=526MB peak=632MB
+ok       readability_wordnet              rows=1000000   #0    gen=0.54s assess=10.30s baseline=848MB peak=982MB
+ok       readability_wordnet              rows=1000000   #1    gen=0.54s assess=10.49s baseline=848MB peak=982MB
+ok       readability_wordnet              rows=1000000   #2    gen=0.54s assess=10.30s baseline=848MB peak=982MB
+ok       readability_wordnet              rows=1000000   timed gen=0.54s assess=10.49s (results=0.00s) baseline=848MB peak=982MB
+ok       readability_wordnet              cols=6         #0    gen=0.01s assess=0.75s baseline=208MB peak=400MB
+ok       readability_wordnet              cols=6         #1    gen=0.01s assess=0.75s baseline=208MB peak=400MB
+ok       readability_wordnet              cols=6         #2    gen=0.01s assess=0.75s baseline=208MB peak=400MB
+ok       readability_wordnet              cols=6         timed gen=0.01s assess=0.75s (results=0.00s) baseline=208MB peak=400MB
+ok       readability_wordnet              cols=12        #0    gen=0.01s assess=0.80s baseline=209MB peak=402MB
+ok       readability_wordnet              cols=12        #1    gen=0.01s assess=0.80s baseline=209MB peak=402MB
+ok       readability_wordnet              cols=12        #2    gen=0.01s assess=0.80s baseline=209MB peak=402MB
+ok       readability_wordnet              cols=12        timed gen=0.01s assess=0.79s (results=0.00s) baseline=209MB peak=402MB
+ok       readability_wordnet              cols=18        #0    gen=0.01s assess=0.85s baseline=211MB peak=404MB
+ok       readability_wordnet              cols=18        #1    gen=0.01s assess=0.85s baseline=211MB peak=404MB
+ok       readability_wordnet              cols=18        #2    gen=0.01s assess=0.85s baseline=211MB peak=404MB
+ok       readability_wordnet              cols=18        timed gen=0.01s assess=0.85s (results=0.00s) baseline=211MB peak=404MB
+ok       readability_wordnet              cols=24        #0    gen=0.02s assess=0.90s baseline=214MB peak=404MB
+ok       readability_wordnet              cols=24        #1    gen=0.02s assess=0.90s baseline=214MB peak=404MB
+ok       readability_wordnet              cols=24        #2    gen=0.02s assess=0.91s baseline=214MB peak=404MB
+ok       readability_wordnet              cols=24        timed gen=0.02s assess=0.90s (results=0.00s) baseline=214MB peak=404MB
+ok       readability_wordnet              cols=36        #0    gen=0.02s assess=1.00s baseline=219MB peak=408MB
+ok       readability_wordnet              cols=36        #1    gen=0.03s assess=1.01s baseline=219MB peak=408MB
+ok       readability_wordnet              cols=36        #2    gen=0.03s assess=1.01s baseline=219MB peak=408MB
+ok       readability_wordnet              cols=36        timed gen=0.02s assess=1.00s (results=0.00s) baseline=219MB peak=408MB
+ok       readability_wordnet              cols=48        #0    gen=0.03s assess=1.11s baseline=224MB peak=413MB
+ok       readability_wordnet              cols=48        #1    gen=0.03s assess=1.14s baseline=224MB peak=413MB
+ok       readability_wordnet              cols=48        #2    gen=0.04s assess=1.19s baseline=224MB peak=413MB
+ok       readability_wordnet              cols=48        timed gen=0.03s assess=1.12s (results=0.00s) baseline=224MB peak=413MB
+ok       readability_wordnet              cols=60        #0    gen=0.04s assess=1.28s baseline=229MB peak=417MB
+ok       readability_wordnet              cols=60        #1    gen=0.04s assess=1.31s baseline=229MB peak=417MB
+ok       readability_wordnet              cols=60        #2    gen=0.04s assess=1.24s baseline=229MB peak=417MB
+ok       readability_wordnet              cols=60        timed gen=0.04s assess=1.22s (results=0.00s) baseline=229MB peak=417MB
+ok       readability_wordnet              cols=78        #0    gen=0.05s assess=1.37s baseline=237MB peak=424MB
+ok       readability_wordnet              cols=78        #1    gen=0.05s assess=1.50s baseline=237MB peak=424MB
+ok       readability_wordnet              cols=78        #2    gen=0.05s assess=1.37s baseline=237MB peak=424MB
+ok       readability_wordnet              cols=78        timed gen=0.05s assess=1.37s (results=0.00s) baseline=237MB peak=424MB
+
+wrote 84 measurements to benchmarks/results/sweep_wordnet.csv
