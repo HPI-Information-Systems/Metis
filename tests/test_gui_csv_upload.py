@@ -46,17 +46,35 @@ def test_an_unclosed_quote_is_declined():
 
 
 @pytest.mark.parametrize(
-    "raw,name",
-    [(b"a;b\n1;2\n", "semicolons"), (b"a\tb\n1\t2\n", "tabs"), (b"a|b\n1|2\n", "pipes")],
-    ids=["semicolon", "tab", "pipe"],
+    "delimiter", [",", ";", "\t", "|"], ids=["comma", "semicolon", "tab", "pipe"]
 )
-def test_a_file_with_another_separator_is_declined(raw, name):
-    with pytest.raises(DatasetLoadError, match=f"separated by {name}, not commas"):
-        read_csv_upload(raw, "other.csv")
+def test_the_delimiter_is_detected(delimiter):
+    raw = delimiter.join(["name", "age"]) + "\n" + delimiter.join(["Ada", "36"]) + "\n"
+    upload = read_csv_upload(raw.encode(), "any.csv")
+    assert list(upload.frame.columns) == ["name", "age"]
+    assert upload.frame.iloc[0].tolist() == ["Ada", 36]
+    assert upload.delimiter == delimiter
+
+
+def test_commas_inside_quoted_values_do_not_hide_a_semicolon_delimiter():
+    upload = read_csv_upload(b'name;note\nAda;"x, y, z"\nGrace;"p, q"\n', "notes.csv")
+    assert upload.delimiter == ";"
+    assert upload.frame["note"].tolist() == ["x, y, z", "p, q"]
+
+
+def test_a_given_delimiter_overrides_the_detected_one():
+    raw = b"name;age\nAda;36\n"
+    assert read_csv_upload(raw, "semi.csv").frame.shape == (1, 2)
+
+    forced = read_csv_upload(raw, "semi.csv", delimiter=",")
+    assert forced.delimiter == ","
+    assert list(forced.frame.columns) == ["name;age"]
 
 
 def test_a_single_column_file_is_accepted():
-    assert read_csv_upload(b"name\nAda\nGrace\n", "one.csv").frame.shape == (2, 1)
+    upload = read_csv_upload(b"name\nAda\nGrace\n", "one.csv")
+    assert upload.frame.shape == (2, 1)
+    assert upload.delimiter == ","
 
 
 def test_rows_with_too_many_fields_are_skipped_and_reported():

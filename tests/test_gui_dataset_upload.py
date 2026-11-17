@@ -22,7 +22,7 @@ class _Upload:
         self.size = len(content)
         self._content = content
 
-    def read(self) -> bytes:
+    def getvalue(self) -> bytes:
         return self._content
 
 
@@ -43,8 +43,8 @@ def test_a_valid_upload_becomes_the_dataset():
 
 @pytest.mark.parametrize(
     "content",
-    [b"", b"name,age\n", b"name;age\nAda;36\n", b"\x00\x01\x02"],
-    ids=["empty", "header_only", "semicolons", "binary"],
+    [b"", b"name,age\n", b"\x00\x01\x02"],
+    ids=["empty", "header_only", "binary"],
 )
 def test_an_invalid_upload_is_declined_and_loads_nothing(content):
     dataset_page._load_csv(_Upload("bad.csv", content))
@@ -96,3 +96,17 @@ def test_a_second_upload_keeps_an_experiment_tag_the_user_typed():
     dataset_page._load_csv(_Upload("second.csv", b"a\n1\n"))
 
     assert AppState.get_experiment_tag() == "baseline"
+
+
+def test_a_semicolon_file_is_loaded_with_its_detected_delimiter():
+    dataset_page._load_csv(_Upload("semi.csv", b"name;age\nAda;36\n"))
+
+    assert AppState.get_df().shape == (1, 2)
+    assert st.session_state["_upload_delimiter"] == ";"
+
+
+def test_a_chosen_delimiter_is_used_instead_of_the_detected_one():
+    dataset_page._load_csv(_Upload("semi.csv", b"name;age\nAda;36\n"), ",")
+
+    assert list(AppState.get_df().columns) == ["name;age"]
+    assert st.session_state["_upload_delimiter"] == ","

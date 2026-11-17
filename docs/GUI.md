@@ -53,15 +53,16 @@ metric is selected and no blockers remain.
 
 `gui/ui/pages/dataset_page.py`
 
-- Upload a CSV file. The page states the expected format: comma-separated,
-  column names in the first row, double quotes around values that contain a
-  comma, decimal points, UTF-8. UTF-8 is tried first with a Latin-1
-  fallback.
+- Upload a CSV file. The page states the expected format: column names in
+  the first row, double quotes around values that contain the separator,
+  decimal points, UTF-8. UTF-8 is tried first with a Latin-1 fallback.
+- The delimiter is detected automatically (comma, semicolon, tab or pipe).
+  A Delimiter field overrides it when the detection is wrong.
 - A file that cannot be assessed is declined with the reason and no dataset
   is loaded. That covers an empty file, a file with column names but no
-  rows, a file that is not text, a file that is not valid CSV and a file
-  separated by semicolons, tabs or pipes. Rows with more fields than the
-  header are skipped, and a warning says how many and on which lines.
+  rows, a file that is not text and a file that is not valid CSV. Rows with
+  more fields than the header are skipped, and a warning says how many and
+  on which lines.
 - Set a dataset name and an optional table name. Each run gets an
   experiment tag, auto-generated as `{dataset_name}_{timestamp}`.
 - A preview shows the first 50 rows together with column types and basic

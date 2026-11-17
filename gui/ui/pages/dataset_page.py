@@ -6,7 +6,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-from core.csv_upload import CSV_FORMAT_EXPECTATION, read_csv_upload
+from core.csv_upload import CSV_FORMAT_EXPECTATION, DELIMITER_NAMES, read_csv_upload
 from core.metric_catalog import get_catalog
 from core.result_store import get_active_store
 from metis.utils.dataset_checks import DatasetError
@@ -30,6 +30,15 @@ _UPLOAD_WARNINGS_KEY: str = "_upload_warnings"
 
 # A tag still equal to this was not edited by the user.
 _AUTO_TAG_KEY: str = "_auto_experiment_tag"
+
+_UPLOAD_DELIMITER_KEY: str = "_upload_delimiter"
+_DELIMITER_CHOICES: dict[str, str | None] = {
+    "Detect automatically": None,
+    "Comma (,)": ",",
+    "Semicolon (;)": ";",
+    "Tab": "\t",
+    "Pipe (|)": "|",
+}
 
 
 def render(demo_mode: bool = False, demo_df: pd.DataFrame | None = None) -> None:
@@ -58,10 +67,19 @@ def _render_upload_section() -> None:
         help="Drag and drop or click to browse. Files >100 MB may be slow.",
     )
 
+    choice = st.selectbox(
+        "Delimiter",
+        options=list(_DELIMITER_CHOICES),
+        key="input_delimiter",
+        width=220,
+        help="Set this if the delimiter of your file was not detected correctly.",
+    )
+    delimiter = _DELIMITER_CHOICES[choice]
+
     if uploaded is not None:
-        file_id = f"{uploaded.name}::{uploaded.size}"
+        file_id = f"{uploaded.name}::{uploaded.size}::{delimiter}"
         if st.session_state.get("_loaded_file_id") != file_id:
-            _load_csv(uploaded)
+            _load_csv(uploaded, delimiter)
             st.session_state["_loaded_file_id"] = file_id
     else:
         # Forget the declined file so it can be uploaded again.
@@ -76,7 +94,8 @@ def _render_upload_section() -> None:
     if df is not None:
         st.success(
             f"Dataset loaded: **{AppState.get_dataset_name()}** — "
-            f"{len(df):,} rows × {len(df.columns)} columns"
+            f"{len(df):,} rows × {len(df.columns)} columns, separated by "
+            f"{DELIMITER_NAMES[st.session_state.get(_UPLOAD_DELIMITER_KEY, ',')]}"
         )
         for warning in st.session_state.get(_UPLOAD_WARNINGS_KEY, []):
             st.warning(warning)
@@ -89,7 +108,7 @@ def _render_upload_section() -> None:
         st.info("Upload a CSV file to get started.")
 
 
-def _load_csv(uploaded) -> None:
+def _load_csv(uploaded, delimiter: str | None = None) -> None:
     """
     Parse an uploaded CSV file and seed app state, or decline the file.
 
@@ -98,13 +117,14 @@ def _load_csv(uploaded) -> None:
     with it.
 
     :param uploaded: A Streamlit ``UploadedFile``.
+    :param delimiter: The delimiter to read the file with. ``None`` detects it.
     :return: None.
     """
     st.session_state.pop(_UPLOAD_ERROR_KEY, None)
     st.session_state.pop(_UPLOAD_WARNINGS_KEY, None)
 
     try:
-        upload = read_csv_upload(uploaded.read(), uploaded.name)
+        upload = read_csv_upload(uploaded.getvalue(), uploaded.name, delimiter)
     except DatasetError as e:
         # Also drop an earlier dataset, so it is not shown next to the error.
         AppState.clear_df()
@@ -119,6 +139,7 @@ def _load_csv(uploaded) -> None:
             "Consider using the max-rows cap in the Compute step."
         )
     st.session_state[_UPLOAD_WARNINGS_KEY] = notes
+    st.session_state[_UPLOAD_DELIMITER_KEY] = upload.delimiter
 
     dataset_name = uploaded.name.removesuffix(".csv")
     AppState.set_df(df)
