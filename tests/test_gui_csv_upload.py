@@ -107,6 +107,59 @@ def test_decline_messages_name_the_file():
         read_csv_upload(b"", "my_data.csv")
 
 
+def test_repeated_column_names_are_reported_by_name():
+    upload = read_csv_upload(b"id,name,name\n1,Ada,Lovelace\n", "dup.csv")
+    assert list(upload.frame.columns) == ["id", "name", "name.1"]
+    assert len(upload.warnings) == 1
+    assert "`name`" in upload.warnings[0]
+    assert "`name.1`" in upload.warnings[0]
+    assert "`id`" not in upload.warnings[0]
+
+
+def test_repeated_column_names_are_found_in_a_semicolon_file():
+    upload = read_csv_upload(b"id;name;name\n1;Ada;Lovelace\n", "dup.csv")
+    assert upload.delimiter == ";"
+    assert "`name`" in upload.warnings[0]
+
+
+def test_repeated_column_names_are_found_with_a_byte_order_mark():
+    upload = read_csv_upload("id,id,name\n1,2,Ada\n".encode("utf-8-sig"), "dup.csv")
+    assert "`id`" in upload.warnings[0]
+
+
+def test_repeated_column_names_are_found_in_a_latin1_file():
+    upload = read_csv_upload("city,city\nKöln,Bonn\n".encode("latin-1"), "dup.csv")
+    assert len(upload.warnings) == 2
+    assert "`city`" in upload.warnings[1]
+
+
+def test_real_columns_named_a_and_a_dot_1_do_not_warn():
+    upload = read_csv_upload(b"a,a.1\n1,2\n", "dots.csv")
+    assert list(upload.frame.columns) == ["a", "a.1"]
+    assert upload.warnings == []
+
+
+def test_a_numeric_column_name_warns_that_there_may_be_no_header():
+    upload = read_csv_upload(b"1,Ada,London\n2,Grace,Paris\n", "no_header.csv")
+    assert list(upload.frame.columns) == ["1", "Ada", "London"]
+    assert len(upload.warnings) == 1
+    assert "`1`" in upload.warnings[0]
+    assert "`Ada`" not in upload.warnings[0]
+    assert "add one" in upload.warnings[0]
+
+
+def test_every_numeric_column_name_is_listed():
+    upload = read_csv_upload(b"1,Ada,36.5\n2,Grace,45\n", "no_header.csv")
+    assert "`1`" in upload.warnings[0]
+    assert "`36.5`" in upload.warnings[0]
+
+
+def test_an_empty_header_cell_does_not_warn_about_a_missing_header():
+    upload = read_csv_upload(b"id,\n1,Ada\n", "blank.csv")
+    assert list(upload.frame.columns) == ["id", "Unnamed: 1"]
+    assert upload.warnings == []
+
+
 def test_the_stated_expectation_covers_separator_quoting_and_encoding():
     for expected in ("commas", "first row", "double quotes", "UTF-8"):
         assert expected in CSV_FORMAT_EXPECTATION

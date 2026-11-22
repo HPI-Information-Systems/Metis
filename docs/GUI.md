@@ -62,7 +62,9 @@ metric is selected and no blockers remain.
   is loaded. That covers an empty file, a file with column names but no
   rows, a file that is not text and a file that is not valid CSV. Rows with
   more fields than the header are skipped, and a warning says how many and
-  on which lines.
+  on which lines. Repeated column names, which are renamed to `name.1`, and
+  a first row with numbers in it, which may mean the file has no header, also
+  produce a warning. The file is still loaded.
 - Set a dataset name and an optional table name. Each run gets an
   experiment tag, auto-generated as `{dataset_name}_{timestamp}`.
 - A preview shows the first 50 rows together with column types and basic

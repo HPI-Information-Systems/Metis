@@ -30,6 +30,7 @@ DELIMITER_NAMES: dict[str, str] = {
     ",": "commas", ";": "semicolons", "\t": "tabs", "|": "pipes",
 }
 _DEFAULT_DELIMITER: str = ","
+_NUMBER_RE: re.Pattern[str] = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?")
 _SNIFF_BYTES: int = 64 * 1024
 _MAX_SKIPPED_LINES_LISTED: int = 5
 
@@ -95,10 +96,12 @@ def read_csv_upload(
         )
 
     delimiter = delimiter or detect_delimiter(raw)
+    encoding = "utf-8"
     try:
-        frame, skipped = _parse(raw, "utf-8", delimiter)
+        frame, skipped = _parse(raw, encoding, delimiter)
     except UnicodeDecodeError:
-        frame, skipped = _parse_or_decline(raw, "latin-1", delimiter, file_name)
+        encoding = "latin-1"
+        frame, skipped = _parse_or_decline(raw, encoding, delimiter, file_name)
         notes.append(
             "The file is not UTF-8 encoded and was read as Latin-1. Check "
             "that special characters look right in the preview."
@@ -117,6 +120,12 @@ def read_csv_upload(
 
     if skipped:
         notes.append(_skipped_note(skipped))
+
+    header = _read_header(raw, encoding, delimiter)
+    if repeated := _repeated_names(header):
+        notes.append(_duplicate_note(repeated))
+    if numeric := _numeric_names(header):
+        notes.append(_no_header_note(numeric))
 
     return CsvUpload(frame=frame, warnings=notes, delimiter=delimiter)
 
@@ -200,4 +209,80 @@ def _skipped_note(skipped: list[int]) -> str:
         f"skipped (line {listed}). They are not part of the assessment. This "
         "usually means a value contains the separator and is not enclosed "
         "in double quotes."
+    )
+
+
+def _read_header(raw: bytes, encoding: str, delimiter: str) -> list[str]:
+    """
+    Read the column names exactly as written in the file.
+
+    :param raw: The content of the file.
+    :param encoding: The encoding the file was read with.
+    :param delimiter: The delimiter that separates the values.
+    :return: The values of the first non-blank row.
+    """
+    # utf-8-sig drops a byte order mark, as pandas does for UTF-8
+    text = io.TextIOWrapper(
+        io.BytesIO(raw), encoding="utf-8-sig" if encoding == "utf-8" else encoding,
+        newline="",
+    )
+    try:
+        return next((row for row in csv.reader(text, delimiter=delimiter) if row), [])
+    except csv.Error:
+        return []
+
+
+def _repeated_names(header: list[str]) -> list[str]:
+    """
+    Find the column names that occur more than once in the header.
+
+    :param header: The column names as written in the file.
+    :return: Each repeated name once, in order of first appearance. Empty
+        names are left out because pandas names them ``Unnamed: N``.
+    """
+    return [
+        name for name in dict.fromkeys(header)
+        if name and header.count(name) > 1
+    ]
+
+
+def _numeric_names(header: list[str]) -> list[str]:
+    """
+    Find the column names that look like data values.
+
+    :param header: The column names as written in the file.
+    :return: The distinct names that are numbers, in order of appearance.
+    """
+    return [
+        name for name in dict.fromkeys(header)
+        if _NUMBER_RE.fullmatch(name.strip())
+    ]
+
+
+def _duplicate_note(repeated: list[str]) -> str:
+    """
+    Describe the column names that were made unique.
+
+    :param repeated: The column names that occur more than once.
+    :return: A warning naming the repeated names and how they were renamed.
+    """
+    names = ", ".join(f"`{name}`" for name in repeated)
+    return (
+        f"Some column names appear more than once: {names}. The repeats were "
+        f"renamed, for example `{repeated[0]}` to `{repeated[0]}.1`."
+    )
+
+
+def _no_header_note(numeric: list[str]) -> str:
+    """
+    Describe a first row that looks like data instead of column names.
+
+    :param numeric: The column names that are numbers.
+    :return: A warning naming the values and what to do if there is no header.
+    """
+    values = ", ".join(f"`{name}`" for name in numeric)
+    return (
+        "The first row is used as the column names, but it contains values "
+        f"that look like data: {values}. If the file has no header row, add "
+        "one and upload it again."
     )
