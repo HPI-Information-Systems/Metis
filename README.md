@@ -251,7 +251,7 @@ def assess(self,
 ````
 Each metric should be a subclass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes two arguments:
 - **data: pandas.Dataframe**: The DataFrame that should be assessed by this metric. This is the primary dataset under inspection.
-- **metric_config: Optional[str | MetricConfig]**: Optional metric-specific configuration. Accepts a path to a `.json` file, a JSON string, or a pre-instantiated config object. An empty string resolves to a config with all defaults. Use this to keep the method signature compact. All metric-specific parameters (thresholds, aggregation options, reference data) can be stored here.
+- **metric_config: Optional[str | MetricConfig]**: Optional metric-specific configuration. Accepts a path to a `.json` file, a JSON string, or a pre-instantiated config object. An empty string or `None` resolves to a config with all defaults. Use this to keep the method signature compact. All metric-specific parameters (thresholds, aggregation options, reference data) can be stored here.
 
 Metrics that compare against reference data declare a `reference` field on their
 config class rather than taking a reference parameter. Different metrics need

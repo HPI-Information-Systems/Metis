@@ -1,8 +1,12 @@
+import csv
+import itertools
+
 import pandas as pd
 
 from metis.loader.loader import DataLoader
 from metis.utils.data_config import DataConfig
 from metis.utils.dataset_checks import DatasetLoadError
+from metis.utils.logging import logger
 
 
 class CSVLoader(DataLoader):
@@ -26,7 +30,7 @@ class CSVLoader(DataLoader):
         :return: DataFrame containing the loaded data.
         """
         try:
-            return pd.read_csv(
+            data = pd.read_csv(
                 config.file_name,
                 delimiter=config.delimiter,
                 encoding=config.encoding,
@@ -65,3 +69,35 @@ class CSVLoader(DataLoader):
                 f"Dataset '{config.name}' could not be loaded from "
                 f"'{config.file_name}': {e}"
             ) from e
+        self._warn_on_duplicate_columns(config)
+        return data
+
+    @staticmethod
+    def _warn_on_duplicate_columns(config: DataConfig) -> None:
+        """
+        Warn when the header row repeats a column name.
+
+        pandas silently renames the repeats to ``name.1``, ``name.2`` and so
+        on, so the check reads the raw header row. It does nothing when the
+        header is not a single row index or the row cannot be read.
+
+        :param config: DataConfig object containing the CSV parsing details.
+        :return: None.
+        """
+        if not isinstance(config.header, int) or isinstance(config.header, bool):
+            return
+        if config.header < 0:
+            return
+        try:
+            with open(config.file_name, encoding=config.encoding, newline="") as f:
+                rows = (row for row in csv.reader(f, delimiter=config.delimiter) if row)
+                names = next(itertools.islice(rows, config.header, None), [])
+        except (OSError, ValueError, TypeError, csv.Error):
+            return
+        repeated = [n for n in dict.fromkeys(names) if n and names.count(n) > 1]
+        if repeated:
+            logger.warning(
+                f"Dataset '{config.name}': the header row of '{config.file_name}' "
+                f"repeats the column name(s) {repeated}. pandas renamed the "
+                "repeats to 'name.1', 'name.2' and so on."
+            )

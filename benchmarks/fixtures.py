@@ -96,11 +96,9 @@ def _default_config(metric_name: str):
     """
     Instantiate a metric's config class by naming convention, if it has one.
 
-    Returning a bare ``None`` is not safe. ``Metric.load_config`` rejects
-    ``None`` outright, and the completeness metrics pass ``metric_config``
-    straight through without the ``metric_config or ""`` idiom the accuracy
-    metrics use, so they raise ``TypeError`` on a ``None`` config. The sweep
-    would then record them as errors rather than measuring them. This mirrors
+    Returning a bare ``None`` is not safe for every metric. Metrics that
+    require a config check for ``None`` themselves and raise on it, so the
+    sweep would record them as errors rather than measuring them. This mirrors
     what ``_prepare_config`` in ``gui/core/metric_runner.py`` already does for
     the GUI.
 

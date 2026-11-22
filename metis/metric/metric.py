@@ -95,14 +95,17 @@ class Metric(ABC):
 
     def load_config(self, config: Any, model: type[C]) -> C:
         """
-        Load metric-specific configuration from a JSON file path, JSON string or the correct config model instance. Also validates the configuration using its validate method.
+        Load metric-specific configuration from a JSON file path, JSON string or the correct config model instance. ``None`` and the empty string give a config with all defaults. Also validates the configuration using its validate method.
 
-        :param config: Path to the JSON configuration file, a JSON string or an instance of the config model.
+        :param config: Path to the JSON configuration file, a JSON string, an instance of the config model or ``None``.
         :return: An instance of the metric-specific configuration class.
         """
         if isinstance(config, model):
             config.validate()
             return config
+
+        if config is None:
+            config = ""
 
         if isinstance(config, str):
             try:
