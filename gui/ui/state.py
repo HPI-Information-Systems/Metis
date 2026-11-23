@@ -84,6 +84,10 @@ class AppState:
         st.session_state["metric_configs"] = configs
 
     @staticmethod
+    def clear_metric_config(metric_name: str) -> None:
+        st.session_state.get("metric_configs", {}).pop(metric_name, None)
+
+    @staticmethod
     def get_last_results() -> list[dict]:
         return st.session_state.get("last_results", [])
 
