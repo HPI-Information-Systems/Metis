@@ -27,6 +27,11 @@ ReferenceSource = Union[pd.DataFrame, str, Mapping, list, set, None]
 
 _VOCABULARY_COLUMN = "value"
 
+
+class MissingReferenceError(ValueError):
+    """Raised when a metric that requires a reference has none to use."""
+
+
 _default_reference: ContextVar[pd.DataFrame | None] = ContextVar(
     "metis_default_reference", default=None
 )
@@ -212,4 +217,8 @@ def _load_csv(payload: Mapping) -> pd.DataFrame:
     :return: The loaded DataFrame.
     """
     config_dict = {"name": "reference", **dict(payload)}
-    return CSVLoader().load(DataConfig(config_dict))
+    return CSVLoader().load(
+        DataConfig(config_dict),
+        file_field="reference",
+        config_label="the metric config",
+    )

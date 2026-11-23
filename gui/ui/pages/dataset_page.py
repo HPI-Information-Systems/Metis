@@ -1,14 +1,15 @@
 """Step 1: Upload a CSV dataset and set run metadata."""
 from __future__ import annotations
 
-import io
 from datetime import datetime
 
 import pandas as pd
 import streamlit as st
 
+from core.csv_upload import CSV_FORMAT_EXPECTATION, DELIMITER_NAMES, read_csv_upload
 from core.metric_catalog import get_catalog
 from core.result_store import get_active_store
+from metis.utils.dataset_checks import DatasetError
 from ui.state import AppState
 
 LARGE_DATASET_ROW_THRESHOLD: int = 100_000
@@ -21,6 +22,23 @@ RECENT_RUN_CARD_HEIGHT_PX: int = 90
 # them in the sweep AppState.reset() runs over all reference upload state.
 _REFERENCE_STAMP_KEY: str = "_ref_cache__global__stamp"
 _REFERENCE_VERSION_KEY: str = "_ref_cache__global__version"
+_REFERENCE_ERROR_KEY: str = "_ref_cache__global__error"
+
+# A file is parsed once, so its messages are kept to survive later reruns.
+_UPLOAD_ERROR_KEY: str = "_upload_error"
+_UPLOAD_WARNINGS_KEY: str = "_upload_warnings"
+
+# A tag still equal to this was not edited by the user.
+_AUTO_TAG_KEY: str = "_auto_experiment_tag"
+
+_UPLOAD_DELIMITER_KEY: str = "_upload_delimiter"
+_DELIMITER_CHOICES: dict[str, str | None] = {
+    "Detect automatically": None,
+    "Comma (,)": ",",
+    "Semicolon (;)": ";",
+    "Tab": "\t",
+    "Pipe (|)": "|",
+}
 
 
 def render(demo_mode: bool = False, demo_df: pd.DataFrame | None = None) -> None:
@@ -41,6 +59,7 @@ def render(demo_mode: bool = False, demo_df: pd.DataFrame | None = None) -> None
 def _render_upload_section() -> None:
     st.header("Dataset")
     st.write("Upload a CSV file to assess its data quality.")
+    st.markdown(CSV_FORMAT_EXPECTATION)
 
     uploaded = st.file_uploader(
         "Choose a CSV file",
@@ -48,53 +67,106 @@ def _render_upload_section() -> None:
         help="Drag and drop or click to browse. Files >100 MB may be slow.",
     )
 
+    choice = st.selectbox(
+        "Delimiter",
+        options=list(_DELIMITER_CHOICES),
+        key="input_delimiter",
+        width=220,
+        help="Set this if the delimiter of your file was not detected correctly.",
+    )
+    delimiter = _DELIMITER_CHOICES[choice]
+
     if uploaded is not None:
-        file_id = f"{uploaded.name}::{uploaded.size}"
+        file_id = f"{uploaded.name}::{uploaded.size}::{delimiter}"
         if st.session_state.get("_loaded_file_id") != file_id:
-            _load_csv(uploaded)
+            _load_csv(uploaded, delimiter)
             st.session_state["_loaded_file_id"] = file_id
+    else:
+        # Forget the declined file so it can be uploaded again.
+        if st.session_state.pop(_UPLOAD_ERROR_KEY, None) is not None:
+            st.session_state.pop("_loaded_file_id", None)
+
+    error = st.session_state.get(_UPLOAD_ERROR_KEY)
+    if error:
+        st.error(error)
 
     df = AppState.get_df()
     if df is not None:
         st.success(
             f"Dataset loaded: **{AppState.get_dataset_name()}** — "
-            f"{len(df):,} rows × {len(df.columns)} columns"
+            f"{len(df):,} rows × {len(df.columns)} columns, separated by "
+            f"{DELIMITER_NAMES[st.session_state.get(_UPLOAD_DELIMITER_KEY, ',')]}"
         )
+        for warning in st.session_state.get(_UPLOAD_WARNINGS_KEY, []):
+            st.warning(warning)
         # Metadata form runs in main scope so its values affect session_state
         # immediately. Nav-button availability reads df from session_state on the same rerun.
         _render_metadata_form()
         _render_preview_fragment(df)
         _render_reference_upload()
-    else:
+    elif not error:
         st.info("Upload a CSV file to get started.")
 
 
-def _load_csv(uploaded) -> None:
+def _load_csv(uploaded, delimiter: str | None = None) -> None:
     """
-    Parse an uploaded CSV file with UTF-8 then latin-1 fallback, and seed app state.
+    Parse an uploaded CSV file and seed app state, or decline the file.
+
+    A file that is empty or cannot be read as CSV is declined: the reason is
+    kept for display and no dataset is loaded, so the wizard cannot continue
+    with it.
 
     :param uploaded: A Streamlit ``UploadedFile``.
+    :param delimiter: The delimiter to read the file with. ``None`` detects it.
     :return: None.
     """
-    raw = uploaded.read()
-    try:
-        df = pd.read_csv(io.BytesIO(raw), encoding="utf-8", on_bad_lines="skip", low_memory=False)
-    except UnicodeDecodeError:
-        st.warning("UTF-8 decoding failed. Retrying with latin-1.")
-        df = pd.read_csv(io.BytesIO(raw), encoding="latin-1", on_bad_lines="skip", low_memory=False)
+    st.session_state.pop(_UPLOAD_ERROR_KEY, None)
+    st.session_state.pop(_UPLOAD_WARNINGS_KEY, None)
 
+    try:
+        upload = read_csv_upload(uploaded.getvalue(), uploaded.name, delimiter)
+    except DatasetError as e:
+        # Also drop an earlier dataset, so it is not shown next to the error.
+        AppState.clear_df()
+        st.session_state[_UPLOAD_ERROR_KEY] = str(e)
+        return
+
+    df = upload.frame
+    notes = list(upload.warnings)
     if len(df) > LARGE_DATASET_ROW_THRESHOLD:
-        st.warning(
+        notes.append(
             f"Large file: {len(df):,} rows. Metrics may be slow. "
             "Consider using the max-rows cap in the Compute step."
         )
+    st.session_state[_UPLOAD_WARNINGS_KEY] = notes
+    st.session_state[_UPLOAD_DELIMITER_KEY] = upload.delimiter
 
     dataset_name = uploaded.name.removesuffix(".csv")
     AppState.set_df(df)
     AppState.set_dataset_name(dataset_name)
+    _sync_metadata_input("input_dataset_name", dataset_name)
 
-    if not AppState.get_experiment_tag():
-        AppState.set_experiment_tag(f"{dataset_name}_{datetime.now():%Y%m%d_%H%M}")
+    tag = AppState.get_experiment_tag()
+    if not tag or tag == st.session_state.get(_AUTO_TAG_KEY):
+        tag = f"{dataset_name}_{datetime.now():%Y%m%d_%H%M}"
+        AppState.set_experiment_tag(tag)
+        st.session_state[_AUTO_TAG_KEY] = tag
+        _sync_metadata_input("input_experiment_tag", tag)
+
+
+def _sync_metadata_input(widget_key: str, value: str) -> None:
+    """
+    Point a run-metadata text input at a newly loaded dataset.
+
+    The inputs keep their own widget state. Left alone, an input that is
+    already on screen writes the previous file's name back over the new one.
+
+    :param widget_key: Session key of the text input.
+    :param value: The value the input should show.
+    :return: None.
+    """
+    if widget_key in st.session_state:
+        st.session_state[widget_key] = value
 
 
 def _render_reference_upload() -> None:
@@ -132,13 +204,20 @@ def _render_reference_upload() -> None:
         if uploaded is not None:
             stamp = f"{uploaded.name}::{uploaded.size}"
             if st.session_state.get(_REFERENCE_STAMP_KEY) != stamp:
-                raw = uploaded.read()
-                try:
-                    reference = pd.read_csv(io.BytesIO(raw), encoding="utf-8")
-                except UnicodeDecodeError:
-                    reference = pd.read_csv(io.BytesIO(raw), encoding="latin-1")
-                AppState.set_reference_df(reference)
                 st.session_state[_REFERENCE_STAMP_KEY] = stamp
+                try:
+                    upload = read_csv_upload(uploaded.read(), uploaded.name)
+                except DatasetError as e:
+                    AppState.set_reference_df(None)
+                    st.session_state[_REFERENCE_ERROR_KEY] = str(e)
+                else:
+                    AppState.set_reference_df(upload.frame)
+                    st.session_state.pop(_REFERENCE_ERROR_KEY, None)
+        elif st.session_state.pop(_REFERENCE_ERROR_KEY, None) is not None:
+            st.session_state.pop(_REFERENCE_STAMP_KEY, None)
+
+        if st.session_state.get(_REFERENCE_ERROR_KEY):
+            st.error(st.session_state[_REFERENCE_ERROR_KEY])
 
         reference = AppState.get_reference_df()
         if reference is not None:
@@ -161,6 +240,7 @@ def _remove_reference() -> None:
     """
     AppState.set_reference_df(None)
     st.session_state.pop(_REFERENCE_STAMP_KEY, None)
+    st.session_state.pop(_REFERENCE_ERROR_KEY, None)
     st.session_state[_REFERENCE_VERSION_KEY] = (
         st.session_state.get(_REFERENCE_VERSION_KEY, 0) + 1
     )
@@ -221,9 +301,9 @@ def _render_preview_fragment(df: pd.DataFrame) -> None:
 
 
 @st.cache_data(show_spinner=False)
-def _describe_cached(_df: pd.DataFrame) -> pd.DataFrame:
+def _describe_cached(df: pd.DataFrame) -> pd.DataFrame:
     """Cache ``df.describe(include='all')`` — expensive on wide datasets."""
-    return _df.describe(include="all").astype(str)
+    return df.describe(include="all").astype(str)
 
 
 @st.fragment
@@ -263,7 +343,7 @@ def _render_recent_runs_fragment() -> None:
             st.markdown(
                 f"<div style='"
                 f"border:1px solid {RECENT_RUN_CARD_BORDER};border-radius:8px;padding:12px 14px 8px;"
-                f"background:{RECENT_RUN_CARD_BG};height:{RECENT_RUN_CARD_HEIGHT_PX}px;overflow:hidden;"
+                f"background:{RECENT_RUN_CARD_BG};min-height:{RECENT_RUN_CARD_HEIGHT_PX}px;"
                 f"'>"
                 f"<div style='font-weight:600;font-size:14px;margin-bottom:3px;"
                 f"white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"

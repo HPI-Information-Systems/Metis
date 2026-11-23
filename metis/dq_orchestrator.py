@@ -12,6 +12,7 @@ from metis.metric.config import MetricConfig
 from metis.profiling.data_profile_manager import DataProfileManager
 from metis.profiling.importers import get_importer
 from metis.utils.data_config import DataConfig
+from metis.utils.dataset_checks import DatasetLoadError, ensure_not_empty
 from metis.utils.garbage_collection import gc_paused
 from metis.utils.logging import logger
 from metis.utils.reference_loader import default_reference
@@ -53,41 +54,93 @@ class DQOrchestrator:
 
     def load(self, data_loader_configs: List[str]) -> None:
         for config_path in data_loader_configs:
+            config_data = self._read_data_config(config_path)
+            config = DataConfig(config_data)
+
+            if config.loader == "CSV":
+                loader = CSVLoader()
+                dataframe = loader.load(config)
+                ensure_not_empty(dataframe, f"Dataset '{config.name}'")
+                self.dataframes[config.name] = dataframe
+                self.data_paths[config.name] = config_path
+
+                if config.reference_file_name:
+                    reference_config = DataConfig(config_data)
+                    reference_config.file_name = config.reference_file_name
+                    self.reference_dataframes[config.name] = loader.load(
+                        reference_config, file_field="reference_file_name"
+                    )
+
+                # Import pre-computed data profiles
+                if config.data_profiles:
+                    self._import_data_profiles(
+                        config.data_profiles, config_path, config.name
+                    )
+            else:
+                raise ValueError(
+                    f"Unsupported loader type: {config_data.get('loader', None)}"
+                )
+
+    @staticmethod
+    def _read_data_config(config_path: str) -> dict:
+        """
+        Read a data config file.
+
+        :param config_path: Path to the data config JSON file.
+        :raises DatasetLoadError: If the file does not exist, is not valid
+            JSON or does not hold a JSON object.
+        :return: The parsed data config.
+        """
+        try:
             with open(config_path, "r") as f:
                 config_data = json.load(f)
-                config = DataConfig(config_data)
-
-                if config.loader == "CSV":
-                    loader = CSVLoader()
-                    dataframe = loader.load(config)
-                    self.dataframes[config.name] = dataframe
-                    self.data_paths[config.name] = config_path
-
-                    if config.reference_file_name:
-                        reference_config = DataConfig(config_data)
-                        reference_config.file_name = config.reference_file_name
-                        reference_dataframe = loader.load(reference_config)
-                        self.reference_dataframes[config.name] = reference_dataframe
-
-                    # Import pre-computed data profiles
-                    if config.data_profiles:
-                        self._import_data_profiles(
-                            config.data_profiles, config_path, config.name
-                        )
-                else:
-                    raise ValueError(
-                        f"Unsupported loader type: {config_data.get('loader', None)}"
-                    )
+        except FileNotFoundError as e:
+            raise DatasetLoadError(
+                f"The data config '{config_path}' does not exist."
+            ) from e
+        except json.JSONDecodeError as e:
+            raise DatasetLoadError(
+                f"The data config '{config_path}' is not valid JSON: {e}"
+            ) from e
+        if not isinstance(config_data, dict):
+            raise DatasetLoadError(
+                f"The data config '{config_path}' must hold a JSON object, "
+                f"not {type(config_data).__name__}."
+            )
+        return config_data
 
     def assess(
         self, metrics: List[str], metric_configs: List[str | MetricConfig | None]
     ) -> List[DQResult]:
+        """
+        Assess every loaded dataset with the given metrics.
+
+        :param metrics: Registry names of the metrics to run.
+        :param metric_configs: One config per metric, in the same order.
+            Use ``None`` for a metric's defaults.
+        :raises ValueError: If the number of configs differs from the number
+            of metrics, or a metric name is not registered.
+        :raises EmptyDatasetError: If a loaded dataset has no rows or columns.
+        :return: The results of all metrics on all datasets.
+        """
         results: List[DQResult] = []
 
+        if len(metrics) != len(metric_configs):
+            raise ValueError(
+                f"Got {len(metrics)} metric(s) but {len(metric_configs)} "
+                "config(s). Pass one config per metric, in the same order, "
+                "with None for a metric's defaults."
+            )
+        unknown = [m for m in metrics if m not in Metric.registry]
+        if unknown:
+            raise ValueError(f"Metric(s) not registered: {', '.join(unknown)}.")
+
+        # Once, before any metric runs.
+        for df_name, df in self.dataframes.items():
+            ensure_not_empty(df, f"Dataset '{df_name}'")
+
         for metric, metric_config in zip(metrics, metric_configs):
-            metric_class: Type[Metric] | None = Metric.registry.get(metric)
-            if not metric_class:
-                raise ValueError(f"Metric {metric} is not registered.")
+            metric_class: Type[Metric] = Metric.registry[metric]
             metric_instance: Metric = metric_class()
             for df_name, df in self.dataframes.items():
                 # Set profiling context so cached functions know the active dataset.

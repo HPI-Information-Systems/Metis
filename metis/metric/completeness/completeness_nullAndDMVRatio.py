@@ -28,11 +28,13 @@ class completeness_nullAndDMVRatio(Metric):
         description=(
             "Completeness as the ratio of non-null and non-disguised-missing values. "
             "Disguised missing values (e.g., '?', 'N/A') are detected with the FAHES "
-            "algorithm (Qahtan et al., 2018). Configurable granularity."
+            "algorithm (Qahtan et al., 2018). Reports per column by default; "
+            "configurable to report per cell, per row, or as a single table-level score."
         ),
         dimension=DQDimension.COMPLETENESS,
         granularities=frozenset({
-            DQGranularity.ROW, DQGranularity.COLUMN, DQGranularity.TABLE,
+            DQGranularity.CELL, DQGranularity.ROW,
+            DQGranularity.COLUMN, DQGranularity.TABLE,
         }),
     )
 

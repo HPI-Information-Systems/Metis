@@ -251,7 +251,7 @@ def assess(self,
 ````
 Each metric should be a subclass of ```metis.metric.metric.Metric``` and implement the assess method. This method takes two arguments:
 - **data: pandas.Dataframe**: The DataFrame that should be assessed by this metric. This is the primary dataset under inspection.
-- **metric_config: Optional[str | MetricConfig]**: Optional metric-specific configuration. Accepts a path to a `.json` file, a JSON string, or a pre-instantiated config object. An empty string resolves to a config with all defaults. Use this to keep the method signature compact. All metric-specific parameters (thresholds, aggregation options, reference data) can be stored here.
+- **metric_config: Optional[str | MetricConfig]**: Optional metric-specific configuration. Accepts a path to a `.json` file, a JSON string, or a pre-instantiated config object. An empty string or `None` resolves to a config with all defaults. Use this to keep the method signature compact. All metric-specific parameters (thresholds, aggregation options, reference data) can be stored here.
 
 Metrics that compare against reference data declare a `reference` field on their
 config class rather than taking a reference parameter. Different metrics need
@@ -421,7 +421,9 @@ as the template. A metric's tests should cover at least:
 Some checks run on every registered metric automatically and need no work
 from the metric author. `tests/test_metric_meta_conformance.py` verifies that
 the metric is registered, declares a `MetricMeta` and follows the naming and
-score conventions above.
+score conventions above. `tests/test_empty_dataset.py` verifies that an empty
+dataset is declined before the metric runs. The orchestrator and the GUI do
+that for every metric, so `assess` does not have to handle empty input.
 
 ## Output: creating a DQResult
 

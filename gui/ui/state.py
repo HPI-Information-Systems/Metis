@@ -22,6 +22,10 @@ class AppState:
         st.session_state["df"] = df
 
     @staticmethod
+    def clear_df() -> None:
+        st.session_state.pop("df", None)
+
+    @staticmethod
     def get_reference_df() -> pd.DataFrame | None:
         """
         Return the global reference dataset uploaded on the Dataset step.
@@ -78,6 +82,10 @@ class AppState:
         configs = st.session_state.get("metric_configs", {})
         configs[metric_name] = config
         st.session_state["metric_configs"] = configs
+
+    @staticmethod
+    def clear_metric_config(metric_name: str) -> None:
+        st.session_state.get("metric_configs", {}).pop(metric_name, None)
 
     @staticmethod
     def get_last_results() -> list[dict]:
@@ -217,6 +225,8 @@ class AppState:
             "df", "reference_df", "dataset_name", "table_name",
             "experiment_tag", "selected_metrics", "metric_configs",
             "last_results", "last_errors", "run_requested",
+            "_upload_error", "_upload_warnings", "_upload_delimiter",
+            "_auto_experiment_tag",
         ):
             st.session_state.pop(key, None)
 

@@ -10,11 +10,17 @@ from typing import Any, get_args, get_origin
 import streamlit as st
 
 from metis.metric.config import MetricConfig
-from metis.utils.reference_loader import ReferenceSource
+from metis.utils.reference_loader import MissingReferenceError, ReferenceSource
 
 from ui.components.config_editors import reference_editor
 
 _REFERENCE_ARGS = frozenset(get_args(ReferenceSource))
+
+MISSING_REFERENCE_MESSAGE: str = (
+    "This metric needs reference data before it can run. Upload a reference "
+    "dataset on the Dataset step, or a reference for this metric only in the "
+    "uploader above."
+)
 
 
 def is_reference_field(annotation: Any) -> bool:
@@ -67,6 +73,10 @@ def render(
         cfg = config_class(**values)
         cfg.validate()
         return cfg
+    except MissingReferenceError:
+        # The library message names fields a GUI user never sees.
+        st.warning(MISSING_REFERENCE_MESSAGE)
+        return None
     except (TypeError, ValueError) as e:
         st.error(f"Config error: {e}")
         return None

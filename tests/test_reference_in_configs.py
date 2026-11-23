@@ -13,6 +13,7 @@ from metis.metric.correctness.correctness_heinrich_config import (
     correctness_heinrich_config,
 )
 from metis.metric.metric import Metric
+from metis.utils.reference_loader import MissingReferenceError
 from metis.metric.validity.validity_outOfVocabulary import validity_outOfVocabulary
 from metis.metric.validity.validity_outOfVocabulary_config import (
     validity_outOfVocabulary_config,
@@ -70,3 +71,11 @@ def test_out_of_vocabulary_takes_an_inline_vocabulary():
 def test_reference_survives_config_serialisation():
     cfg = correctness_heinrich_config(reference="data/clean.csv")
     assert cfg.to_json()["reference"] == "data/clean.csv"
+
+
+@pytest.mark.parametrize(
+    "config_class", [accuracy_semanticReference_config, correctness_heinrich_config]
+)
+def test_a_missing_required_reference_has_its_own_error_type(config_class):
+    with pytest.raises(MissingReferenceError):
+        config_class().validate()

@@ -108,3 +108,58 @@ def test_reset_clears_per_metric_reference_state():
     assert "_ref_cache__correctness_heinrich__reference" not in st.session_state
     assert "_ref_cache__correctness_heinrich__reference__stamp" not in st.session_state
     assert "correctness_heinrich__reference" not in st.session_state
+
+
+class _Upload:
+    """Stands in for Streamlit's ``UploadedFile``."""
+
+    def __init__(self, name: str, content: bytes) -> None:
+        self.name = name
+        self.size = len(content)
+        self._content = content
+
+    def read(self) -> bytes:
+        return self._content
+
+
+def _render_heinrich_config(monkeypatch, upload):
+    import streamlit as st
+
+    from core.metric_catalog import get_catalog
+    from ui.pages import metrics_page
+
+    monkeypatch.setattr(st, "file_uploader", lambda *args, **kwargs: upload)
+    metrics_page._render_inline_config(
+        get_catalog()["correctness_heinrich"], pd.DataFrame({"n": [10, 99]})
+    )
+
+
+def test_a_declined_reference_upload_drops_the_reference_stored_before(monkeypatch):
+    import streamlit as st
+
+    from ui.state import AppState
+
+    st.session_state.clear()
+    _render_heinrich_config(monkeypatch, _Upload("ref.csv", b"n\n10\n20\n"))
+    assert len(AppState.get_metric_configs()["correctness_heinrich"].reference) == 2
+
+    _render_heinrich_config(monkeypatch, _Upload("empty.csv", b""))
+
+    assert "correctness_heinrich" not in AppState.get_metric_configs()
+    st.session_state.clear()
+
+
+def test_a_declined_reference_upload_falls_back_to_the_global_reference(monkeypatch):
+    import streamlit as st
+
+    from ui.state import AppState
+
+    st.session_state.clear()
+    AppState.set_reference_df(pd.DataFrame({"n": [10, 20, 30]}))
+    _render_heinrich_config(monkeypatch, _Upload("ref.csv", b"n\n10\n20\n"))
+    assert len(AppState.get_metric_configs()["correctness_heinrich"].reference) == 2
+
+    _render_heinrich_config(monkeypatch, _Upload("empty.csv", b""))
+
+    assert AppState.get_metric_configs()["correctness_heinrich"].reference is None
+    st.session_state.clear()

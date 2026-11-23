@@ -742,6 +742,9 @@ def _render_inline_config(info: MetricInfo, df) -> None:
             )
         if cfg is not None:
             AppState.set_metric_config(info.name, cfg)
+        elif info.requires_reference:
+            # Otherwise a declined upload leaves the earlier reference in use.
+            AppState.clear_metric_config(info.name)
 
 
 def _render_fd_config(metric_name: str, df) -> None:
