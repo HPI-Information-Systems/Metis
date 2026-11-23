@@ -5,6 +5,7 @@ import csv
 import io
 import re
 import warnings
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -82,7 +83,8 @@ def read_csv_upload(
         it from the content.
     :raises EmptyDatasetError: If the file has no content, no columns or no
         data rows.
-    :raises DatasetLoadError: If the file is not text or not a valid CSV file.
+    :raises DatasetLoadError: If the file is not text, is not a valid CSV file
+        or has more fields than the header in every data row.
     :return: The parsed data together with any warnings.
     """
     if not raw.strip():
@@ -111,6 +113,13 @@ def read_csv_upload(
 
     if len(frame.columns) == 0:
         raise EmptyDatasetError(f"**{file_name}** has no columns. There is nothing to assess.")
+
+    if len(frame) == 0 and skipped:
+        raise DatasetLoadError(
+            f"Every data row of **{file_name}** has more fields than the "
+            "header, so no row could be read. Check that the header names "
+            "every column and that the delimiter is right."
+        )
 
     if len(frame) == 0:
         raise EmptyDatasetError(
@@ -141,13 +150,14 @@ def _parse(
     :param delimiter: The delimiter that separates the values.
     :return: The parsed frame and the 1-based numbers of the skipped lines.
     """
+    leading = _leading_wide_rows(raw, encoding, delimiter)
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always", pd.errors.ParserWarning)
         frame = pd.read_csv(
             io.BytesIO(raw), sep=delimiter, encoding=encoding,
-            on_bad_lines="warn", low_memory=False,
+            on_bad_lines="warn", low_memory=False, skiprows=leading or None,
         )
-    skipped = [
+    skipped = [number + 1 for number in leading] + [
         int(number)
         for warning in caught
         if issubclass(warning.category, pd.errors.ParserWarning)
@@ -212,6 +222,55 @@ def _skipped_note(skipped: list[int]) -> str:
     )
 
 
+def _rows(raw: bytes, encoding: str, delimiter: str) -> Iterator[list[str]]:
+    """
+    Iterate over the rows of the file as the ``csv`` module reads them.
+
+    :param raw: The content of the file.
+    :param encoding: The encoding to decode the content with.
+    :param delimiter: The delimiter that separates the values.
+    :return: The values of each row. A blank line gives an empty list.
+    """
+    # utf-8-sig drops a byte order mark, as pandas does for UTF-8
+    text = io.TextIOWrapper(
+        io.BytesIO(raw), encoding="utf-8-sig" if encoding == "utf-8" else encoding,
+        newline="",
+    )
+    for row in csv.reader(text, delimiter=delimiter):
+        yield [] if len(row) == 1 and not row[0].strip() else row
+
+
+def _leading_wide_rows(raw: bytes, encoding: str, delimiter: str) -> list[int]:
+    """
+    Find the data rows directly below the header that have more fields than it.
+
+    pandas only reports such rows after the first data row. A first data row
+    that is too wide is read with its first values as the row labels instead,
+    which shifts every value one column to the left.
+
+    :param raw: The content of the file.
+    :param encoding: The encoding to decode the content with.
+    :param delimiter: The delimiter that separates the values.
+    :return: The 0-based numbers of those rows, counted the way pandas
+        counts rows for ``skiprows``.
+    """
+    wide: list[int] = []
+    width = None
+    try:
+        for number, row in enumerate(_rows(raw, encoding, delimiter)):
+            if not row:
+                continue
+            if width is None:
+                width = len(row)
+            elif len(row) > width:
+                wide.append(number)
+            else:
+                break
+    except csv.Error:
+        return []
+    return wide
+
+
 def _read_header(raw: bytes, encoding: str, delimiter: str) -> list[str]:
     """
     Read the column names exactly as written in the file.
@@ -221,13 +280,8 @@ def _read_header(raw: bytes, encoding: str, delimiter: str) -> list[str]:
     :param delimiter: The delimiter that separates the values.
     :return: The values of the first non-blank row.
     """
-    # utf-8-sig drops a byte order mark, as pandas does for UTF-8
-    text = io.TextIOWrapper(
-        io.BytesIO(raw), encoding="utf-8-sig" if encoding == "utf-8" else encoding,
-        newline="",
-    )
     try:
-        return next((row for row in csv.reader(text, delimiter=delimiter) if row), [])
+        return next((row for row in _rows(raw, encoding, delimiter) if row), [])
     except csv.Error:
         return []
 

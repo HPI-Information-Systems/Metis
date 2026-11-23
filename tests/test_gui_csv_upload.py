@@ -85,6 +85,35 @@ def test_rows_with_too_many_fields_are_skipped_and_reported():
     assert "line 3, 5" in upload.warnings[0]
 
 
+def test_a_first_data_row_with_too_many_fields_is_skipped_and_reported():
+    upload = read_csv_upload(b"a,b\n1,2,3\n4,5\n", "wide_first.csv")
+    assert upload.frame.to_dict("list") == {"a": [4], "b": [5]}
+    assert list(upload.frame.index) == [0]
+    assert "1 row(s)" in upload.warnings[0]
+    assert "line 2)" in upload.warnings[0]
+
+
+def test_wide_rows_at_the_start_and_later_are_reported_together():
+    upload = read_csv_upload(
+        b"a;b\r\n1;2;3\r\n\r\n4;5;6;7\r\n8;9\r\n10;11;12\r\n13;14\r\n", "wide.csv",
+        delimiter=";",
+    )
+    assert upload.frame["a"].tolist() == [8, 13]
+    assert "3 row(s)" in upload.warnings[0]
+    assert "line 2, 4, 6)" in upload.warnings[0]
+
+
+def test_a_file_where_every_row_has_too_many_fields_is_declined():
+    with pytest.raises(DatasetLoadError, match="Every data row"):
+        read_csv_upload(b"a,b\n1,2,3\n4,5,6\n", "all_wide.csv")
+
+
+def test_a_whitespace_line_above_the_header_does_not_hide_the_header():
+    upload = read_csv_upload(b"  \na,b\n1,2\n", "padded.csv")
+    assert upload.frame.to_dict("list") == {"a": [1], "b": [2]}
+    assert upload.warnings == []
+
+
 def test_a_latin1_file_is_read_with_a_warning():
     upload = read_csv_upload("name,city\nJosé,Köln\n".encode("latin-1"), "latin.csv")
     assert upload.frame.iloc[0].tolist() == ["José", "Köln"]
