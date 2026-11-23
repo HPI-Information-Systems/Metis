@@ -301,9 +301,9 @@ def _render_preview_fragment(df: pd.DataFrame) -> None:
 
 
 @st.cache_data(show_spinner=False)
-def _describe_cached(_df: pd.DataFrame) -> pd.DataFrame:
+def _describe_cached(df: pd.DataFrame) -> pd.DataFrame:
     """Cache ``df.describe(include='all')`` — expensive on wide datasets."""
-    return _df.describe(include="all").astype(str)
+    return df.describe(include="all").astype(str)
 
 
 @st.fragment
@@ -343,7 +343,7 @@ def _render_recent_runs_fragment() -> None:
             st.markdown(
                 f"<div style='"
                 f"border:1px solid {RECENT_RUN_CARD_BORDER};border-radius:8px;padding:12px 14px 8px;"
-                f"background:{RECENT_RUN_CARD_BG};height:{RECENT_RUN_CARD_HEIGHT_PX}px;overflow:hidden;"
+                f"background:{RECENT_RUN_CARD_BG};min-height:{RECENT_RUN_CARD_HEIGHT_PX}px;"
                 f"'>"
                 f"<div style='font-weight:600;font-size:14px;margin-bottom:3px;"
                 f"white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"

@@ -6,6 +6,8 @@ metric name is examined anywhere in this module.
 """
 from __future__ import annotations
 
+import json
+
 import pandas as pd
 import streamlit as st
 
@@ -18,14 +20,31 @@ def extract_rules(results: list[dict]) -> dict[str, list]:
     ``"{det}:{dep}"``.
 
     :param results: A list of result dicts as produced by ``get_table_results``.
-    :return: Mapping ``rule_key → list of violating determinant values``.
+    :return: Mapping ``rule_key → list of violations``. A violation is a
+        violating row as a dict, or a bare determinant value.
     """
     rules: dict[str, list] = {}
     for r in results:
         for k, v in (r.get("DQexplanation") or {}).items():
             if ":" in k and k not in rules:
-                rules[k] = v if isinstance(v, list) else []
+                rules[k] = _violations(v)
     return rules
+
+
+def _violations(value) -> list:
+    """
+    Read the violations of one rule from an explanation value.
+
+    :param value: A list, or the JSON string of one, as the FD metric stores
+        its violating rows.
+    :return: The violations, or an empty list when the value holds none.
+    """
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except ValueError:
+            return []
+    return value if isinstance(value, list) else []
 
 
 def render_violations_table(rules: dict[str, list], cache_key: str = "") -> None:
@@ -82,7 +101,9 @@ def render_violations_table(rules: dict[str, list], cache_key: str = "") -> None
 
         st.markdown(f"**Violating values for `{rule_label}`** ({len(violations)})")
         st.dataframe(
-            pd.DataFrame({"Determinant value": violations}),
+            pd.DataFrame(violations)
+            if isinstance(violations[0], dict)
+            else pd.DataFrame({"Determinant value": violations}),
             width="stretch",
             hide_index=True,
         )
