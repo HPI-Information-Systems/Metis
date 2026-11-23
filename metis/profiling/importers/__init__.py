@@ -8,6 +8,7 @@ from .histogram_importer import HistogramImporter
 from .ind_importer import INDImporter
 from .jaccard_importer import JaccardImporter
 from .patterns_importer import PatternsImporter
+from .pfd_importer import PFDImporter
 from .quartiles_importer import QuartilesImporter
 from .scalar_importer import ScalarImporter, create_scalar_importers
 from .ucc_importer import UCCImporter
@@ -34,6 +35,7 @@ def _build_registry() -> Dict[str, BaseImporter]:
 
     # Dependencies
     registry["fd"] = FDImporter()
+    registry["pfd"] = PFDImporter()
     registry["ucc"] = UCCImporter()
     registry["ind"] = INDImporter()
 
@@ -66,6 +68,7 @@ __all__ = [
     "INDImporter",
     "JaccardImporter",
     "PatternsImporter",
+    "PFDImporter",
     "QuartilesImporter",
     "ScalarImporter",
     "UCCImporter",

@@ -1,0 +1,20 @@
+[clean.csv.MeasureName]->clean.csv.MeasureCode#1.0#0.9346923243243244
+[clean.csv.MeasureCode]->clean.csv.MeasureName#1.0#0.9346923243243244
+[clean.csv.HospitalName]->clean.csv.ProviderNumber#1.0#0.9327338738738739
+[clean.csv.ProviderNumber]->clean.csv.HospitalName#1.0#0.9327338738738739
+[clean.csv.ProviderNumber]->clean.csv.Address1#1.0#0.9327338738738739
+[clean.csv.ProviderNumber]->clean.csv.PhoneNumber#1.0#0.9327338738738739
+[clean.csv.ProviderNumber]->clean.csv.ZipCode#1.0#0.9315389289289289
+[clean.csv.ZipCode]->clean.csv.City#1.0#0.9260549029029029
+[clean.csv.City]->clean.csv.CountyName#1.0#0.9221925305305305
+[clean.csv.MeasureCode, clean.csv.State]->clean.csv.Stateavg#1.0#0.9169332372372372
+[clean.csv.ProviderNumber]->clean.csv.HospitalOwner#1.0#0.7792073473473473
+[clean.csv.MeasureCode]->clean.csv.Condition#1.0#0.7226231351351351
+[clean.csv.CountyName]->clean.csv.EmergencyService#1.0#0.24000765765765764
+[clean.csv.CountyName]->clean.csv.State#1.0#0.03794434434434435
+[]->clean.csv.Address2#1.0#0.0
+[]->clean.csv.Address3#1.0#0.0
+[]->clean.csv.HospitalType#1.0#0.0
+[clean.csv.index]->clean.csv.Sample#1.0#0.0
+[clean.csv.index]->clean.csv.Score#1.0#0.0
+[clean.csv.ProviderNumber, clean.csv.Stateavg]->clean.csv.index#1.0#0.0

@@ -334,6 +334,50 @@ Each FD on the same line, space-separated. Table prefix is stripped automaticall
 
 The pattern tableau is stored as additional metadata.
 
+### Partial Functional Dependencies (pfd)
+
+Each entry extends an FD with a partial threshold `partial` (rho, in (0, 1])
+and a `gpdep` genuineness weight (in [0, 1]). Consumed by the
+`consistency_cpfd` metric.
+
+#### JSON inline
+
+```json
+"pfd": {
+  "source": "cpfd",
+  "values": [
+    {"lhs": ["zip"], "rhs": "city", "partial": 1.0,  "gpdep": 0.98},
+    {"lhs": ["city"], "rhs": "state", "partial": 1.0,  "gpdep": 0.92},
+    {"lhs": ["city"], "rhs": "zip",   "partial": 0.90, "gpdep": 0.10},
+    {"lhs": ["state"], "rhs": "zip",  "partial": 0.71, "gpdep": 0.05}
+  ]
+}
+```
+
+#### External file (Partial HyFD format)
+
+```json
+"pfd": {
+  "source": "cpfd",
+  "file": "demo/consistency_cpfd/hospital_pfds.txt"
+}
+```
+
+**Partial HyFD output format** (one pFD per line):
+```
+[table.csv.col1]->table.csv.col2#0.95#0.87
+[table.csv.col1, table.csv.col2]->table.csv.col3#1.00#0.92
+```
+
+Each line is `[<lhs>]-><rhs>#<partialScore>#<weightScore>`, where
+`partialScore` is rho in (0, 1] and `weightScore` is the gpdep genuineness
+weight in [0, 1]. The `table.` / `table.csv.` prefix is stripped
+automatically. An empty LHS (`[]->...`) is kept as a pFD with `lhs = []`
+(used for constant-column claims emitted by the discoverer).
+
+See [demo/consistency_cpfd/](../demo/consistency_cpfd/) for a runnable
+example using the Hospital dataset.
+
 ### Unique Column Combinations (ucc)
 
 **JSON inline:**
@@ -389,6 +433,7 @@ The `source` field tracks where the data came from:
 | `hyfd` | HyFD algorithm output |
 | `aidfd` | AIDFD algorithm output |
 | `cfdfinder` | CFDFinder algorithm output |
+| `cpfd` | Partial HyFD (cpfd) output: partial FDs with rho and gpdep weights |
 | `computed` | Computed by Metis (automatic) |
 | `imported:<tool>` | Custom import source |
 
