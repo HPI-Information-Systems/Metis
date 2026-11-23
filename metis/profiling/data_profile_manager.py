@@ -307,6 +307,7 @@ class DataProfileManager:
         self.store(
             column_names=sorted(lhs + [rhs]),
             dp_task_name="pfd",
+            task_config={"rhs": rhs},
             value={
                 "lhs": lhs,
                 "rhs": rhs,
